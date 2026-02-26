@@ -29,8 +29,8 @@ describe('Generator Component', () => {
         <Generator />
       </SettingsProvider>
     )
-    expect(screen.getByText('Job Description')).toBeInTheDocument()
-    expect(screen.getByText('Generated CV')).toBeInTheDocument()
+    expect(screen.getByText('generator.job_description')).toBeInTheDocument()
+    expect(screen.getByText('generator.generated_cv')).toBeInTheDocument()
   })
 
   it('handles generation', async () => {
@@ -40,10 +40,10 @@ describe('Generator Component', () => {
       </SettingsProvider>
     )
 
-    const textarea = screen.getByPlaceholderText('Paste job description...')
+    const textarea = screen.getByPlaceholderText('generator.jd_placeholder')
     fireEvent.change(textarea, { target: { value: 'Software Engineer' } })
 
-    const button = screen.getByText('Generate CV')
+    const button = screen.getByText('generator.generate')
     fireEvent.click(button)
 
     await waitFor(() => {

@@ -34,9 +34,9 @@ describe('Settings Component', () => {
 
   it('renders settings page', () => {
     render(<Settings />)
-    expect(screen.getByText('Settings')).toBeInTheDocument()
+    expect(screen.getByText('settings.title')).toBeInTheDocument()
     // Depending on whether it's h2 or something else, getByText is safer than getByRole
-    expect(screen.getAllByText('AI Provider').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('settings.ai_providers').length).toBeGreaterThan(0)
   })
 
   it('shows OpenAI settings when OpenAI is selected', () => {
@@ -47,8 +47,8 @@ describe('Settings Component', () => {
       error: null
     })
     render(<Settings />)
-    expect(screen.getByText('OpenAI API Key')).toBeInTheDocument()
-    expect(screen.queryByText('Anthropic API Key')).not.toBeInTheDocument()
+    expect(screen.getByText('settings.openai_key')).toBeInTheDocument()
+    expect(screen.queryByText('settings.claude_key')).not.toBeInTheDocument()
   })
 
   it('shows Anthropic settings when Anthropic is selected', () => {
@@ -59,8 +59,8 @@ describe('Settings Component', () => {
       error: null
     })
     render(<Settings />)
-    expect(screen.getByText('Anthropic API Key')).toBeInTheDocument()
-    expect(screen.queryByText('OpenAI API Key')).not.toBeInTheDocument()
+    expect(screen.getByText('settings.claude_key')).toBeInTheDocument()
+    expect(screen.queryByText('settings.openai_key')).not.toBeInTheDocument()
   })
 
   it('calls updateSettings when API key is changed', () => {

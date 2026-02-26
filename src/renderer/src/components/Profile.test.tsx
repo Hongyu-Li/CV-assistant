@@ -49,7 +49,7 @@ describe('Profile Component', () => {
 
     // Wait for load
     await waitFor(() => {
-      expect(screen.getByText('Profile Management')).toBeInTheDocument()
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
     // Check if data is populated
@@ -62,7 +62,7 @@ describe('Profile Component', () => {
   it('can update personal info and save', async () => {
     render(<Profile />)
     await waitFor(() => {
-      expect(screen.getByText('Profile Management')).toBeInTheDocument()
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
     const nameInput = screen.getByDisplayValue('Test Name')
@@ -70,7 +70,7 @@ describe('Profile Component', () => {
 
     expect(screen.getByDisplayValue('Updated Name')).toBeInTheDocument()
 
-    const saveButton = screen.getByText('Save Changes')
+    const saveButton = screen.getByText('profile.save_changes')
     fireEvent.click(saveButton)
 
     await waitFor(() => {
@@ -88,7 +88,7 @@ describe('Profile Component', () => {
   it('can add and remove work experience', async () => {
     render(<Profile />)
     await waitFor(() => {
-      expect(screen.getByText('Profile Management')).toBeInTheDocument()
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
     const addExperienceBtn = screen.getByText('Add Experience')
@@ -116,7 +116,7 @@ describe('Profile Component', () => {
   it('can add and remove projects', async () => {
     render(<Profile />)
     await waitFor(() => {
-      expect(screen.getByText('Profile Management')).toBeInTheDocument()
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
     const addProjectBtn = screen.getByText('Add Project')
