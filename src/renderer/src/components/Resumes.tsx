@@ -117,7 +117,12 @@ export function Resumes(): React.JSX.Element {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Briefcase className="h-4 w-4" />
                       <span className="capitalize">
-                        {t('resumes.experience_display', { level: resume.experienceLevel })}
+                        {t('resumes.experience_display', {
+                          level: t(
+                            `dashboard.level_${resume.experienceLevel}`,
+                            resume.experienceLevel
+                          )
+                        })}
                       </span>
                     </div>
                   )}

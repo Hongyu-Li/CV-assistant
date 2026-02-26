@@ -1,14 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 export interface AppSettings {
-  // Agent settings
-  agentType: 'opencode' | 'claude-code' | 'aider' | 'cursor' | 'copilot' | 'custom-cli'
-  agentEndpoint: string
-  agentModel: string
-  agentCommand: string
-  agentArgs: string
-
-  // App settings
+  provider:
+    | 'openai'
+    | 'anthropic'
+    | 'google'
+    | 'deepseek'
+    | 'ollama'
+    | 'openrouter'
+    | 'groq'
+    | 'mistral'
+    | 'custom'
+  apiKey: string
+  model: string
+  baseUrl: string
   theme: 'light' | 'dark' | 'system'
   language: 'en' | 'zh'
   workspacePath?: string
@@ -22,11 +27,10 @@ export interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
-  agentType: 'opencode',
-  agentEndpoint: 'http://localhost:4096',
-  agentModel: 'anthropic/claude-sonnet-4',
-  agentCommand: '',
-  agentArgs: '',
+  provider: 'openai',
+  apiKey: '',
+  model: 'gpt-4o',
+  baseUrl: '',
   theme: 'system',
   language: 'en',
   workspacePath: ''

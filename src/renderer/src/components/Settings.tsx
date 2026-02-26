@@ -1,6 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings, AppSettings } from '../context/SettingsContext'
+import { PROVIDER_CONFIGS, AIProvider } from '../lib/provider'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 
@@ -12,8 +13,13 @@ export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
 
-  const handleAgentTypeChange = (value: string): void => {
-    updateSettings({ agentType: value as AppSettings['agentType'] })
+  const handleProviderChange = (value: string): void => {
+    const provider = value as AIProvider
+    updateSettings({
+      provider,
+      model: PROVIDER_CONFIGS[provider].defaultModel,
+      baseUrl: PROVIDER_CONFIGS[provider].defaultBaseUrl
+    })
   }
 
   const handleThemeChange = (value: string): void => {
@@ -24,11 +30,13 @@ export const Settings = (): React.JSX.Element => {
     updateSettings({ language: value as AppSettings['language'] })
   }
 
+  const providerConfig = PROVIDER_CONFIGS[settings.provider]
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h2>
-        <p className="text-muted-foreground">{t('settings.coding_agent_desc')}</p>
+        <p className="text-muted-foreground">{t('settings.ai_provider_desc')}</p>
       </div>
 
       <div className="grid gap-6">
@@ -108,245 +116,82 @@ export const Settings = (): React.JSX.Element => {
           </CardContent>
         </Card>
 
-        {/* Coding Agent Settings */}
+        {/* AI Provider Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('settings.coding_agent')}</CardTitle>
-            <CardDescription>{t('settings.coding_agent_desc')}</CardDescription>
+            <CardTitle>{t('settings.ai_provider')}</CardTitle>
+            <CardDescription>{t('settings.ai_provider_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">{t('settings.agent_type')}</label>
-              <Select value={settings.agentType} onValueChange={handleAgentTypeChange}>
+              <label className="text-sm font-medium leading-none">{t('settings.provider')}</label>
+              <Select value={settings.provider} onValueChange={handleProviderChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t('settings.select_agent_ph')} />
+                  <SelectValue placeholder={t('settings.select_provider_ph')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="opencode">OpenCode</SelectItem>
-                  <SelectItem value="claude-code">Claude Code</SelectItem>
-                  <SelectItem value="aider">{t('settings.agent_aider')}</SelectItem>
-                  <SelectItem value="cursor">{t('settings.agent_cursor')}</SelectItem>
-                  <SelectItem value="copilot">{t('settings.agent_copilot')}</SelectItem>
-                  <SelectItem value="custom-cli">Custom CLI</SelectItem>
+                  {(Object.keys(PROVIDER_CONFIGS) as AIProvider[]).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {t(`settings.provider_${key}`)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="pt-4 border-t">
-              {settings.agentType === 'opencode' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_endpoint')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_endpoint_ph')}
-                      value={settings.agentEndpoint}
-                      onChange={(e) => updateSettings({ agentEndpoint: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_endpoint_desc')}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_model')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_model_ph')}
-                      value={settings.agentModel}
-                      onChange={(e) => updateSettings({ agentModel: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_model_desc')}
-                    </p>
-                  </div>
-                </div>
-              )}
+            {providerConfig.requiresApiKey && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">{t('settings.api_key')}</label>
+                <Input
+                  type="password"
+                  placeholder={t('settings.api_key_ph')}
+                  value={settings.apiKey}
+                  onChange={(e) => updateSettings({ apiKey: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">{t('settings.api_key_desc')}</p>
+              </div>
+            )}
 
-              {settings.agentType === 'claude-code' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_command')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_command_ph')}
-                      value={settings.agentCommand}
-                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_command_desc')}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_args')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_args_ph')}
-                      value={settings.agentArgs}
-                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">{t('settings.agent_args_desc')}</p>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">{t('settings.model')}</label>
+              <Input
+                type="text"
+                placeholder={t('settings.model_ph')}
+                value={settings.model}
+                onChange={(e) => updateSettings({ model: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">{t('settings.model_desc')}</p>
+            </div>
 
-              {settings.agentType === 'custom-cli' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_command')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.custom_command_ph')}
-                      value={settings.agentCommand}
-                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_command_desc')}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_args')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.custom_args_ph')}
-                      value={settings.agentArgs}
-                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.custom_args_desc')}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {settings.agentType === 'aider' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_command')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_command_ph')}
-                      value={settings.agentCommand}
-                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_command_desc')}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.aider_model')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.aider_model_ph')}
-                      value={settings.agentArgs}
-                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.aider_model_desc')}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {settings.agentType === 'cursor' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_command')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_command_ph')}
-                      value={settings.agentCommand}
-                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_command_desc')}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.cursor_model')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.cursor_model_ph')}
-                      value={settings.agentArgs}
-                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.cursor_model_desc')}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {settings.agentType === 'copilot' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.agent_command')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.agent_command_ph')}
-                      value={settings.agentCommand}
-                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.agent_command_desc')}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">
-                      {t('settings.copilot_model')}
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder={t('settings.copilot_model_ph')}
-                      value={settings.agentArgs}
-                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('settings.copilot_model_desc')}
-                    </p>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">{t('settings.base_url')}</label>
+              <Input
+                type="text"
+                placeholder={t('settings.base_url_ph')}
+                value={settings.baseUrl}
+                onChange={(e) => updateSettings({ baseUrl: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">{t('settings.base_url_desc')}</p>
             </div>
 
             <Button
               variant="outline"
               onClick={async (): Promise<void> => {
                 try {
-                  if (settings.agentType === 'opencode') {
-                    const res = await fetch(`${settings.agentEndpoint}/v1/models`)
-                    if (res.ok) {
-                      toast.success(t('settings.connection_success'))
-                    } else {
-                      toast.error(t('settings.connection_failed'))
-                    }
-                  } else {
-                    // CLI agents can't be tested from renderer
+                  const result = await window.electron.ipcRenderer.invoke('ai:test', {
+                    provider: settings.provider,
+                    apiKey: settings.apiKey,
+                    model: settings.model,
+                    baseUrl: settings.baseUrl
+                  })
+                  if (result.success) {
                     toast.success(t('settings.connection_success'))
+                  } else {
+                    toast.error(`${t('settings.connection_failed')} ${result.error || ''}`)
                   }
-                } catch {
-                  toast.error(t('settings.connection_failed'))
+                } catch (err) {
+                  const msg = err instanceof Error ? err.message : String(err)
+                  toast.error(`${t('settings.connection_failed')} ${msg}`)
                 }
               }}
             >

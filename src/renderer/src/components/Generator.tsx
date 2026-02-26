@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { useSettings } from '../context/SettingsContext'
-import { getAgent } from '../lib/agent'
+import { generateCV } from '../lib/provider'
 import { toast } from 'sonner'
 
 export function Generator(): React.JSX.Element {
@@ -26,18 +26,18 @@ export function Generator(): React.JSX.Element {
     setGeneratedCV('')
 
     try {
-      const agent = getAgent(settings)
       // Mock profile data for now as we don't have a profile context yet
       const profile = 'Mock Profile Data'
 
-      const stream = agent.generateCV({
+      const result = await generateCV({
         profile,
-        jobDescription
+        jobDescription,
+        provider: settings.provider,
+        apiKey: settings.apiKey,
+        model: settings.model,
+        baseUrl: settings.baseUrl
       })
-
-      for await (const chunk of stream) {
-        setGeneratedCV((prev) => prev + chunk)
-      }
+      setGeneratedCV(result)
 
       toast.success(t('generator.generate_success'))
     } catch (error) {

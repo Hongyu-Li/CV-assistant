@@ -58,9 +58,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
   // Profile Management IPC
   ipcMain.handle('profile:load', async () => {
     try {
@@ -153,6 +150,132 @@ app.whenReady().then(() => {
   ipcMain.handle('app:getDefaultWorkspacePath', () => {
     return join(app.getPath('userData'), 'drafts')
   })
+
+  // AI API proxy IPC — all external HTTP from main process to bypass CSP
+  ipcMain.handle(
+    'ai:chat',
+    async (
+      _,
+      {
+        provider,
+        apiKey,
+        model,
+        messages,
+        baseUrl
+      }: {
+        provider: string
+        apiKey: string
+        model: string
+        messages: Array<{ role: string; content: string }>
+        baseUrl: string
+      }
+    ) => {
+      // Build URL
+      let url: string
+      if (provider === 'anthropic') {
+        url = `${baseUrl || 'https://api.anthropic.com/v1'}/messages`
+      } else {
+        url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
+      }
+
+      // Build headers
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (provider === 'anthropic') {
+        headers['x-api-key'] = apiKey
+        headers['anthropic-version'] = '2023-06-01'
+      } else if (provider !== 'ollama') {
+        headers['Authorization'] = `Bearer ${apiKey}`
+      }
+
+      // Build body
+      let body: string
+      if (provider === 'anthropic') {
+        const systemMsgs = messages.filter((m) => m.role === 'system')
+        const nonSystemMsgs = messages.filter((m) => m.role !== 'system')
+        body = JSON.stringify({
+          model,
+          max_tokens: 4096,
+          ...(systemMsgs.length > 0 ? { system: systemMsgs.map((m) => m.content).join('\n') } : {}),
+          messages: nonSystemMsgs
+        })
+      } else {
+        body = JSON.stringify({ model, messages })
+      }
+
+      const response = await fetch(url, { method: 'POST', headers, body })
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`API error ${response.status}: ${errorText}`)
+      }
+
+      const data = await response.json()
+
+      // Extract content
+      if (provider === 'anthropic') {
+        return data.content?.[0]?.text || ''
+      }
+      return data.choices?.[0]?.message?.content || ''
+    }
+  )
+
+  ipcMain.handle(
+    'ai:test',
+    async (
+      _,
+      {
+        provider,
+        apiKey,
+        model,
+        baseUrl
+      }: {
+        provider: string
+        apiKey: string
+        model: string
+        baseUrl: string
+      }
+    ) => {
+      try {
+        let url: string
+        if (provider === 'anthropic') {
+          url = `${baseUrl || 'https://api.anthropic.com/v1'}/messages`
+        } else {
+          url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
+        }
+
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (provider === 'anthropic') {
+          headers['x-api-key'] = apiKey
+          headers['anthropic-version'] = '2023-06-01'
+        } else if (provider !== 'ollama') {
+          headers['Authorization'] = `Bearer ${apiKey}`
+        }
+
+        let body: string
+        if (provider === 'anthropic') {
+          body = JSON.stringify({
+            model,
+            max_tokens: 10,
+            messages: [{ role: 'user', content: 'Hi' }]
+          })
+        } else {
+          body = JSON.stringify({
+            model,
+            messages: [{ role: 'user', content: 'Hi' }],
+            max_tokens: 10
+          })
+        }
+
+        const response = await fetch(url, { method: 'POST', headers, body })
+        if (!response.ok) {
+          const errorText = await response.text()
+          return { success: false, error: `HTTP ${response.status}: ${errorText}` }
+        }
+        return { success: true }
+      } catch (error) {
+        return { success: false, error: (error as Error).message }
+      }
+    }
+  )
   createWindow()
 
   app.on('activate', function () {

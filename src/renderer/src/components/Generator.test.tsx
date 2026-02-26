@@ -3,13 +3,17 @@ import { describe, it, expect, vi } from 'vitest'
 import { Generator } from './Generator'
 import { SettingsProvider } from '../context/SettingsContext'
 
-// Mock the agent module
-vi.mock('../lib/agent', () => ({
-  getAgent: () => ({
-    generateCV: async function* () {
-      yield 'Generated CV Content'
+// Mock the provider module
+vi.mock('../lib/provider', () => ({
+  generateCV: vi.fn().mockResolvedValue('Generated CV Content'),
+  PROVIDER_CONFIGS: {
+    openai: {
+      label: 'OpenAI',
+      defaultBaseUrl: 'https://api.openai.com/v1',
+      defaultModel: 'gpt-4o',
+      requiresApiKey: true
     }
-  })
+  }
 }))
 
 // Mock sonner
@@ -23,6 +27,7 @@ window.electron = {
     send: vi.fn(),
     on: vi.fn(),
     once: vi.fn(),
+    invoke: vi.fn(),
     removeAllListeners: vi.fn()
   }
 } as unknown as Window['electron']
