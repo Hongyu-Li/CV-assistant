@@ -15,6 +15,7 @@ export interface AppSettings {
 
   // App settings
   theme: 'light' | 'dark' | 'system'
+  language: 'en' | 'zh'
 }
 
 export interface SettingsContextType {
@@ -31,7 +32,8 @@ const defaultSettings: AppSettings = {
   deepSeekApiKey: '',
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'llama3',
-  theme: 'system'
+  theme: 'system',
+  language: 'en'
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -84,6 +86,26 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     loadInitialSettings()
   }, [])
+
+  // Effect to apply theme to document
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.remove('light', 'dark')
+    
+    if (settings.theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      root.classList.add(systemTheme)
+    } else {
+      root.classList.add(settings.theme)
+    }
+  }, [settings.theme])
+
+  // Effect to apply language
+  useEffect(() => {
+    import('../i18n').then(({ default: i18n }) => {
+      i18n.changeLanguage(settings.language)
+    })
+  }, [settings.language])
 
   const updateSettings = async (newSettings: Partial<AppSettings>): Promise<void> => {
     try {

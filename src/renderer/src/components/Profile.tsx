@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
@@ -45,6 +46,7 @@ const initialProfile: ProfileData = {
 export function Profile(): React.JSX.Element {
   const [profile, setProfile] = useState<ProfileData>(initialProfile)
   const [loading, setLoading] = useState(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
@@ -141,20 +143,20 @@ export function Profile(): React.JSX.Element {
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Profile Management</h2>
-        <Button onClick={handleSave}>Save Changes</Button>
+        <h2 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h2>
+        <Button onClick={handleSave}>{t('profile.save_changes')}</Button>
       </div>
 
       {/* Personal Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Your contact details and professional summary.</CardDescription>
+          <CardTitle>{t('profile.personal_info')}</CardTitle>
+          <CardDescription>{t('profile.personal_info_desc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Full Name</label>
+              <label className="text-sm font-medium">{t('profile.full_name')}</label>
               <Input
                 value={profile.personalInfo.name}
                 onChange={(e) => updatePersonalInfo('name', e.target.value)}
@@ -162,7 +164,7 @@ export function Profile(): React.JSX.Element {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">{t('profile.email')}</label>
               <Input
                 value={profile.personalInfo.email}
                 onChange={(e) => updatePersonalInfo('email', e.target.value)}
@@ -170,7 +172,7 @@ export function Profile(): React.JSX.Element {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Phone</label>
+              <label className="text-sm font-medium">{t('profile.phone')}</label>
               <Input
                 value={profile.personalInfo.phone}
                 onChange={(e) => updatePersonalInfo('phone', e.target.value)}

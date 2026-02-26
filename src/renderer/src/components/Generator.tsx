@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Copy, Download, Check, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
@@ -9,6 +10,7 @@ import { toast } from 'sonner'
 
 export function Generator(): React.JSX.Element {
   const { settings } = useSettings()
+  const { t } = useTranslation()
   const [jobDescription, setJobDescription] = useState('')
   const [generatedCV, setGeneratedCV] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -59,7 +61,7 @@ export function Generator(): React.JSX.Element {
     if (!generatedCV) return
     await navigator.clipboard.writeText(generatedCV)
     setIsCopied(true)
-    toast.success('Copied to clipboard')
+    toast.success(t('generator.copied'))
     setTimeout(() => setIsCopied(false), 2000)
   }
 
@@ -74,7 +76,7 @@ export function Generator(): React.JSX.Element {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast.success('CV exported successfully')
+    toast.success(t('generator.exported'))
   }
 
   return (
@@ -82,12 +84,11 @@ export function Generator(): React.JSX.Element {
       {/* Left Pane: Job Description */}
       <Card className="flex flex-col h-full">
         <CardHeader>
-          <CardTitle>Job Description</CardTitle>
-          <CardDescription>Paste the job description here.</CardDescription>
+          <CardTitle>{t('generator.job_description')}</CardTitle>
         </CardHeader>
         <CardContent className="flex-1 flex flex-col gap-4">
           <Textarea
-            placeholder="Paste job description..."
+            placeholder={t('generator.jd_placeholder')}
             className="flex-1 resize-none font-mono text-sm"
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
@@ -99,7 +100,7 @@ export function Generator(): React.JSX.Element {
                 Generating...
               </>
             ) : (
-              'Generate CV'
+              t('generator.generate')
             )}
           </Button>
         </CardContent>
@@ -109,17 +110,17 @@ export function Generator(): React.JSX.Element {
       <Card className="flex flex-col h-full">
         <CardHeader>
           <div className="flex flex-row items-center justify-between">
-            <CardTitle>Generated CV</CardTitle>
+            <CardTitle>{t('generator.generated_cv')}</CardTitle>
             {generatedCV && (
               <div className="flex gap-2">
-                <Button variant="ghost" size="icon" onClick={handleCopy} title="Copy to Clipboard">
+                <Button variant="ghost" size="icon" onClick={handleCopy} title={t('generator.copy')}>
                   {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={handleDownload}
-                  title="Export to Markdown"
+                  title={t('generator.export')}
                 >
                   <Download className="h-4 w-4" />
                 </Button>
@@ -150,7 +151,7 @@ export function Generator(): React.JSX.Element {
               ) : (
                 <>
                   <Copy className="mr-2 h-4 w-4" />
-                  Copy to Clipboard
+                  {t('generator.copy')}
                 </>
               )}
             </Button>
@@ -161,7 +162,7 @@ export function Generator(): React.JSX.Element {
               onClick={handleDownload}
             >
               <Download className="mr-2 h-4 w-4" />
-              Download Markdown
+              {t('generator.export')}
             </Button>
           </div>
         </CardContent>

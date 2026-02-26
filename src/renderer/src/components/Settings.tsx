@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSettings, AppSettings } from '../context/SettingsContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
@@ -7,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
+  const { t } = useTranslation()
 
   const handleProviderChange = (value: string) => {
     updateSettings({ provider: value as AppSettings['provider'] })
@@ -16,35 +18,51 @@ export const Settings = (): React.JSX.Element => {
     updateSettings({ theme: value as AppSettings['theme'] })
   }
 
+  const handleLanguageChange = (value: string) => {
+    updateSettings({ language: value as AppSettings['language'] })
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-        <p className="text-muted-foreground">
-          Manage your AI provider and application preferences.
-        </p>
+        <h2 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h2>
+        <p className="text-muted-foreground">{t('settings.provider_desc')}</p>
       </div>
 
       <div className="grid gap-6">
         {/* General Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize how the application looks on your device.</CardDescription>
+            <CardTitle>{t('settings.general')}</CardTitle>
+            <CardDescription></CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Theme
+                {t('settings.theme')}
               </label>
               <Select value={settings.theme} onValueChange={handleThemeChange}>
                 <SelectTrigger className="w-full md:w-[240px]">
                   <SelectValue placeholder="Select theme" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="light">{t('settings.theme_light')}</SelectItem>
+                  <SelectItem value="dark">{t('settings.theme_dark')}</SelectItem>
+                  <SelectItem value="system">{t('settings.theme_system')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                {t('settings.language')}
+              </label>
+              <Select value={settings.language || 'en'} onValueChange={handleLanguageChange}>
+                <SelectTrigger className="w-full md:w-[240px]">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="zh">中文</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -54,14 +72,12 @@ export const Settings = (): React.JSX.Element => {
         {/* AI Provider Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>AI Provider</CardTitle>
-            <CardDescription>
-              Select and configure the AI model you want to use for generating content.
-            </CardDescription>
+            <CardTitle>{t('settings.ai_providers')}</CardTitle>
+            <CardDescription>{t('settings.provider_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">Active Provider</label>
+              <label className="text-sm font-medium leading-none">{t('settings.active_provider')}</label>
               <Select value={settings.provider} onValueChange={handleProviderChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select provider" />
@@ -78,7 +94,7 @@ export const Settings = (): React.JSX.Element => {
             <div className="pt-4 border-t">
               {settings.provider === 'openai' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">OpenAI API Key</label>
+                  <label className="text-sm font-medium leading-none">{t('settings.openai_key')}</label>
                   <Input
                     type="password"
                     placeholder="sk-..."
@@ -93,7 +109,7 @@ export const Settings = (): React.JSX.Element => {
 
               {settings.provider === 'anthropic' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">Anthropic API Key</label>
+                  <label className="text-sm font-medium leading-none">{t('settings.claude_key')}</label>
                   <Input
                     type="password"
                     placeholder="sk-ant-..."
@@ -108,7 +124,7 @@ export const Settings = (): React.JSX.Element => {
 
               {settings.provider === 'deepseek' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">DeepSeek API Key</label>
+                  <label className="text-sm font-medium leading-none">{t('settings.deepseek_key')}</label>
                   <Input
                     type="password"
                     placeholder="ds-..."
@@ -124,7 +140,7 @@ export const Settings = (): React.JSX.Element => {
               {settings.provider === 'ollama' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">Ollama URL</label>
+                    <label className="text-sm font-medium leading-none">{t('settings.ollama_url')}</label>
                     <Input
                       type="text"
                       placeholder="http://localhost:11434"
@@ -133,7 +149,7 @@ export const Settings = (): React.JSX.Element => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">Model Name</label>
+                    <label className="text-sm font-medium leading-none">{t('settings.ollama_model')}</label>
                     <Input
                       type="text"
                       placeholder="llama3"

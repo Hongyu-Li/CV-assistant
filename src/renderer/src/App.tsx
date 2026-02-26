@@ -16,8 +16,9 @@ import { useState } from 'react'
 import { Profile } from './components/Profile'
 import { Settings } from './components/Settings'
 import { Generator } from './components/Generator'
+import { useTranslation } from 'react-i18next'
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const { t } = useTranslation()
   const [currentView, setCurrentView] = useState<
     'dashboard' | 'profile' | 'settings' | 'generator'
   >('dashboard')
@@ -26,45 +27,40 @@ function App(): React.JSX.Element {
     <div className="flex h-screen w-full bg-background text-foreground">
       {/* Sidebar */}
       <aside className="w-64 border-r bg-muted/40 p-4 flex flex-col gap-4">
-        <div className="font-semibold text-lg">CV Assistant</div>
+        <div className="font-semibold text-lg">{t('app.title')}</div>
         <nav className="flex flex-col gap-2">
           <Button
             variant={currentView === 'dashboard' ? 'secondary' : 'ghost'}
             className="justify-start"
             onClick={() => setCurrentView('dashboard')}
           >
-            Dashboard
+            {t('app.dashboard')}
           </Button>
           <Button
             variant={currentView === 'profile' ? 'secondary' : 'ghost'}
             className="justify-start"
             onClick={() => setCurrentView('profile')}
           >
-            Profile
+            {t('app.profile')}
           </Button>
           <Button
             variant={currentView === 'generator' ? 'secondary' : 'ghost'}
             className="justify-start"
             onClick={() => setCurrentView('generator')}
           >
-            CV Generator
+            {t('app.generator')}
           </Button>
           <Button variant="ghost" className="justify-start">
-            Resumes
+            {t('app.resumes')}
           </Button>
           <Button
             variant={currentView === 'settings' ? 'secondary' : 'ghost'}
             className="justify-start"
             onClick={() => setCurrentView('settings')}
           >
-            Settings
+            {t('app.settings')}
           </Button>
         </nav>
-        <div className="mt-auto">
-          <Button onClick={ipcHandle} className="w-full">
-            Send IPC Ping
-          </Button>
-        </div>
       </aside>
 
       {/* Main Content */}
@@ -74,52 +70,52 @@ function App(): React.JSX.Element {
         {currentView === 'generator' && <Generator />}
         {currentView === 'dashboard' && (
           <div className="max-w-4xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Create New CV</CardTitle>
-                  <CardDescription>Start building your resume here.</CardDescription>
+                  <CardTitle>{t('dashboard.create_cv_title')}</CardTitle>
+                  <CardDescription>{t('dashboard.create_cv_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Job Title</label>
-                    <Input placeholder="e.g. Software Engineer" />
+                    <label className="text-sm font-medium">{t('dashboard.job_title')}</label>
+                    <Input placeholder={t('dashboard.job_title_ph')} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Experience Level</label>
+                    <label className="text-sm font-medium">{t('dashboard.exp_level')}</label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select level" />
+                        <SelectValue placeholder={t('dashboard.exp_level_ph')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="junior">Junior</SelectItem>
-                        <SelectItem value="mid">Mid-Level</SelectItem>
-                        <SelectItem value="senior">Senior</SelectItem>
+                        <SelectItem value="junior">{t('dashboard.level_junior')}</SelectItem>
+                        <SelectItem value="mid">{t('dashboard.level_mid')}</SelectItem>
+                        <SelectItem value="senior">{t('dashboard.level_senior')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <Button
                     onClick={() => {
-                      toast('CV Draft Created!')
+                      toast(t('dashboard.draft_created'))
                       setCurrentView('generator')
                     }}
                   >
-                    Create Draft
+                    {t('dashboard.create_draft')}
                   </Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick Notes</CardTitle>
-                  <CardDescription>Jot down ideas for your next application.</CardDescription>
+                  <CardTitle>{t('dashboard.quick_notes_title')}</CardTitle>
+                  <CardDescription>{t('dashboard.quick_notes_desc')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Textarea placeholder="Type your notes here..." className="min-h-[120px]" />
-                  <Button variant="secondary" onClick={() => toast('Notes saved!')}>
-                    Save Notes
+                  <Textarea placeholder={t('dashboard.quick_notes_ph')} className="min-h-[120px]" />
+                  <Button variant="secondary" onClick={() => toast(t('dashboard.notes_saved'))}>
+                    {t('dashboard.save_notes')}
                   </Button>
                 </CardContent>
               </Card>

@@ -1,0 +1,69 @@
+{
+  "app": {
+    "title": "CV Assistant",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "generator": "CV Generator",
+    "resumes": "Resumes",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "create_cv_title": "Create New CV",
+    "create_cv_desc": "Start building your resume here.",
+    "job_title": "Job Title",
+    "job_title_ph": "e.g. Software Engineer",
+    "exp_level": "Experience Level",
+    "exp_level_ph": "Select level",
+    "level_junior": "Junior",
+    "level_mid": "Mid-Level",
+    "level_senior": "Senior",
+    "create_draft": "Create Draft",
+    "draft_created": "CV Draft Created!",
+    "quick_notes_title": "Quick Notes",
+    "quick_notes_desc": "Jot down ideas for your next application.",
+    "quick_notes_ph": "Type your notes here...",
+    "save_notes": "Save Notes",
+    "notes_saved": "Notes saved!"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "language": "Language",
+    "theme": "Theme",
+    "theme_light": "Light",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "ai_providers": "AI Providers",
+    "provider_desc": "Select and configure your preferred AI provider for generating CVs.",
+    "active_provider": "Active Provider",
+    "openai_key": "OpenAI API Key",
+    "claude_key": "Claude API Key",
+    "deepseek_key": "DeepSeek API Key",
+    "ollama_url": "Ollama URL",
+    "ollama_model": "Ollama Model"
+  },
+  "profile": {
+    "title": "Profile",
+    "personal_info": "Personal Info",
+    "personal_info_desc": "Your basic contact information.",
+    "full_name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "location": "Location",
+    "website": "Website / Portfolio",
+    "save_changes": "Save Changes"
+  },
+  "generator": {
+    "title": "CV Generator",
+    "generate": "Generate CV",
+    "generating": "Generating...",
+    "job_description": "Job Description",
+    "jd_placeholder": "Paste the job description here...",
+    "generated_cv": "Generated CV",
+    "copy": "Copy to Clipboard",
+    "export": "Export to Markdown",
+    "copied": "Copied to clipboard!",
+    "exported": "CV exported successfully!"
+  }
+}
