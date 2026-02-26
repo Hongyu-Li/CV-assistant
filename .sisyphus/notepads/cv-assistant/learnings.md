@@ -20,3 +20,11 @@
 - Implemented `Settings` component with conditional rendering based on selected provider.
 - Used `Card` and `Select` components from `shadcn/ui` for a clean layout.
 - Mocked `useSettings` hook in tests to verify component behavior in isolation.
+
+
+## Profile Management UI
+
+- Implemented a structured form using `shadcn/ui` components for managing profile data (Personal Info, Work Experience, Projects).
+- Used IPC `invoke` for loading and saving profile data to `profile.json` in user data directory.
+- Mocked `ipcRenderer.invoke` in Vitest to simulate data loading and saving, ensuring the UI behaves correctly without needing the actual main process.
+- Ensured type safety by fixing missing imports (`useState`) and test mock return types.
