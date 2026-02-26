@@ -502,10 +502,10 @@ Wave FINAL:
 
 ## Final Verification Wave
 
-- [ ] F1. **Plan Compliance Audit** — `oracle`
+- [x] F1. **Plan Compliance Audit** — `oracle`
 - [x] F2. **Code Quality Review** — `unspecified-high`
-- [ ] F3. **Real Manual QA** — `unspecified-high`
-- [ ] F4. **Scope Fidelity Check** — `deep`
+- [x] F3. **Real Manual QA** — `unspecified-high`
+- [x] F4. **Scope Fidelity Check** — `deep`
 
 ## Commit Strategy
 
@@ -514,5 +514,5 @@ Wave FINAL:
 
 ## Success Criteria
 
-- [ ] All "Must Have" present
-- [ ] All tests pass
+- [x] All "Must Have" present
+- [x] All tests pass

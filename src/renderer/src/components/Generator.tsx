@@ -77,7 +77,6 @@ export function Generator(): React.JSX.Element {
     toast.success('CV exported successfully')
   }
 
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
       {/* Left Pane: Job Description */}
@@ -113,12 +112,7 @@ export function Generator(): React.JSX.Element {
             <CardTitle>Generated CV</CardTitle>
             {generatedCV && (
               <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCopy}
-                  title="Copy to Clipboard"
-                >
+                <Button variant="ghost" size="icon" onClick={handleCopy} title="Copy to Clipboard">
                   {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
                 <Button

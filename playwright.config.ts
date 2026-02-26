@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -8,6 +8,6 @@ export default defineConfig({
   },
   reporter: 'html',
   use: {
-    trace: 'on-first-retry',
-  },
-});
+    trace: 'on-first-retry'
+  }
+})

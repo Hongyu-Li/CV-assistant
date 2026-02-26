@@ -262,7 +262,7 @@ export function Profile(): React.JSX.Element {
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Projects</CardTitle>
-            <CardDescription>Notable projects you've worked on.</CardDescription>
+            <CardDescription>Notable projects you&apos;ve worked on.</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={addProject}>
             Add Project
