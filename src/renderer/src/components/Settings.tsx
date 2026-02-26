@@ -238,7 +238,7 @@ export const Settings = (): React.JSX.Element => {
                     </label>
                     <Input
                       type="text"
-                      placeholder="aider"
+                      placeholder={t('settings.agent_command_ph')}
                       value={settings.agentCommand}
                       onChange={(e) => updateSettings({ agentCommand: e.target.value })}
                     />
@@ -271,7 +271,7 @@ export const Settings = (): React.JSX.Element => {
                     </label>
                     <Input
                       type="text"
-                      placeholder="cursor"
+                      placeholder={t('settings.agent_command_ph')}
                       value={settings.agentCommand}
                       onChange={(e) => updateSettings({ agentCommand: e.target.value })}
                     />
@@ -304,7 +304,7 @@ export const Settings = (): React.JSX.Element => {
                     </label>
                     <Input
                       type="text"
-                      placeholder="copilot"
+                      placeholder={t('settings.agent_command_ph')}
                       value={settings.agentCommand}
                       onChange={(e) => updateSettings({ agentCommand: e.target.value })}
                     />

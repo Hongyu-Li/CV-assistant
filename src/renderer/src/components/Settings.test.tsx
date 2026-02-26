@@ -55,6 +55,31 @@ describe('Settings Component', () => {
     expect(screen.getByText('settings.agent_endpoint')).toBeInTheDocument()
   })
 
+  it('shows model field when OpenCode is selected', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, agentType: 'opencode' },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    expect(screen.getByText('settings.agent_model')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('anthropic/claude-sonnet-4')).toBeInTheDocument()
+  })
+
+  it('calls updateSettings when model is changed', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, agentType: 'opencode' },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    const input = screen.getByDisplayValue('anthropic/claude-sonnet-4')
+    fireEvent.change(input, { target: { value: 'anthropic/claude-opus-4' } })
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ agentModel: 'anthropic/claude-opus-4' })
+  })
+
   it('shows command fields when Claude Code is selected', () => {
     ;(useSettings as Mock).mockReturnValue({
       settings: { ...defaultSettings, agentType: 'claude-code' },

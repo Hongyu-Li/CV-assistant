@@ -90,10 +90,10 @@ export class OpenCodeAgent implements CodingAgent {
           }
         }
       }
-    } catch {
-      yield `Failed to connect to OpenCode server at ${this.endpoint}. `
-      yield 'Make sure OpenCode is running with `opencode serve --cors`.\n'
-      yield 'If running in dev mode, the --cors flag is required for CORS headers.\n\n'
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err)
+      yield `Failed to connect to OpenCode server at ${this.endpoint}: ${errMsg}\n`
+      yield 'Make sure OpenCode is running with `opencode serve --cors`.\n\n'
       yield 'Falling back to mock generation...\n\n'
       yield* new MockAgent().generateCV(options)
     }
@@ -119,23 +119,29 @@ export class CustomCLIAgent implements CodingAgent {
 }
 
 export class AiderAgent implements CodingAgent {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
   async *generateCV(_options: AgentOptions): AsyncGenerator<string, void, unknown> {
-    throw new Error('Aider agent is not yet implemented. Please select a different agent type.')
+    yield 'Aider agent integration requires IPC support (coming soon).\n'
+    yield 'Configure: aider --message "prompt" --model X --yes --stream\n\n'
+    yield 'Falling back to mock generation...\n\n'
+    yield* new MockAgent().generateCV(_options)
   }
 }
 
 export class CursorAgent implements CodingAgent {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
   async *generateCV(_options: AgentOptions): AsyncGenerator<string, void, unknown> {
-    throw new Error('Cursor agent is not yet implemented. Please select a different agent type.')
+    yield 'Cursor agent integration requires IPC support (coming soon).\n'
+    yield 'Configure: cursor agent --mode=agent "prompt"\n\n'
+    yield 'Falling back to mock generation...\n\n'
+    yield* new MockAgent().generateCV(_options)
   }
 }
 
 export class CopilotAgent implements CodingAgent {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
   async *generateCV(_options: AgentOptions): AsyncGenerator<string, void, unknown> {
-    throw new Error('Copilot agent is not yet implemented. Please select a different agent type.')
+    yield 'GitHub Copilot agent integration requires IPC support (coming soon).\n'
+    yield 'Configure: gh copilot run "prompt" --auto-approve\n\n'
+    yield 'Falling back to mock generation...\n\n'
+    yield* new MockAgent().generateCV(_options)
   }
 }
 
