@@ -190,7 +190,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-2-test.log
   ```
 
-- [ ] 3. Setup UI Components (shadcn/ui base)
+- [x] 3. Setup UI Components (shadcn/ui base)
 
   **What to do**:
   - Initialize shadcn/ui
@@ -211,7 +211,7 @@ Wave FINAL:
   - shadcn/ui docs
 
   **Acceptance Criteria**:
-  - [ ] Components installed in `src/renderer/src/components/ui/`
+  - [x] Components installed in `src/renderer/src/components/ui/`
 
   **QA Scenarios**:
   ```
