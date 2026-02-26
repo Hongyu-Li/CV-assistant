@@ -225,7 +225,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-3-layout.png
   ```
 
-- [ ] 4. Local Storage IPC & Main Process
+- [x] 4. Local Storage IPC & Main Process
 
   **What to do**:
   - Create `fs` helper in main process to read/write Markdown files in `app.getPath('userData')`
@@ -243,7 +243,7 @@ Wave FINAL:
   - **Blocked By**: 2
 
   **Acceptance Criteria**:
-  - [ ] Can successfully read and write a `.md` file from renderer via `window.api`
+  - [x] Can successfully read and write a `.md` file from renderer via `window.api`
 
   **QA Scenarios**:
   ```
@@ -257,7 +257,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-4-fs.log
   ```
 
-- [ ] 5. AI Provider Abstraction
+- [x] 5. AI Provider Abstraction
 
   **What to do**:
   - Implement utility class/functions to call OpenAI, Claude, DeepSeek APIs
@@ -275,7 +275,7 @@ Wave FINAL:
   - **Blocked By**: 2
 
   **Acceptance Criteria**:
-  - [ ] Unit tests pass for mocked API calls for all 4 providers
+  - [x] Unit tests pass for mocked API calls for all 4 providers
 
   **QA Scenarios**:
   ```
@@ -288,7 +288,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-5-ai.log
   ```
 
-- [ ] 6. Settings Data Context & State Management
+- [x] 6. Settings Data Context & State Management
 
   **What to do**:
   - Setup React Context or Zustand for app state
@@ -306,7 +306,7 @@ Wave FINAL:
   - **Blocked By**: 1
 
   **Acceptance Criteria**:
-  - [ ] App state hydrates from local JSON store
+  - [x] App state hydrates from local JSON store
 
   **QA Scenarios**:
   ```
