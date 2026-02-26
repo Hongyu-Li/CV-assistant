@@ -25,13 +25,18 @@ export function Resumes(): React.JSX.Element {
     try {
       setLoading(true)
       const data = await window.electron.ipcRenderer.invoke('cv:list', settings.workspacePath)
-      // Sort by lastModified descending
-      const sorted = data.sort((a: CV, b: CV) => {
-        if (!a.lastModified) return 1
-        if (!b.lastModified) return -1
-        return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-      })
-      setResumes(sorted)
+      // Ensure data is an array before calling sort
+      if (Array.isArray(data)) {
+        // Sort by lastModified descending
+        const sorted = data.sort((a: CV, b: CV) => {
+          if (!a.lastModified) return 1
+          if (!b.lastModified) return -1
+          return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
+        })
+        setResumes(sorted)
+      } else {
+        setResumes([])
+      }
     } catch (error) {
       console.error('Failed to load resumes:', error)
       toast.error(t('resumes.load_error') || 'Failed to load resumes')
