@@ -499,7 +499,7 @@ Wave FINAL:
   ```
 
 - [x] 12. Resumes Management & Dashboard Draft Integration
-- [ ] 13. Custom Workspace Directory (Storage Location)
+- [x] 13. Custom Workspace Directory (Storage Location)
 
   **What to do**:
   - Add a `dialog:openDirectory` IPC handler in `src/main/index.ts` using Electron's `dialog.showOpenDialog`.
@@ -518,10 +518,10 @@ Wave FINAL:
   - **Blocked By**: 12
 
   **Acceptance Criteria**:
-  - [ ] User can click "Choose Directory" in settings and select a local folder.
-  - [ ] Selected path is saved in local app settings.
-  - [ ] Creating a new draft CV actually saves the file in the newly selected folder.
-  - [ ] "My CVs" tab lists files from the newly selected folder.
+  - [x] User can click "Choose Directory" in settings and select a local folder.
+  - [x] Selected path is saved in local app settings.
+  - [x] Creating a new draft CV actually saves the file in the newly selected folder.
+  - [x] "My CVs" tab lists files from the newly selected folder.
 
   **QA Scenarios**:
 
