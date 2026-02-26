@@ -437,7 +437,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-9-generation.png
   ```
 
-- [ ] 10. E2E Testing with Playwright
+- [x] 10. E2E Testing with Playwright
 
   **What to do**:
   - Setup full flow tests from opening app -> entering data -> generating CV -> saving
