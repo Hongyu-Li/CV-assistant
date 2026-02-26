@@ -39,7 +39,7 @@ export function Generator(): React.JSX.Element {
         setGeneratedCV((prev) => prev + chunk)
       }
 
-      toast.success('CV Generated Successfully!')
+      toast.success(t('generator.generate_success'))
     } catch (error) {
       console.error('Generation failed:', error)
       toast.error(t('generator.generate_error'))

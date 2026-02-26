@@ -24,7 +24,10 @@
     "quick_notes_desc": "Jot down ideas for your next application.",
     "quick_notes_ph": "Type your notes here...",
     "save_notes": "Save Notes",
-    "notes_saved": "Notes saved!"
+    "notes_saved": "Notes saved!",
+    "validation_error": "Please fill in all fields",
+    "save_draft_error": "Failed to save draft: {{error}}",
+    "create_draft_error": "Failed to create draft"
   },
   "settings": {
     "title": "Settings",
@@ -119,7 +122,8 @@
     "generating_text": "Generating...",
     "cv_desc": "Your AI-tailored CV will appear here.",
     "waiting": "Waiting for generation...",
-    "copied_text": "Copied"
+    "copied_text": "Copied",
+    "generate_success": "CV Generated Successfully!"
   },
   "common": {
     "delete": "Delete"
@@ -130,6 +134,10 @@
     "empty_desc": "Create a new draft from the dashboard to get started.",
     "load_error": "Failed to load resumes",
     "delete_success": "Resume deleted successfully",
-    "delete_error": "Failed to delete resume"
+    "delete_error": "Failed to delete resume",
+    "loading": "Loading resumes...",
+    "untitled": "Untitled Resume",
+    "unknown_date": "Unknown date",
+    "experience_display": "{{level}} level"
   }
 }

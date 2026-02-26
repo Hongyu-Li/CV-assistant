@@ -39,7 +39,7 @@ export function Resumes(): React.JSX.Element {
       }
     } catch (error) {
       console.error('Failed to load resumes:', error)
-      toast.error(t('resumes.load_error') || 'Failed to load resumes')
+      toast.error(t('resumes.load_error'))
     } finally {
       setLoading(false)
     }
@@ -56,19 +56,19 @@ export function Resumes(): React.JSX.Element {
         workspacePath: settings.workspacePath
       })
       if (result.success) {
-        toast.success(t('resumes.delete_success') || 'Resume deleted successfully')
+        toast.success(t('resumes.delete_success'))
         loadResumes() // Reload list
       } else {
-        toast.error(t('resumes.delete_error') || 'Failed to delete resume')
+        toast.error(t('resumes.delete_error'))
       }
     } catch (error) {
       console.error('Failed to delete resume:', error)
-      toast.error(t('resumes.delete_error') || 'Failed to delete resume')
+      toast.error(t('resumes.delete_error'))
     }
   }
 
   if (loading) {
-    return <div className="p-6">Loading resumes...</div>
+    return <div className="p-6">{t('resumes.loading')}</div>
   }
 
   return (
@@ -76,9 +76,7 @@ export function Resumes(): React.JSX.Element {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('app.resumes')}</h2>
-          <p className="text-muted-foreground mt-1">
-            {t('resumes.description') || 'Manage your saved CV drafts and generated resumes.'}
-          </p>
+          <p className="text-muted-foreground mt-1">{t('resumes.description')}</p>
         </div>
       </div>
 
@@ -89,12 +87,8 @@ export function Resumes(): React.JSX.Element {
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-medium">
-                {t('resumes.empty_title') || 'No resumes found'}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t('resumes.empty_desc') || 'Create a new draft from the dashboard to get started.'}
-              </p>
+              <h3 className="text-lg font-medium">{t('resumes.empty_title')}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{t('resumes.empty_desc')}</p>
             </div>
           </CardContent>
         </Card>
@@ -108,13 +102,13 @@ export function Resumes(): React.JSX.Element {
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2 truncate">
                   <FileText className="h-4 w-4 text-primary" />
-                  <span className="truncate">{resume.jobTitle || 'Untitled Resume'}</span>
+                  <span className="truncate">{resume.jobTitle || t('resumes.untitled')}</span>
                 </CardTitle>
                 <CardDescription className="flex items-center gap-2 text-xs">
                   <Calendar className="h-3 w-3" />
                   {resume.lastModified
                     ? new Date(resume.lastModified).toLocaleDateString()
-                    : 'Unknown date'}
+                    : t('resumes.unknown_date')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -122,7 +116,9 @@ export function Resumes(): React.JSX.Element {
                   {resume.experienceLevel && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Briefcase className="h-4 w-4" />
-                      <span className="capitalize">{resume.experienceLevel} level</span>
+                      <span className="capitalize">
+                        {t('resumes.experience_display', { level: resume.experienceLevel })}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -134,7 +130,7 @@ export function Resumes(): React.JSX.Element {
                     onClick={() => handleDelete(resume.filename)}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
-                    {t('common.delete') || 'Delete'}
+                    {t('common.delete')}
                   </Button>
                 </div>
               </CardContent>

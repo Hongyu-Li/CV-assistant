@@ -34,7 +34,7 @@ describe('Resumes Component', () => {
   it('renders loading state initially', () => {
     mockInvoke.mockReturnValue(new Promise(() => {})) // Pending promise
     renderWithProvider(<Resumes />)
-    expect(screen.getByText('Loading resumes...')).toBeInTheDocument()
+    expect(screen.getByText('resumes.loading')).toBeInTheDocument()
   })
 
   it('renders empty state when no resumes', async () => {

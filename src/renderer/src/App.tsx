@@ -113,7 +113,7 @@ function App(): React.JSX.Element {
                   <Button
                     onClick={async () => {
                       if (!jobTitle || !experienceLevel) {
-                        toast.error(t('dashboard.validation_error') || 'Please fill in all fields')
+                        toast.error(t('dashboard.validation_error'))
                         return
                       }
                       try {
@@ -135,11 +135,11 @@ function App(): React.JSX.Element {
                           setJobTitle('')
                           setExperienceLevel('')
                         } else {
-                          toast.error('Failed to save draft: ' + result.error)
+                          toast.error(t('dashboard.save_draft_error', { error: result.error }))
                         }
                       } catch (error) {
                         console.error(error)
-                        toast.error('Failed to create draft')
+                        toast.error(t('dashboard.create_draft_error'))
                       }
                     }}
                   >

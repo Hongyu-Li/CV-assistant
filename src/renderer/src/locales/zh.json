@@ -24,7 +24,10 @@
     "quick_notes_desc": "记录您下次求职的想法。",
     "quick_notes_ph": "在这里输入您的笔记...",
     "save_notes": "保存笔记",
-    "notes_saved": "笔记已保存！"
+    "notes_saved": "笔记已保存！",
+    "validation_error": "请填写所有字段",
+    "save_draft_error": "保存草稿失败：{{error}}",
+    "create_draft_error": "创建草稿失败"
   },
   "settings": {
     "title": "设置",
@@ -119,7 +122,8 @@
     "generating_text": "生成中...",
     "cv_desc": "您的AI定制简历将显示在此处。",
     "waiting": "等待生成...",
-    "copied_text": "已复制"
+    "copied_text": "已复制",
+    "generate_success": "简历生成成功！"
   },
   "common": {
     "delete": "删除"
@@ -130,6 +134,10 @@
     "empty_desc": "从仪表盘创建一个新草稿以开始。",
     "load_error": "加载简历失败",
     "delete_success": "简历删除成功",
-    "delete_error": "删除简历失败"
+    "delete_error": "删除简历失败",
+    "loading": "正在加载简历...",
+    "untitled": "未命名简历",
+    "unknown_date": "未知日期",
+    "experience_display": "{{level}}级"
   }
 }
