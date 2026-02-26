@@ -131,19 +131,35 @@ export const Settings = (): React.JSX.Element => {
 
             <div className="pt-4 border-t">
               {settings.agentType === 'opencode' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">
-                    {t('settings.agent_endpoint')}
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder={t('settings.agent_endpoint_ph')}
-                    value={settings.agentEndpoint}
-                    onChange={(e) => updateSettings({ agentEndpoint: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t('settings.agent_endpoint_desc')}
-                  </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_endpoint')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.agent_endpoint_ph')}
+                      value={settings.agentEndpoint}
+                      onChange={(e) => updateSettings({ agentEndpoint: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.agent_endpoint_desc')}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_model')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.agent_model_ph')}
+                      value={settings.agentModel}
+                      onChange={(e) => updateSettings({ agentModel: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.agent_model_desc')}
+                    </p>
+                  </div>
                 </div>
               )}
 

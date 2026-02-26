@@ -20,6 +20,7 @@ describe('Settings Component', () => {
   const defaultSettings = {
     agentType: 'opencode',
     agentEndpoint: 'http://localhost:4096',
+    agentModel: 'anthropic/claude-sonnet-4',
     agentCommand: '',
     agentArgs: '',
     theme: 'system',

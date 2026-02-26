@@ -4,6 +4,7 @@ export interface AppSettings {
   // Agent settings
   agentType: 'opencode' | 'claude-code' | 'custom-cli'
   agentEndpoint: string
+  agentModel: string
   agentCommand: string
   agentArgs: string
 
@@ -23,6 +24,7 @@ export interface SettingsContextType {
 const defaultSettings: AppSettings = {
   agentType: 'opencode',
   agentEndpoint: 'http://localhost:4096',
+  agentModel: 'anthropic/claude-sonnet-4',
   agentCommand: '',
   agentArgs: '',
   theme: 'system',

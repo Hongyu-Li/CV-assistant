@@ -34,9 +34,11 @@ export class MockAgent implements CodingAgent {
 
 export class OpenCodeAgent implements CodingAgent {
   private endpoint: string
+  private model: string
 
-  constructor(endpoint: string) {
+  constructor(endpoint: string, model: string) {
     this.endpoint = endpoint
+    this.model = model
   }
 
   async *generateCV(options: AgentOptions): AsyncGenerator<string, void, unknown> {
@@ -47,6 +49,7 @@ export class OpenCodeAgent implements CodingAgent {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          model: this.model,
           messages: [{ role: 'user', content: prompt }],
           stream: true
         })
@@ -89,7 +92,8 @@ export class OpenCodeAgent implements CodingAgent {
       }
     } catch {
       yield `Failed to connect to OpenCode server at ${this.endpoint}. `
-      yield 'Make sure OpenCode is running with `opencode serve`.\n\n'
+      yield 'Make sure OpenCode is running with `opencode serve --cors`.\n'
+      yield 'If running in dev mode, the --cors flag is required for CORS headers.\n\n'
       yield 'Falling back to mock generation...\n\n'
       yield* new MockAgent().generateCV(options)
     }
@@ -117,7 +121,7 @@ export class CustomCLIAgent implements CodingAgent {
 export function getAgent(settings: AppSettings): CodingAgent {
   switch (settings.agentType) {
     case 'opencode':
-      return new OpenCodeAgent(settings.agentEndpoint)
+      return new OpenCodeAgent(settings.agentEndpoint, settings.agentModel)
     case 'claude-code':
       return new ClaudeCodeAgent()
     case 'custom-cli':
