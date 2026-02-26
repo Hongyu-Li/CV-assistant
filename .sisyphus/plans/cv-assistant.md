@@ -498,6 +498,86 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-11-export.png
   ```
 
+- [x] 12. Resumes Management & Dashboard Draft Integration
+- [ ] 13. Custom Workspace Directory (Storage Location)
+
+  **What to do**:
+  - Add a `dialog:openDirectory` IPC handler in `src/main/index.ts` using Electron's `dialog.showOpenDialog`.
+  - Update `Settings.tsx` to include a "Data Storage Directory" section, allowing users to pick a custom folder and save it to app settings.
+  - Update `src/main/fs.ts` to allow saving and reading CVs/drafts from this custom directory instead of strictly locking to `app.getPath('userData')`. (Note: `settings.json` and `profile.json` should probably stay in `userData` to bootstrap the app, while drafts/CVs go to the custom workspace).
+  - Integrate this logic into the file operations from Task 12 (`cv:save`, `cv:list`, etc.).
+
+  **Recommended Agent Profile**:
+  - **Category**: `deep`
+  - **Skills**: `frontend-design`, `javascript-testing-patterns`
+
+  **Parallelization**:
+  - **Can Run In Parallel**: NO
+  - **Parallel Group**: Wave 5
+  - **Blocks**: None
+  - **Blocked By**: 12
+
+  **Acceptance Criteria**:
+  - [ ] User can click "Choose Directory" in settings and select a local folder.
+  - [ ] Selected path is saved in local app settings.
+  - [ ] Creating a new draft CV actually saves the file in the newly selected folder.
+  - [ ] "My CVs" tab lists files from the newly selected folder.
+
+  **QA Scenarios**:
+
+  ```
+  Scenario: Custom Storage Location
+    Tool: Playwright (with mocked dialog) / Real Manual QA
+    Preconditions: App running, custom directory created
+    Steps:
+      1. Go to Settings, pick custom directory
+      2. Create Draft on Dashboard
+      3. Check local OS filesystem at custom directory
+    Expected Result: The draft file exists in the custom directory, not in userData
+    Evidence: .sisyphus/evidence/task-13-custom-dir.log
+  ```
+
+---
+
+**What to do**:
+
+- Add IPC handlers in `src/main/index.ts` and `src/main/fs.ts` to manage CV drafts (e.g. `cv:save`, `cv:list`, `cv:delete`, reading/writing to a `drafts` folder in `userData`)
+- Create a new UI component `Resumes.tsx` that fetches and displays the list of saved CVs/drafts
+- Wire up the "My CVs" (`t('app.resumes')`) button in `App.tsx` sidebar to set `currentView` to `resumes` and render the `<Resumes />` component
+- Wire up the "Create Draft" button on the Dashboard to physically save a draft JSON file using the IPC before navigating to the generator
+
+**Recommended Agent Profile**:
+
+- **Category**: `visual-engineering`
+- **Skills**: `frontend-design`
+
+**Parallelization**:
+
+- **Can Run In Parallel**: NO
+- **Parallel Group**: Wave 5
+- **Blocks**: None
+- **Blocked By**: 11
+
+**Acceptance Criteria**:
+
+- [x] Dashboard "Create Draft" correctly saves a file in the local storage
+- [x] "My CVs" tab is clickable and correctly routes to the Resumes view
+- [x] Resumes view lists the created drafts/CVs
+
+**QA Scenarios**:
+
+```
+Scenario: Resumes Listing and Draft Creation
+  Tool: Playwright
+  Preconditions: App running
+  Steps:
+    1. Click "Create Draft" on dashboard with some input
+    2. Navigate to "My CVs" (Resumes) tab
+    3. Verify the draft appears in the list
+  Expected Result: Drafts are saved persistently and listed correctly
+  Evidence: .sisyphus/evidence/task-12-resumes.png
+```
+
 ---
 
 ## Final Verification Wave

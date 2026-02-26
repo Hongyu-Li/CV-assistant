@@ -10,15 +10,15 @@ export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
 
-  const handleProviderChange = (value: string) => {
+  const handleProviderChange = (value: string): void => {
     updateSettings({ provider: value as AppSettings['provider'] })
   }
 
-  const handleThemeChange = (value: string) => {
+  const handleThemeChange = (value: string): void => {
     updateSettings({ theme: value as AppSettings['theme'] })
   }
 
-  const handleLanguageChange = (value: string) => {
+  const handleLanguageChange = (value: string): void => {
     updateSettings({ language: value as AppSettings['language'] })
   }
 
@@ -77,7 +77,9 @@ export const Settings = (): React.JSX.Element => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">{t('settings.active_provider')}</label>
+              <label className="text-sm font-medium leading-none">
+                {t('settings.active_provider')}
+              </label>
               <Select value={settings.provider} onValueChange={handleProviderChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select provider" />
@@ -94,7 +96,9 @@ export const Settings = (): React.JSX.Element => {
             <div className="pt-4 border-t">
               {settings.provider === 'openai' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">{t('settings.openai_key')}</label>
+                  <label className="text-sm font-medium leading-none">
+                    {t('settings.openai_key')}
+                  </label>
                   <Input
                     type="password"
                     placeholder="sk-..."
@@ -109,7 +113,9 @@ export const Settings = (): React.JSX.Element => {
 
               {settings.provider === 'anthropic' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">{t('settings.claude_key')}</label>
+                  <label className="text-sm font-medium leading-none">
+                    {t('settings.claude_key')}
+                  </label>
                   <Input
                     type="password"
                     placeholder="sk-ant-..."
@@ -124,7 +130,9 @@ export const Settings = (): React.JSX.Element => {
 
               {settings.provider === 'deepseek' && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">{t('settings.deepseek_key')}</label>
+                  <label className="text-sm font-medium leading-none">
+                    {t('settings.deepseek_key')}
+                  </label>
                   <Input
                     type="password"
                     placeholder="ds-..."
@@ -140,7 +148,9 @@ export const Settings = (): React.JSX.Element => {
               {settings.provider === 'ollama' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">{t('settings.ollama_url')}</label>
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.ollama_url')}
+                    </label>
                     <Input
                       type="text"
                       placeholder="http://localhost:11434"
@@ -149,7 +159,9 @@ export const Settings = (): React.JSX.Element => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium leading-none">{t('settings.ollama_model')}</label>
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.ollama_model')}
+                    </label>
                     <Input
                       type="text"
                       placeholder="llama3"

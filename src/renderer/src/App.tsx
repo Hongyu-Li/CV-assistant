@@ -16,12 +16,15 @@ import { useState } from 'react'
 import { Profile } from './components/Profile'
 import { Settings } from './components/Settings'
 import { Generator } from './components/Generator'
+import { Resumes } from './components/Resumes'
 import { useTranslation } from 'react-i18next'
 function App(): React.JSX.Element {
   const { t } = useTranslation()
   const [currentView, setCurrentView] = useState<
-    'dashboard' | 'profile' | 'settings' | 'generator'
+    'dashboard' | 'profile' | 'settings' | 'generator' | 'resumes'
   >('dashboard')
+  const [jobTitle, setJobTitle] = useState('')
+  const [experienceLevel, setExperienceLevel] = useState('')
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
@@ -50,7 +53,11 @@ function App(): React.JSX.Element {
           >
             {t('app.generator')}
           </Button>
-          <Button variant="ghost" className="justify-start">
+          <Button
+            variant={currentView === 'resumes' ? 'secondary' : 'ghost'}
+            className="justify-start"
+            onClick={() => setCurrentView('resumes')}
+          >
             {t('app.resumes')}
           </Button>
           <Button
@@ -68,6 +75,7 @@ function App(): React.JSX.Element {
         {currentView === 'profile' && <Profile />}
         {currentView === 'settings' && <Settings />}
         {currentView === 'generator' && <Generator />}
+        {currentView === 'resumes' && <Resumes />}
         {currentView === 'dashboard' && (
           <div className="max-w-4xl mx-auto space-y-6">
             <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
@@ -81,11 +89,15 @@ function App(): React.JSX.Element {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t('dashboard.job_title')}</label>
-                    <Input placeholder={t('dashboard.job_title_ph')} />
+                    <Input
+                      placeholder={t('dashboard.job_title_ph')}
+                      value={jobTitle}
+                      onChange={(e) => setJobTitle(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t('dashboard.exp_level')}</label>
-                    <Select>
+                    <Select value={experienceLevel} onValueChange={setExperienceLevel}>
                       <SelectTrigger>
                         <SelectValue placeholder={t('dashboard.exp_level_ph')} />
                       </SelectTrigger>
@@ -97,9 +109,36 @@ function App(): React.JSX.Element {
                     </Select>
                   </div>
                   <Button
-                    onClick={() => {
-                      toast(t('dashboard.draft_created'))
-                      setCurrentView('generator')
+                    onClick={async () => {
+                      if (!jobTitle || !experienceLevel) {
+                        toast.error(t('dashboard.validation_error') || 'Please fill in all fields')
+                        return
+                      }
+                      try {
+                        const filename = `${jobTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${Date.now()}.json`
+                        const result = await window.electron.ipcRenderer.invoke('cv:save', {
+                          filename,
+                          data: {
+                            jobTitle,
+                            experienceLevel,
+                            createdAt: new Date().toISOString(),
+                            status: 'draft'
+                          }
+                        })
+
+                        if (result.success) {
+                          toast.success(t('dashboard.draft_created'))
+                          setCurrentView('generator')
+                          // Optionally reset form
+                          setJobTitle('')
+                          setExperienceLevel('')
+                        } else {
+                          toast.error('Failed to save draft: ' + result.error)
+                        }
+                      } catch (error) {
+                        console.error(error)
+                        toast.error('Failed to create draft')
+                      }
                     }}
                   >
                     {t('dashboard.create_draft')}

@@ -2,7 +2,13 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { readUserDataFile, writeUserDataFile } from './fs'
+import {
+  readUserDataFile,
+  writeUserDataFile,
+  listUserDataFiles,
+  deleteUserDataFile,
+  getLastModified
+} from './fs'
 
 function createWindow(): void {
   // Create the browser window.
@@ -74,6 +80,55 @@ app.whenReady().then(() => {
     }
   })
 
+  // CV Management IPC
+  ipcMain.handle('cv:list', async () => {
+    try {
+      const files = await listUserDataFiles('drafts')
+      const drafts = await Promise.all(
+        files.map(async (file) => {
+          try {
+            const content = await readUserDataFile(`drafts/${file}`)
+            const data = JSON.parse(content)
+            const modified = await getLastModified(`drafts/${file}`)
+            return {
+              ...data,
+              id: file.replace('.json', ''),
+              filename: file,
+              lastModified: modified.toISOString()
+            }
+          } catch (e) {
+            console.warn(`Skipping invalid CV file: ${file}`, e)
+            return null
+          }
+        })
+      )
+      return drafts.filter(Boolean)
+    } catch (error) {
+      console.warn('Failed to list CVs:', error)
+      return []
+    }
+  })
+
+  ipcMain.handle('cv:save', async (_, { filename, data }) => {
+    try {
+      const safeFilename = filename.endsWith('.json') ? filename : `${filename}.json`
+      await writeUserDataFile(`drafts/${safeFilename}`, JSON.stringify(data, null, 2))
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save CV:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  ipcMain.handle('cv:delete', async (_, filename) => {
+    try {
+      await deleteUserDataFile(`drafts/${filename}`)
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to delete CV:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
   createWindow()
 
   app.on('activate', function () {
