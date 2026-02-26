@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import App from './App'
+import { SettingsProvider } from './context/SettingsContext'
 
 // Mock window.electron
 window.electron = {
@@ -8,7 +9,8 @@ window.electron = {
     send: vi.fn(),
     on: vi.fn(),
     once: vi.fn(),
-    removeAllListeners: vi.fn()
+    removeAllListeners: vi.fn(),
+    invoke: vi.fn().mockResolvedValue({})
   },
   process: {
     versions: {
@@ -22,7 +24,11 @@ window.electron = {
 
 describe('App', () => {
   it('renders without crashing', () => {
-    render(<App />)
+    render(
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
+    )
     expect(screen.getByText('app.title')).toBeInTheDocument()
   })
 })

@@ -1,13 +1,15 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import {
   readUserDataFile,
   writeUserDataFile,
-  listUserDataFiles,
-  deleteUserDataFile,
-  getLastModified
+  listWorkspaceFiles,
+  readWorkspaceFile,
+  getWorkspaceLastModified,
+  writeWorkspaceFile,
+  deleteWorkspaceFile
 } from './fs'
 
 function createWindow(): void {
@@ -81,15 +83,15 @@ app.whenReady().then(() => {
   })
 
   // CV Management IPC
-  ipcMain.handle('cv:list', async () => {
+  ipcMain.handle('cv:list', async (_, workspacePath?: string) => {
     try {
-      const files = await listUserDataFiles('drafts')
+      const files = await listWorkspaceFiles(workspacePath)
       const drafts = await Promise.all(
         files.map(async (file) => {
           try {
-            const content = await readUserDataFile(`drafts/${file}`)
+            const content = await readWorkspaceFile(file, workspacePath)
             const data = JSON.parse(content)
-            const modified = await getLastModified(`drafts/${file}`)
+            const modified = await getWorkspaceLastModified(file, workspacePath)
             return {
               ...data,
               id: file.replace('.json', ''),
@@ -109,10 +111,10 @@ app.whenReady().then(() => {
     }
   })
 
-  ipcMain.handle('cv:save', async (_, { filename, data }) => {
+  ipcMain.handle('cv:save', async (_, { filename, data, workspacePath }) => {
     try {
       const safeFilename = filename.endsWith('.json') ? filename : `${filename}.json`
-      await writeUserDataFile(`drafts/${safeFilename}`, JSON.stringify(data, null, 2))
+      await writeWorkspaceFile(safeFilename, JSON.stringify(data, null, 2), workspacePath)
       return { success: true }
     } catch (error) {
       console.error('Failed to save CV:', error)
@@ -120,14 +122,25 @@ app.whenReady().then(() => {
     }
   })
 
-  ipcMain.handle('cv:delete', async (_, filename) => {
+  ipcMain.handle('cv:delete', async (_, { filename, workspacePath }) => {
     try {
-      await deleteUserDataFile(`drafts/${filename}`)
+      await deleteWorkspaceFile(filename, workspacePath)
       return { success: true }
     } catch (error) {
       console.error('Failed to delete CV:', error)
       return { success: false, error: (error as Error).message }
     }
+  })
+
+  // Directory Picker IPC
+  ipcMain.handle('dialog:openDirectory', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openDirectory', 'createDirectory']
+    })
+    if (canceled) {
+      return null
+    }
+    return filePaths[0]
   })
   createWindow()
 

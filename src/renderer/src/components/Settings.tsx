@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-
+import { Button } from './ui/button'
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
@@ -37,6 +37,36 @@ export const Settings = (): React.JSX.Element => {
             <CardDescription></CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                {t('settings.workspace_dir', { defaultValue: 'Workspace Directory' })}
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={settings.workspacePath || ''}
+                  placeholder={t('settings.workspace_dir_ph', {
+                    defaultValue: 'Default (userData/drafts)'
+                  })}
+                />
+                <Button
+                  variant="outline"
+                  onClick={async (): Promise<void> => {
+                    const dir = await window.electron.ipcRenderer.invoke('dialog:openDirectory')
+                    if (dir) {
+                      updateSettings({ workspacePath: dir })
+                    }
+                  }}
+                >
+                  {t('settings.change_dir', { defaultValue: 'Change...' })}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('settings.workspace_dir_desc', {
+                  defaultValue: 'Choose where your CV drafts are saved locally.'
+                })}
+              </p>
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 {t('settings.theme')}

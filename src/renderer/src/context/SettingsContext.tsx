@@ -16,6 +16,7 @@ export interface AppSettings {
   // App settings
   theme: 'light' | 'dark' | 'system'
   language: 'en' | 'zh'
+  workspacePath?: string
 }
 
 export interface SettingsContextType {
@@ -33,7 +34,8 @@ const defaultSettings: AppSettings = {
   ollamaUrl: 'http://localhost:11434',
   ollamaModel: 'llama3',
   theme: 'system',
-  language: 'en'
+  language: 'en',
+  workspacePath: ''
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)

@@ -18,6 +18,7 @@ import { Settings } from './components/Settings'
 import { Generator } from './components/Generator'
 import { Resumes } from './components/Resumes'
 import { useTranslation } from 'react-i18next'
+import { useSettings } from './context/SettingsContext'
 function App(): React.JSX.Element {
   const { t } = useTranslation()
   const [currentView, setCurrentView] = useState<
@@ -25,6 +26,7 @@ function App(): React.JSX.Element {
   >('dashboard')
   const [jobTitle, setJobTitle] = useState('')
   const [experienceLevel, setExperienceLevel] = useState('')
+  const { settings } = useSettings()
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
@@ -123,9 +125,9 @@ function App(): React.JSX.Element {
                             experienceLevel,
                             createdAt: new Date().toISOString(),
                             status: 'draft'
-                          }
+                          },
+                          workspacePath: settings.workspacePath
                         })
-
                         if (result.success) {
                           toast.success(t('dashboard.draft_created'))
                           setCurrentView('generator')

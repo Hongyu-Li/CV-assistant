@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSettings } from '../context/SettingsContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { toast } from 'sonner'
@@ -15,6 +16,7 @@ interface CV {
 }
 
 export function Resumes(): React.JSX.Element {
+  const { settings } = useSettings()
   const { t } = useTranslation()
   const [resumes, setResumes] = useState<CV[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,7 +24,7 @@ export function Resumes(): React.JSX.Element {
   const loadResumes = React.useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      const data = await window.electron.ipcRenderer.invoke('cv:list')
+      const data = await window.electron.ipcRenderer.invoke('cv:list', settings.workspacePath)
       // Sort by lastModified descending
       const sorted = data.sort((a: CV, b: CV) => {
         if (!a.lastModified) return 1
@@ -36,7 +38,7 @@ export function Resumes(): React.JSX.Element {
     } finally {
       setLoading(false)
     }
-  }, [t])
+  }, [t, settings.workspacePath])
 
   useEffect(() => {
     loadResumes()
@@ -44,7 +46,10 @@ export function Resumes(): React.JSX.Element {
 
   const handleDelete = async (filename: string): Promise<void> => {
     try {
-      const result = await window.electron.ipcRenderer.invoke('cv:delete', filename)
+      const result = await window.electron.ipcRenderer.invoke('cv:delete', {
+        filename,
+        workspacePath: settings.workspacePath
+      })
       if (result.success) {
         toast.success(t('resumes.delete_success') || 'Resume deleted successfully')
         loadResumes() // Reload list

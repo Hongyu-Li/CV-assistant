@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Resumes } from './Resumes'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { SettingsProvider } from '../context/SettingsContext'
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -21,6 +22,10 @@ Object.defineProperty(window, 'electron', {
   writable: true
 })
 
+const renderWithProvider = (ui: React.ReactElement): ReturnType<typeof render> => {
+  return render(<SettingsProvider>{ui}</SettingsProvider>)
+}
+
 describe('Resumes Component', () => {
   beforeEach(() => {
     mockInvoke.mockReset()
@@ -28,13 +33,13 @@ describe('Resumes Component', () => {
 
   it('renders loading state initially', () => {
     mockInvoke.mockReturnValue(new Promise(() => {})) // Pending promise
-    render(<Resumes />)
+    renderWithProvider(<Resumes />)
     expect(screen.getByText('Loading resumes...')).toBeInTheDocument()
   })
 
   it('renders empty state when no resumes', async () => {
     mockInvoke.mockResolvedValue([])
-    render(<Resumes />)
+    renderWithProvider(<Resumes />)
     await waitFor(() => {
       expect(screen.getByText('resumes.empty_title')).toBeInTheDocument()
     })
@@ -46,7 +51,7 @@ describe('Resumes Component', () => {
       { id: '2', filename: 'cv2.json', jobTitle: 'Designer', lastModified: '2023-01-02' }
     ]
     mockInvoke.mockResolvedValue(resumes)
-    render(<Resumes />)
+    renderWithProvider(<Resumes />)
 
     await waitFor(() => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
@@ -62,7 +67,7 @@ describe('Resumes Component', () => {
     mockInvoke.mockResolvedValueOnce({ success: true }) // for delete
     mockInvoke.mockResolvedValueOnce([]) // for reload
 
-    render(<Resumes />)
+    renderWithProvider(<Resumes />)
 
     await waitFor(() => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
@@ -72,7 +77,10 @@ describe('Resumes Component', () => {
     fireEvent.click(deleteButton)
 
     await waitFor(() => {
-      expect(mockInvoke).toHaveBeenCalledWith('cv:delete', 'cv1.json')
+      expect(mockInvoke).toHaveBeenCalledWith('cv:delete', {
+        filename: 'cv1.json',
+        workspacePath: ''
+      })
     })
   })
 })
