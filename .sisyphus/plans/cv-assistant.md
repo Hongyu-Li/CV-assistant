@@ -156,7 +156,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-1-boot.log
   ```
 
-- [ ] 2. Setup Testing Infrastructure
+- [x] 2. Setup Testing Infrastructure
 
   **What to do**:
   - Install vitest, @testing-library/react, jsdom
@@ -177,7 +177,7 @@ Wave FINAL:
   - vitest docs
 
   **Acceptance Criteria**:
-  - [ ] `npm run test` executes successfully
+  - [x] `npm run test` executes successfully
 
   **QA Scenarios**:
   ```
