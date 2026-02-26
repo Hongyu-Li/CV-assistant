@@ -60,12 +60,17 @@ describe('Resumes Component', () => {
   })
 
   it('calls delete when trash button is clicked', async () => {
-    const resumes = [
+    let resumes = [
       { id: '1', filename: 'cv1.json', jobTitle: 'Developer', lastModified: '2023-01-01' }
     ]
-    mockInvoke.mockResolvedValueOnce(resumes)
-    mockInvoke.mockResolvedValueOnce({ success: true }) // for delete
-    mockInvoke.mockResolvedValueOnce([]) // for reload
+    mockInvoke.mockImplementation((channel) => {
+      if (channel === 'cv:list') return Promise.resolve(resumes)
+      if (channel === 'cv:delete') {
+        resumes = []
+        return Promise.resolve({ success: true })
+      }
+      return Promise.resolve()
+    })
 
     renderWithProvider(<Resumes />)
 

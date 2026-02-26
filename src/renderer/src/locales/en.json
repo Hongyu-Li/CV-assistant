@@ -65,5 +65,16 @@
     "export": "Export to Markdown",
     "copied": "Copied to clipboard!",
     "exported": "CV exported successfully!"
+  },
+  "common": {
+    "delete": "Delete"
+  },
+  "resumes": {
+    "description": "Manage your CV drafts and generated resumes.",
+    "empty_title": "No Resumes Found",
+    "empty_desc": "Create a new draft from the dashboard to get started.",
+    "load_error": "Failed to load resumes",
+    "delete_success": "Resume deleted successfully",
+    "delete_error": "Failed to delete resume"
   }
 }

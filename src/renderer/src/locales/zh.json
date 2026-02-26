@@ -65,5 +65,16 @@
     "export": "导出为 Markdown",
     "copied": "已复制到剪贴板！",
     "exported": "简历导出成功！"
+  },
+  "common": {
+    "delete": "删除"
+  },
+  "resumes": {
+    "description": "管理您的简历草稿和已生成的简历。",
+    "empty_title": "未找到简历",
+    "empty_desc": "从仪表盘创建一个新草稿以开始。",
+    "load_error": "加载简历失败",
+    "delete_success": "简历删除成功",
+    "delete_error": "删除简历失败"
   }
 }
