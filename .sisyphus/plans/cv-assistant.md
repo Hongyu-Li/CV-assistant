@@ -338,7 +338,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-6-state.png
   ```
 
-- [ ] 7. Profile Management UI
+- [x] 7. Profile Management UI
 
   **What to do**:
   - Create UI to add/edit/delete Personal Info, Work Experience, Projects
