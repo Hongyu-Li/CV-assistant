@@ -79,4 +79,40 @@ describe('Settings Component', () => {
     fireEvent.change(input, { target: { value: 'http://localhost:5000' } })
     expect(mockUpdateSettings).toHaveBeenCalledWith({ agentEndpoint: 'http://localhost:5000' })
   })
+
+  it('shows command and model fields when Aider is selected', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, agentType: 'aider' },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    expect(screen.getByText('settings.agent_command')).toBeInTheDocument()
+    expect(screen.getByText('settings.aider_model')).toBeInTheDocument()
+  })
+
+  it('shows command and model fields when Cursor is selected', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, agentType: 'cursor' },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    expect(screen.getByText('settings.agent_command')).toBeInTheDocument()
+    expect(screen.getByText('settings.cursor_model')).toBeInTheDocument()
+  })
+
+  it('shows command and model fields when Copilot is selected', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, agentType: 'copilot' },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    expect(screen.getByText('settings.agent_command')).toBeInTheDocument()
+    expect(screen.getByText('settings.copilot_model')).toBeInTheDocument()
+  })
 })

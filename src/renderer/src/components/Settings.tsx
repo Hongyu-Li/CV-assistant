@@ -124,6 +124,9 @@ export const Settings = (): React.JSX.Element => {
                 <SelectContent>
                   <SelectItem value="opencode">OpenCode</SelectItem>
                   <SelectItem value="claude-code">Claude Code</SelectItem>
+                  <SelectItem value="aider">{t('settings.agent_aider')}</SelectItem>
+                  <SelectItem value="cursor">{t('settings.agent_cursor')}</SelectItem>
+                  <SelectItem value="copilot">{t('settings.agent_copilot')}</SelectItem>
                   <SelectItem value="custom-cli">Custom CLI</SelectItem>
                 </SelectContent>
               </Select>
@@ -222,6 +225,105 @@ export const Settings = (): React.JSX.Element => {
                     />
                     <p className="text-xs text-muted-foreground">
                       {t('settings.custom_args_desc')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {settings.agentType === 'aider' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_command')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="aider"
+                      value={settings.agentCommand}
+                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.agent_command_desc')}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.aider_model')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.aider_model_ph')}
+                      value={settings.agentArgs}
+                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.aider_model_desc')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {settings.agentType === 'cursor' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_command')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="cursor"
+                      value={settings.agentCommand}
+                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.agent_command_desc')}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.cursor_model')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.cursor_model_ph')}
+                      value={settings.agentArgs}
+                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.cursor_model_desc')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {settings.agentType === 'copilot' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_command')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="copilot"
+                      value={settings.agentCommand}
+                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.agent_command_desc')}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.copilot_model')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.copilot_model_ph')}
+                      value={settings.agentArgs}
+                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.copilot_model_desc')}
                     </p>
                   </div>
                 </div>

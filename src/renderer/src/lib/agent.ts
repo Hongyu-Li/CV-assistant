@@ -118,6 +118,27 @@ export class CustomCLIAgent implements CodingAgent {
   }
 }
 
+export class AiderAgent implements CodingAgent {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
+  async *generateCV(_options: AgentOptions): AsyncGenerator<string, void, unknown> {
+    throw new Error('Aider agent is not yet implemented. Please select a different agent type.')
+  }
+}
+
+export class CursorAgent implements CodingAgent {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
+  async *generateCV(_options: AgentOptions): AsyncGenerator<string, void, unknown> {
+    throw new Error('Cursor agent is not yet implemented. Please select a different agent type.')
+  }
+}
+
+export class CopilotAgent implements CodingAgent {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, require-yield
+  async *generateCV(_options: AgentOptions): AsyncGenerator<string, void, unknown> {
+    throw new Error('Copilot agent is not yet implemented. Please select a different agent type.')
+  }
+}
+
 export function getAgent(settings: AppSettings): CodingAgent {
   switch (settings.agentType) {
     case 'opencode':
@@ -126,6 +147,12 @@ export function getAgent(settings: AppSettings): CodingAgent {
       return new ClaudeCodeAgent()
     case 'custom-cli':
       return new CustomCLIAgent()
+    case 'aider':
+      return new AiderAgent()
+    case 'cursor':
+      return new CursorAgent()
+    case 'copilot':
+      return new CopilotAgent()
     default:
       return new MockAgent()
   }

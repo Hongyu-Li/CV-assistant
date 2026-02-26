@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 export interface AppSettings {
   // Agent settings
-  agentType: 'opencode' | 'claude-code' | 'custom-cli'
+  agentType: 'opencode' | 'claude-code' | 'aider' | 'cursor' | 'copilot' | 'custom-cli'
   agentEndpoint: string
   agentModel: string
   agentCommand: string
