@@ -1,17 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 export interface AppSettings {
-  // Provider settings
-  provider: 'openai' | 'anthropic' | 'deepseek' | 'ollama'
-
-  // API Keys
-  openAiApiKey: string
-  claudeApiKey: string
-  deepSeekApiKey: string
-
-  // Ollama Specific
-  ollamaUrl: string
-  ollamaModel: string
+  // Agent settings
+  agentType: 'opencode' | 'claude-code' | 'custom-cli'
+  agentEndpoint: string
+  agentCommand: string
+  agentArgs: string
 
   // App settings
   theme: 'light' | 'dark' | 'system'
@@ -27,12 +21,10 @@ export interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
-  provider: 'openai',
-  openAiApiKey: '',
-  claudeApiKey: '',
-  deepSeekApiKey: '',
-  ollamaUrl: 'http://localhost:11434',
-  ollamaModel: 'llama3',
+  agentType: 'opencode',
+  agentEndpoint: 'http://localhost:4096',
+  agentCommand: '',
+  agentArgs: '',
   theme: 'system',
   language: 'en',
   workspacePath: ''

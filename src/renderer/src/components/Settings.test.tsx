@@ -10,16 +10,21 @@ vi.mock('../context/SettingsContext', () => ({
   SettingsProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }))
 
+// Mock sonner
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() }
+}))
+
 describe('Settings Component', () => {
   const mockUpdateSettings = vi.fn()
   const defaultSettings = {
-    provider: 'openai',
-    openAiApiKey: 'sk-test-openai',
-    claudeApiKey: 'sk-ant-test',
-    deepSeekApiKey: 'ds-test',
-    ollamaUrl: 'http://localhost:11434',
-    ollamaModel: 'llama3',
-    theme: 'system'
+    agentType: 'opencode',
+    agentEndpoint: 'http://localhost:4096',
+    agentCommand: '',
+    agentArgs: '',
+    theme: 'system',
+    language: 'en',
+    workspacePath: ''
   }
 
   beforeEach(() => {
@@ -35,44 +40,42 @@ describe('Settings Component', () => {
   it('renders settings page', () => {
     render(<Settings />)
     expect(screen.getByText('settings.title')).toBeInTheDocument()
-    // Depending on whether it's h2 or something else, getByText is safer than getByRole
-    expect(screen.getAllByText('settings.ai_providers').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('settings.coding_agent').length).toBeGreaterThan(0)
   })
 
-  it('shows OpenAI settings when OpenAI is selected', () => {
+  it('shows OpenCode endpoint when OpenCode is selected', () => {
     ;(useSettings as Mock).mockReturnValue({
-      settings: { ...defaultSettings, provider: 'openai' },
+      settings: { ...defaultSettings, agentType: 'opencode' },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
     })
     render(<Settings />)
-    expect(screen.getByText('settings.openai_key')).toBeInTheDocument()
-    expect(screen.queryByText('settings.claude_key')).not.toBeInTheDocument()
+    expect(screen.getByText('settings.agent_endpoint')).toBeInTheDocument()
   })
 
-  it('shows Anthropic settings when Anthropic is selected', () => {
+  it('shows command fields when Claude Code is selected', () => {
     ;(useSettings as Mock).mockReturnValue({
-      settings: { ...defaultSettings, provider: 'anthropic' },
+      settings: { ...defaultSettings, agentType: 'claude-code' },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
     })
     render(<Settings />)
-    expect(screen.getByText('settings.claude_key')).toBeInTheDocument()
-    expect(screen.queryByText('settings.openai_key')).not.toBeInTheDocument()
+    expect(screen.getByText('settings.agent_command')).toBeInTheDocument()
+    expect(screen.getByText('settings.agent_args')).toBeInTheDocument()
   })
 
-  it('calls updateSettings when API key is changed', () => {
+  it('calls updateSettings when endpoint is changed', () => {
     ;(useSettings as Mock).mockReturnValue({
-      settings: { ...defaultSettings, provider: 'openai' },
+      settings: { ...defaultSettings, agentType: 'opencode' },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
     })
     render(<Settings />)
-    const input = screen.getByDisplayValue('sk-test-openai')
-    fireEvent.change(input, { target: { value: 'new-key' } })
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ openAiApiKey: 'new-key' })
+    const input = screen.getByDisplayValue('http://localhost:4096')
+    fireEvent.change(input, { target: { value: 'http://localhost:5000' } })
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ agentEndpoint: 'http://localhost:5000' })
   })
 })

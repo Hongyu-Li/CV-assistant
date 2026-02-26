@@ -3,13 +3,18 @@ import { describe, it, expect, vi } from 'vitest'
 import { Generator } from './Generator'
 import { SettingsProvider } from '../context/SettingsContext'
 
-// Mock the AI provider
-vi.mock('../lib/ai', () => ({
-  getAIProvider: () => ({
+// Mock the agent module
+vi.mock('../lib/agent', () => ({
+  getAgent: () => ({
     generateCV: async function* () {
       yield 'Generated CV Content'
     }
   })
+}))
+
+// Mock sonner
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() }
 }))
 
 // Mock window.electron

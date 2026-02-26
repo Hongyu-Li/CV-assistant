@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { useSettings } from '../context/SettingsContext'
-import { getAIProvider } from '../lib/ai'
+import { getAgent } from '../lib/agent'
 import { toast } from 'sonner'
 
 export function Generator(): React.JSX.Element {
@@ -26,23 +26,13 @@ export function Generator(): React.JSX.Element {
     setGeneratedCV('')
 
     try {
-      const provider = getAIProvider(settings)
+      const agent = getAgent(settings)
       // Mock profile data for now as we don't have a profile context yet
       const profile = 'Mock Profile Data'
 
-      const apiKey =
-        settings.provider === 'openai'
-          ? settings.openAiApiKey
-          : settings.provider === 'anthropic'
-            ? settings.claudeApiKey
-            : settings.provider === 'deepseek'
-              ? settings.deepSeekApiKey
-              : ''
-
-      const stream = provider.generateCV({
+      const stream = agent.generateCV({
         profile,
-        jobDescription,
-        apiKey
+        jobDescription
       })
 
       for await (const chunk of stream) {

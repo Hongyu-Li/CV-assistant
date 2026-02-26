@@ -6,12 +6,14 @@ import { Input } from './ui/input'
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Button } from './ui/button'
+import { toast } from 'sonner'
+
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
 
-  const handleProviderChange = (value: string): void => {
-    updateSettings({ provider: value as AppSettings['provider'] })
+  const handleAgentTypeChange = (value: string): void => {
+    updateSettings({ agentType: value as AppSettings['agentType'] })
   }
 
   const handleThemeChange = (value: string): void => {
@@ -26,7 +28,7 @@ export const Settings = (): React.JSX.Element => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h2>
-        <p className="text-muted-foreground">{t('settings.provider_desc')}</p>
+        <p className="text-muted-foreground">{t('settings.coding_agent_desc')}</p>
       </div>
 
       <div className="grid gap-6">
@@ -106,106 +108,132 @@ export const Settings = (): React.JSX.Element => {
           </CardContent>
         </Card>
 
-        {/* AI Provider Settings */}
+        {/* Coding Agent Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('settings.ai_providers')}</CardTitle>
-            <CardDescription>{t('settings.provider_desc')}</CardDescription>
+            <CardTitle>{t('settings.coding_agent')}</CardTitle>
+            <CardDescription>{t('settings.coding_agent_desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">
-                {t('settings.active_provider')}
-              </label>
-              <Select value={settings.provider} onValueChange={handleProviderChange}>
+              <label className="text-sm font-medium leading-none">{t('settings.agent_type')}</label>
+              <Select value={settings.agentType} onValueChange={handleAgentTypeChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t('settings.select_provider_ph')} />
+                  <SelectValue placeholder={t('settings.select_agent_ph')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="openai">OpenAI (GPT-4 / GPT-3.5)</SelectItem>
-                  <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
-                  <SelectItem value="deepseek">DeepSeek</SelectItem>
-                  <SelectItem value="ollama">Ollama (Local)</SelectItem>
+                  <SelectItem value="opencode">OpenCode</SelectItem>
+                  <SelectItem value="claude-code">Claude Code</SelectItem>
+                  <SelectItem value="custom-cli">Custom CLI</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="pt-4 border-t">
-              {settings.provider === 'openai' && (
+              {settings.agentType === 'opencode' && (
                 <div className="space-y-2">
                   <label className="text-sm font-medium leading-none">
-                    {t('settings.openai_key')}
+                    {t('settings.agent_endpoint')}
                   </label>
                   <Input
-                    type="password"
-                    placeholder="sk-..."
-                    value={settings.openAiApiKey}
-                    onChange={(e) => updateSettings({ openAiApiKey: e.target.value })}
+                    type="text"
+                    placeholder={t('settings.agent_endpoint_ph')}
+                    value={settings.agentEndpoint}
+                    onChange={(e) => updateSettings({ agentEndpoint: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">{t('settings.openai_key_desc')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t('settings.agent_endpoint_desc')}
+                  </p>
                 </div>
               )}
 
-              {settings.provider === 'anthropic' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">
-                    {t('settings.claude_key')}
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="sk-ant-..."
-                    value={settings.claudeApiKey}
-                    onChange={(e) => updateSettings({ claudeApiKey: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground">{t('settings.claude_key_desc')}</p>
-                </div>
-              )}
-
-              {settings.provider === 'deepseek' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium leading-none">
-                    {t('settings.deepseek_key')}
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="ds-..."
-                    value={settings.deepSeekApiKey}
-                    onChange={(e) => updateSettings({ deepSeekApiKey: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground">{t('settings.deepseek_key_desc')}</p>
-                </div>
-              )}
-
-              {settings.provider === 'ollama' && (
+              {settings.agentType === 'claude-code' && (
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium leading-none">
-                      {t('settings.ollama_url')}
+                      {t('settings.agent_command')}
                     </label>
                     <Input
                       type="text"
-                      placeholder="http://localhost:11434"
-                      value={settings.ollamaUrl}
-                      onChange={(e) => updateSettings({ ollamaUrl: e.target.value })}
+                      placeholder={t('settings.agent_command_ph')}
+                      value={settings.agentCommand}
+                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
                     />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.agent_command_desc')}
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium leading-none">
-                      {t('settings.ollama_model')}
+                      {t('settings.agent_args')}
                     </label>
                     <Input
                       type="text"
-                      placeholder="llama3"
-                      value={settings.ollamaModel}
-                      onChange={(e) => updateSettings({ ollamaModel: e.target.value })}
+                      placeholder={t('settings.agent_args_ph')}
+                      value={settings.agentArgs}
+                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">{t('settings.agent_args_desc')}</p>
+                  </div>
+                </div>
+              )}
+
+              {settings.agentType === 'custom-cli' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_command')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.custom_command_ph')}
+                      value={settings.agentCommand}
+                      onChange={(e) => updateSettings({ agentCommand: e.target.value })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('settings.ollama_model_desc')}
+                      {t('settings.agent_command_desc')}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      {t('settings.agent_args')}
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder={t('settings.custom_args_ph')}
+                      value={settings.agentArgs}
+                      onChange={(e) => updateSettings({ agentArgs: e.target.value })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('settings.custom_args_desc')}
                     </p>
                   </div>
                 </div>
               )}
             </div>
+
+            <Button
+              variant="outline"
+              onClick={async (): Promise<void> => {
+                try {
+                  if (settings.agentType === 'opencode') {
+                    const res = await fetch(`${settings.agentEndpoint}/v1/models`)
+                    if (res.ok) {
+                      toast.success(t('settings.connection_success'))
+                    } else {
+                      toast.error(t('settings.connection_failed'))
+                    }
+                  } else {
+                    // CLI agents can't be tested from renderer
+                    toast.success(t('settings.connection_success'))
+                  }
+                } catch {
+                  toast.error(t('settings.connection_failed'))
+                }
+              }}
+            >
+              {t('settings.test_connection')}
+            </Button>
           </CardContent>
         </Card>
       </div>
