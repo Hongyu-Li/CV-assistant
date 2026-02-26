@@ -18,7 +18,7 @@ export function Generator(): React.JSX.Element {
 
   const handleGenerate = async (): Promise<void> => {
     if (!jobDescription.trim()) {
-      toast.error('Please enter a job description')
+      toast.error(t('generator.empty_jd'))
       return
     }
 
@@ -52,7 +52,7 @@ export function Generator(): React.JSX.Element {
       toast.success('CV Generated Successfully!')
     } catch (error) {
       console.error('Generation failed:', error)
-      toast.error('Failed to generate CV. Please check your settings.')
+      toast.error(t('generator.generate_error'))
     } finally {
       setIsGenerating(false)
     }
@@ -97,7 +97,7 @@ export function Generator(): React.JSX.Element {
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating...
+                {t('generator.generating_text')}
               </>
             ) : (
               t('generator.generate')
@@ -132,13 +132,13 @@ export function Generator(): React.JSX.Element {
               </div>
             )}
           </div>
-          <CardDescription>Your AI-tailored CV will appear here.</CardDescription>
+          <CardDescription>{t('generator.cv_desc')}</CardDescription>
         </CardHeader>
 
         <CardContent className="flex-1 flex flex-col">
           <div className="flex-1 p-4 rounded-md border bg-muted/50 overflow-auto whitespace-pre-wrap font-mono text-sm">
             {generatedCV || (
-              <span className="text-muted-foreground italic">Waiting for generation...</span>
+              <span className="text-muted-foreground italic">{t('generator.waiting')}</span>
             )}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
@@ -151,7 +151,7 @@ export function Generator(): React.JSX.Element {
               {isCopied ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Copied
+                  {t('generator.copied_text')}
                 </>
               ) : (
                 <>

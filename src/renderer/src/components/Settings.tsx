@@ -39,15 +39,13 @@ export const Settings = (): React.JSX.Element => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                {t('settings.workspace_dir', { defaultValue: 'Workspace Directory' })}
+                {t('settings.workspace_dir')}
               </label>
               <div className="flex gap-2">
                 <Input
                   readOnly
                   value={settings.workspacePath || ''}
-                  placeholder={t('settings.workspace_dir_ph', {
-                    defaultValue: 'Default (userData/drafts)'
-                  })}
+                  placeholder={t('settings.workspace_dir_ph')}
                 />
                 <Button
                   variant="outline"
@@ -58,14 +56,23 @@ export const Settings = (): React.JSX.Element => {
                     }
                   }}
                 >
-                  {t('settings.change_dir', { defaultValue: 'Change...' })}
+                  {t('settings.change_dir')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async (): Promise<void> => {
+                    const pathToOpen =
+                      settings.workspacePath ||
+                      (await window.electron.ipcRenderer.invoke('app:getDefaultWorkspacePath'))
+                    if (pathToOpen) {
+                      await window.electron.ipcRenderer.invoke('shell:openPath', pathToOpen)
+                    }
+                  }}
+                >
+                  {t('settings.open_folder')}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {t('settings.workspace_dir_desc', {
-                  defaultValue: 'Choose where your CV drafts are saved locally.'
-                })}
-              </p>
+              <p className="text-xs text-muted-foreground">{t('settings.workspace_dir_desc')}</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -73,7 +80,7 @@ export const Settings = (): React.JSX.Element => {
               </label>
               <Select value={settings.theme} onValueChange={handleThemeChange}>
                 <SelectTrigger className="w-full md:w-[240px]">
-                  <SelectValue placeholder="Select theme" />
+                  <SelectValue placeholder={t('settings.select_theme_ph')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="light">{t('settings.theme_light')}</SelectItem>
@@ -88,7 +95,7 @@ export const Settings = (): React.JSX.Element => {
               </label>
               <Select value={settings.language || 'en'} onValueChange={handleLanguageChange}>
                 <SelectTrigger className="w-full md:w-[240px]">
-                  <SelectValue placeholder="Select language" />
+                  <SelectValue placeholder={t('settings.select_language_ph')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="en">English</SelectItem>
@@ -112,7 +119,7 @@ export const Settings = (): React.JSX.Element => {
               </label>
               <Select value={settings.provider} onValueChange={handleProviderChange}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select provider" />
+                  <SelectValue placeholder={t('settings.select_provider_ph')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="openai">OpenAI (GPT-4 / GPT-3.5)</SelectItem>
@@ -135,9 +142,7 @@ export const Settings = (): React.JSX.Element => {
                     value={settings.openAiApiKey}
                     onChange={(e) => updateSettings({ openAiApiKey: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Your OpenAI API key. Stored locally.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('settings.openai_key_desc')}</p>
                 </div>
               )}
 
@@ -152,9 +157,7 @@ export const Settings = (): React.JSX.Element => {
                     value={settings.claudeApiKey}
                     onChange={(e) => updateSettings({ claudeApiKey: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Your Anthropic API key. Stored locally.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('settings.claude_key_desc')}</p>
                 </div>
               )}
 
@@ -169,9 +172,7 @@ export const Settings = (): React.JSX.Element => {
                     value={settings.deepSeekApiKey}
                     onChange={(e) => updateSettings({ deepSeekApiKey: e.target.value })}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Your DeepSeek API key. Stored locally.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('settings.deepseek_key_desc')}</p>
                 </div>
               )}
 
@@ -199,7 +200,7 @@ export const Settings = (): React.JSX.Element => {
                       onChange={(e) => updateSettings({ ollamaModel: e.target.value })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Make sure you have pulled this model using `ollama pull &lt;model&gt;`
+                      {t('settings.ollama_model_desc')}
                     </p>
                   </div>
                 </div>

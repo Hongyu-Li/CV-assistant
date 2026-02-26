@@ -142,6 +142,17 @@ app.whenReady().then(() => {
     }
     return filePaths[0]
   })
+
+  // Open folder in OS file manager
+  ipcMain.handle('shell:openPath', async (_, path: string) => {
+    const result = await shell.openPath(path)
+    return result // empty string = success
+  })
+
+  // Get default workspace path (userData/drafts)
+  ipcMain.handle('app:getDefaultWorkspacePath', () => {
+    return join(app.getPath('userData'), 'drafts')
+  })
   createWindow()
 
   app.on('activate', function () {

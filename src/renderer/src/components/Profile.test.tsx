@@ -45,7 +45,7 @@ describe('Profile Component', () => {
     render(<Profile />)
 
     // Initially loading
-    expect(screen.getByText('Loading profile...')).toBeInTheDocument()
+    expect(screen.getByText('profile.loading')).toBeInTheDocument()
 
     // Wait for load
     await waitFor(() => {
@@ -91,21 +91,21 @@ describe('Profile Component', () => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
-    const addExperienceBtn = screen.getByText('Add Experience')
+    const addExperienceBtn = screen.getByText('profile.add_experience')
     fireEvent.click(addExperienceBtn)
 
     // Wait for new fields to appear
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Company Name')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('profile.company_ph')).toBeInTheDocument()
     })
 
     // Type something in company
-    const companyInput = screen.getByPlaceholderText('Company Name')
+    const companyInput = screen.getByPlaceholderText('profile.company_ph')
     fireEvent.change(companyInput, { target: { value: 'New Company' } })
     expect(screen.getByDisplayValue('New Company')).toBeInTheDocument()
 
     // Remove it
-    const removeBtn = screen.getByText('Remove')
+    const removeBtn = screen.getByText('profile.remove')
     fireEvent.click(removeBtn)
 
     await waitFor(() => {
@@ -119,20 +119,20 @@ describe('Profile Component', () => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
-    const addProjectBtn = screen.getByText('Add Project')
+    const addProjectBtn = screen.getByText('profile.add_project')
     fireEvent.click(addProjectBtn)
 
     // Wait for new fields to appear
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Project Name')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('profile.project_name_ph')).toBeInTheDocument()
     })
 
     // Type something in project
-    const projectInput = screen.getByPlaceholderText('Project Name')
+    const projectInput = screen.getByPlaceholderText('profile.project_name_ph')
     fireEvent.change(projectInput, { target: { value: 'New Project' } })
     expect(screen.getByDisplayValue('New Project')).toBeInTheDocument()
 
-    const removeBtn = screen.getByText('Remove')
+    const removeBtn = screen.getByText('profile.remove')
     fireEvent.click(removeBtn)
 
     await waitFor(() => {

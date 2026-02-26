@@ -17,15 +17,18 @@ Object.defineProperty(window, 'matchMedia', {
   }))
 })
 
-// Mock react-i18next
+// Mock react-i18next with stable references to prevent useEffect re-triggers
+const mockT = (key: string): string => key
+const mockI18n = {
+  changeLanguage: () => new Promise(() => {}),
+  language: 'en'
+}
+const mockUseTranslation = (): { t: typeof mockT; i18n: typeof mockI18n } => ({
+  t: mockT,
+  i18n: mockI18n
+})
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-    i18n: {
-      changeLanguage: () => new Promise(() => {}),
-      language: 'en'
-    }
-  }),
+  useTranslation: mockUseTranslation,
   initReactI18next: {
     type: '3rdParty',
     init: () => {}

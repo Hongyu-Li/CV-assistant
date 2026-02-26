@@ -57,25 +57,25 @@ export function Profile(): React.JSX.Element {
         }
       } catch (error) {
         console.error('Failed to load profile:', error)
-        toast.error('Failed to load profile')
+        toast.error(t('profile.load_error'))
       } finally {
         setLoading(false)
       }
     }
     loadProfile()
-  }, [])
+  }, [t])
 
   const handleSave = async (): Promise<void> => {
     try {
       const result = await window.electron.ipcRenderer.invoke('profile:save', profile)
       if (result.success) {
-        toast.success('Profile saved successfully')
+        toast.success(t('profile.save_success'))
       } else {
-        toast.error('Failed to save profile: ' + result.error)
+        toast.error(t('profile.save_error') + result.error)
       }
     } catch (error) {
       console.error('Failed to save profile:', error)
-      toast.error('Failed to save profile')
+      toast.error(t('profile.save_error'))
     }
   }
 
@@ -137,7 +137,7 @@ export function Profile(): React.JSX.Element {
   }
 
   if (loading) {
-    return <div className="p-6">Loading profile...</div>
+    return <div className="p-6">{t('profile.loading')}</div>
   }
 
   return (
@@ -160,7 +160,7 @@ export function Profile(): React.JSX.Element {
               <Input
                 value={profile.personalInfo.name}
                 onChange={(e) => updatePersonalInfo('name', e.target.value)}
-                placeholder="John Doe"
+                placeholder={t('profile.name_ph')}
               />
             </div>
             <div className="space-y-2">
@@ -168,7 +168,7 @@ export function Profile(): React.JSX.Element {
               <Input
                 value={profile.personalInfo.email}
                 onChange={(e) => updatePersonalInfo('email', e.target.value)}
-                placeholder="john@example.com"
+                placeholder={t('profile.email_ph')}
               />
             </div>
             <div className="space-y-2">
@@ -176,16 +176,16 @@ export function Profile(): React.JSX.Element {
               <Input
                 value={profile.personalInfo.phone}
                 onChange={(e) => updatePersonalInfo('phone', e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                placeholder={t('profile.phone_ph')}
               />
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Professional Summary</label>
+            <label className="text-sm font-medium">{t('profile.summary')}</label>
             <Textarea
               value={profile.personalInfo.summary}
               onChange={(e) => updatePersonalInfo('summary', e.target.value)}
-              placeholder="Brief summary of your professional background..."
+              placeholder={t('profile.summary_ph')}
               className="min-h-[100px]"
             />
           </div>
@@ -196,11 +196,11 @@ export function Profile(): React.JSX.Element {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Work Experience</CardTitle>
-            <CardDescription>Your past roles and achievements.</CardDescription>
+            <CardTitle>{t('profile.work_experience')}</CardTitle>
+            <CardDescription>{t('profile.work_experience_desc')}</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={addWorkExperience}>
-            Add Experience
+            {t('profile.add_experience')}
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -212,40 +212,40 @@ export function Profile(): React.JSX.Element {
                 className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
                 onClick={() => removeWorkExperience(exp.id)}
               >
-                Remove
+                {t('profile.remove')}
               </Button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Company</label>
+                  <label className="text-sm font-medium">{t('profile.company')}</label>
                   <Input
                     value={exp.company}
                     onChange={(e) => updateWorkExperience(exp.id, 'company', e.target.value)}
-                    placeholder="Company Name"
+                    placeholder={t('profile.company_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Role</label>
+                  <label className="text-sm font-medium">{t('profile.role')}</label>
                   <Input
                     value={exp.role}
                     onChange={(e) => updateWorkExperience(exp.id, 'role', e.target.value)}
-                    placeholder="Job Title"
+                    placeholder={t('profile.role_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Date Range</label>
+                  <label className="text-sm font-medium">{t('profile.date_range')}</label>
                   <Input
                     value={exp.date}
                     onChange={(e) => updateWorkExperience(exp.id, 'date', e.target.value)}
-                    placeholder="e.g. Jan 2020 - Present"
+                    placeholder={t('profile.date_range_ph')}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
+                <label className="text-sm font-medium">{t('profile.description')}</label>
                 <Textarea
                   value={exp.description}
                   onChange={(e) => updateWorkExperience(exp.id, 'description', e.target.value)}
-                  placeholder="Describe your responsibilities and achievements..."
+                  placeholder={t('profile.description_ph')}
                   className="min-h-[80px]"
                 />
               </div>
@@ -253,7 +253,7 @@ export function Profile(): React.JSX.Element {
           ))}
           {profile.workExperience.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              No work experience added yet.
+              {t('profile.no_work_experience')}
             </div>
           )}
         </CardContent>
@@ -263,11 +263,11 @@ export function Profile(): React.JSX.Element {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>Projects</CardTitle>
-            <CardDescription>Notable projects you&apos;ve worked on.</CardDescription>
+            <CardTitle>{t('profile.projects')}</CardTitle>
+            <CardDescription>{t('profile.projects_desc')}</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={addProject}>
-            Add Project
+            {t('profile.add_project')}
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -279,39 +279,39 @@ export function Profile(): React.JSX.Element {
                 className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
                 onClick={() => removeProject(proj.id)}
               >
-                Remove
+                {t('profile.remove')}
               </Button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Project Name</label>
+                  <label className="text-sm font-medium">{t('profile.project_name')}</label>
                   <Input
                     value={proj.name}
                     onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
-                    placeholder="Project Name"
+                    placeholder={t('profile.project_name_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Tech Stack</label>
+                  <label className="text-sm font-medium">{t('profile.tech_stack')}</label>
                   <Input
                     value={proj.techStack}
                     onChange={(e) => updateProject(proj.id, 'techStack', e.target.value)}
-                    placeholder="React, TypeScript, Node.js"
+                    placeholder={t('profile.tech_stack_ph')}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
+                <label className="text-sm font-medium">{t('profile.description')}</label>
                 <Textarea
                   value={proj.description}
                   onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
-                  placeholder="Describe the project and your contribution..."
+                  placeholder={t('profile.project_description_ph')}
                   className="min-h-[80px]"
                 />
               </div>
             </div>
           ))}
           {profile.projects.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">No projects added yet.</div>
+            <div className="text-center py-8 text-muted-foreground">{t('profile.no_projects')}</div>
           )}
         </CardContent>
       </Card>
