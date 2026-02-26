@@ -467,7 +467,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-10-e2e.log
   ```
 
-- [ ] 11. Export & Polish
+- [x] 11. Export & Polish
 
   **What to do**:
   - Add "Copy to Clipboard" and "Export to Markdown" buttons for generated CV
