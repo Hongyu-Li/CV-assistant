@@ -503,7 +503,7 @@ Wave FINAL:
 ## Final Verification Wave
 
 - [ ] F1. **Plan Compliance Audit** — `oracle`
-- [ ] F2. **Code Quality Review** — `unspecified-high`
+- [x] F2. **Code Quality Review** — `unspecified-high`
 - [ ] F3. **Real Manual QA** — `unspecified-high`
 - [ ] F4. **Scope Fidelity Check** — `deep`
 
