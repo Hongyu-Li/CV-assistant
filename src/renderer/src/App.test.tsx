@@ -18,11 +18,11 @@ window.electron = {
       v8: '1.0.0'
     }
   }
-} as any
+} as unknown as Window['electron']
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -30,8 +30,8 @@ Object.defineProperty(window, 'matchMedia', {
     removeListener: vi.fn(), // deprecated
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
+    dispatchEvent: vi.fn()
+  }))
 })
 describe('App', () => {
   it('renders without crashing', () => {

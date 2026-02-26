@@ -1,9 +1,7 @@
 {
   "active_plan": "/Users/theon/Documents/Projects/Demo/CV-assistant-/.sisyphus/plans/cv-assistant.md",
   "started_at": "2026-02-26T05:51:20.759Z",
-  "session_ids": [
-    "ses_3679c320bffeYWFOJC7oys6gMS"
-  ],
+  "session_ids": ["ses_3679c320bffeYWFOJC7oys6gMS"],
   "plan_name": "cv-assistant",
   "agent": "atlas"
 }

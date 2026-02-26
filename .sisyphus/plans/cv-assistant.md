@@ -3,13 +3,14 @@
 ## TL;DR
 
 > **Quick Summary**: A local, privacy-first desktop application built with Electron, React, and Tailwind CSS to manage resumes and generate tailored CVs from Job Descriptions using multiple AI providers (OpenAI, Claude, DeepSeek, Ollama).
-> 
+>
 > **Deliverables**:
+>
 > - Scaffolding of an Electron-Vite-React app
 > - UI for managing markdown-based CV sections
 > - Settings UI for API keys (OpenAI, Claude, DeepSeek) and Ollama connection
 > - JD to CV generation engine with context injection
-> 
+>
 > **Estimated Effort**: Large
 > **Parallel Execution**: YES - 4 waves
 > **Critical Path**: Scaffolding → Core IPC/File System → AI Integration → UI & Generation
@@ -19,10 +20,13 @@
 ## Context
 
 ### Original Request
+
 Develop a local Electron application for managing resumes/CVs and generating tailored CVs by parsing Job Descriptions (JDs) using customizable AI providers.
 
 ### Interview Summary
+
 **Key Discussions**:
+
 - Frontend Framework: React
 - UI Framework: Tailwind CSS + shadcn/ui
 - Storage: 100% Local (Markdown files for data, JSON for settings)
@@ -30,7 +34,9 @@ Develop a local Electron application for managing resumes/CVs and generating tai
 - Test Strategy: TDD using Vitest/Testing-Library
 
 ### Metis Review (Simulated)
+
 **Identified Gaps** (addressed):
+
 - **Security**: ContextBridge must be used strictly; no Node.js APIs in the renderer.
 - **Export Format**: Added a mechanism to at least preview/copy the generated markdown CV.
 - **File System Location**: Defaulting to OS-specific user data folders (`app.getPath('userData')`) to avoid permission issues.
@@ -41,9 +47,11 @@ Develop a local Electron application for managing resumes/CVs and generating tai
 ## Work Objectives
 
 ### Core Objective
+
 Build a completely local and customizable CV tailoring assistant desktop app.
 
 ### Concrete Deliverables
+
 - Electron app with functional IPC bridge
 - File manager module (Markdown parsing/writing)
 - Settings module for AI keys
@@ -51,17 +59,20 @@ Build a completely local and customizable CV tailoring assistant desktop app.
 - JD Input & CV Generation UI
 
 ### Definition of Done
+
 - [ ] App launches locally without errors
 - [ ] User can CRUD Markdown files in a designated local directory via UI
 - [ ] User can configure at least one AI provider and successfully generate a new CV from a JD
 - [ ] All automated tests pass
 
 ### Must Have
+
 - TDD approach for all modules
 - Strict Electron IPC (contextBridge)
 - Absolute local storage for personal data
 
 ### Must NOT Have (Guardrails)
+
 - NO server-side uploads or telemetry
 - NO direct Node.js modules `fs`/`path` exposed in React
 - NO hardcoded AI prompts (must allow some level of template abstraction or use a robust default)
@@ -73,12 +84,14 @@ Build a completely local and customizable CV tailoring assistant desktop app.
 > **ZERO HUMAN INTERVENTION** — ALL verification is agent-executed. No exceptions.
 
 ### Test Decision
+
 - **Infrastructure exists**: NO
 - **Automated tests**: TDD
 - **Framework**: Vitest + React Testing Library + Playwright (for E2E)
 - **If TDD**: Each task follows RED (failing test) → GREEN (minimal impl) → REFACTOR
 
 ### QA Policy
+
 Every task MUST include agent-executed QA scenarios.
 Evidence saved to `.sisyphus/evidence/task-{N}-{scenario-slug}.{ext}`.
 
@@ -145,6 +158,7 @@ Wave FINAL:
   - [x] App starts via `npm run dev` or `bun dev`
 
   **QA Scenarios**:
+
   ```
   Scenario: App Boot
     Tool: interactive_bash
@@ -180,6 +194,7 @@ Wave FINAL:
   - [x] `npm run test` executes successfully
 
   **QA Scenarios**:
+
   ```
   Scenario: Test Runner
     Tool: Bash
@@ -214,6 +229,7 @@ Wave FINAL:
   - [x] Components installed in `src/renderer/src/components/ui/`
 
   **QA Scenarios**:
+
   ```
   Scenario: Component Layout
     Tool: Playwright
@@ -246,6 +262,7 @@ Wave FINAL:
   - [x] Can successfully read and write a `.md` file from renderer via `window.api`
 
   **QA Scenarios**:
+
   ```
   Scenario: IPC File Write
     Tool: Playwright
@@ -278,6 +295,7 @@ Wave FINAL:
   - [x] Unit tests pass for mocked API calls for all 4 providers
 
   **QA Scenarios**:
+
   ```
   Scenario: AI API Call
     Tool: Bash
@@ -309,6 +327,7 @@ Wave FINAL:
   - [x] App state hydrates from local JSON store
 
   **QA Scenarios**:
+
   ```
   Scenario: State Hydration
     Tool: Playwright
@@ -340,6 +359,7 @@ Wave FINAL:
   - [ ] User can edit profile info and see changes persist after app restart
 
   **QA Scenarios**:
+
   ```
   Scenario: Profile CRUD
     Tool: Playwright
@@ -352,7 +372,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-7-crud.png
   ```
 
-- [ ] 8. Settings UI
+- [x] 8. Settings UI
 
   **What to do**:
   - Build UI for inputting API Keys (OpenAI, Claude, DeepSeek)
@@ -372,6 +392,7 @@ Wave FINAL:
   - [ ] API keys are saved securely and masked in UI
 
   **QA Scenarios**:
+
   ```
   Scenario: Settings Update
     Tool: Playwright
@@ -383,7 +404,7 @@ Wave FINAL:
     Evidence: .sisyphus/evidence/task-8-settings.png
   ```
 
-- [ ] 9. CV Generation UI & Orchestration
+- [x] 9. CV Generation UI & Orchestration
 
   **What to do**:
   - Build Split-pane view: JD on left, generated CV on right
@@ -404,6 +425,7 @@ Wave FINAL:
   - [ ] App can generate CV from mocked provider and display on screen
 
   **QA Scenarios**:
+
   ```
   Scenario: CV Generation Flow
     Tool: Playwright
@@ -434,6 +456,7 @@ Wave FINAL:
   - [ ] Playwright suite passes
 
   **QA Scenarios**:
+
   ```
   Scenario: Full E2E
     Tool: Bash
@@ -464,6 +487,7 @@ Wave FINAL:
   - [ ] Can click export and save the file to arbitrary OS location
 
   **QA Scenarios**:
+
   ```
   Scenario: Export Action
     Tool: Playwright
@@ -475,6 +499,7 @@ Wave FINAL:
   ```
 
 ---
+
 ## Final Verification Wave
 
 - [ ] F1. **Plan Compliance Audit** — `oracle`
@@ -483,9 +508,11 @@ Wave FINAL:
 - [ ] F4. **Scope Fidelity Check** — `deep`
 
 ## Commit Strategy
+
 - **1**: `build(scope): desc`
 - **2**: `feat(scope): desc`
 
 ## Success Criteria
+
 - [ ] All "Must Have" present
 - [ ] All tests pass

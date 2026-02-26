@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { readUserDataFile, writeUserDataFile } from './fs'
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,6 +52,27 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Profile Management IPC
+  ipcMain.handle('profile:load', async () => {
+    try {
+      const data = await readUserDataFile('profile.json')
+      return JSON.parse(data)
+    } catch (error) {
+      console.warn('Failed to load profile (may not exist yet):', error)
+      return {}
+    }
+  })
+
+  ipcMain.handle('profile:save', async (_, data) => {
+    try {
+      await writeUserDataFile('profile.json', JSON.stringify(data, null, 2))
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save profile:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
 
   createWindow()
 

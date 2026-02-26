@@ -1,8 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 export interface AppSettings {
-  apiKey: string
-  provider: 'openai' | 'anthropic' | 'custom'
+  // Provider settings
+  provider: 'openai' | 'anthropic' | 'deepseek' | 'ollama'
+
+  // API Keys
+  openAiApiKey: string
+  claudeApiKey: string
+  deepSeekApiKey: string
+
+  // Ollama Specific
+  ollamaUrl: string
+  ollamaModel: string
+
+  // App settings
   theme: 'light' | 'dark' | 'system'
 }
 
@@ -14,8 +25,12 @@ export interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
-  apiKey: '',
   provider: 'openai',
+  openAiApiKey: '',
+  claudeApiKey: '',
+  deepSeekApiKey: '',
+  ollamaUrl: 'http://localhost:11434',
+  ollamaModel: 'llama3',
   theme: 'system'
 }
 
@@ -29,7 +44,7 @@ const mockLoadSettings = async (): Promise<AppSettings> => {
       if (stored) {
         try {
           resolve({ ...defaultSettings, ...JSON.parse(stored) })
-        } catch (e) {
+        } catch {
           resolve(defaultSettings)
         }
       } else {
@@ -54,7 +69,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadInitialSettings = async () => {
+    const loadInitialSettings = async (): Promise<void> => {
       try {
         setIsLoading(true)
         // In the future, replace with window.electron.ipcRenderer.invoke('get-settings')
@@ -70,7 +85,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     loadInitialSettings()
   }, [])
 
-  const updateSettings = async (newSettings: Partial<AppSettings>) => {
+  const updateSettings = async (newSettings: Partial<AppSettings>): Promise<void> => {
     try {
       const updated = { ...settings, ...newSettings }
       // Optimistic update
