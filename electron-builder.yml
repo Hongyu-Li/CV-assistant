@@ -47,3 +47,4 @@ publish:
   provider: github
   owner: tc9011
   repo: CV-assistant
+  releaseType: release
