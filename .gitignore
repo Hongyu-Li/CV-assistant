@@ -5,3 +5,7 @@ out
 .eslintcache
 *.log*
 coverage
+.env*
+!.env.example
+.vscode/
+.idea/

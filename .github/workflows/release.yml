@@ -3,6 +3,8 @@ name: Build & Release
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
 
 # Prevent concurrent releases
 concurrency:
@@ -22,6 +24,8 @@ jobs:
           cache: npm
 
       - run: npm ci
+      - name: Security audit
+        run: npm audit --audit-level=moderate || true
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
@@ -31,7 +35,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     # Skip if the last commit was a version bump (prevent infinite loop)
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
     outputs:
       version: ${{ steps.bump.outputs.version }}
       tag: ${{ steps.bump.outputs.tag }}
