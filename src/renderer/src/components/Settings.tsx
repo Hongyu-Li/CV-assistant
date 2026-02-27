@@ -8,11 +8,13 @@ import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Button } from './ui/button'
 import { toast } from 'sonner'
+import { Eye, EyeOff } from 'lucide-react'
 
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
   const [isMigrating, setIsMigrating] = React.useState(false)
+  const [showApiKey, setShowApiKey] = React.useState(false)
 
   const handleMigration = async (currentPath: string, newDir: string): Promise<void> => {
     // Determine actual source path
@@ -247,12 +249,27 @@ export const Settings = (): React.JSX.Element => {
             {providerConfig.requiresApiKey && (
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">{t('settings.api_key')}</label>
-                <Input
-                  type="password"
-                  placeholder={t('settings.api_key_ph')}
-                  value={settings.apiKey}
-                  onChange={(e) => updateSettings({ apiKey: e.target.value })}
-                />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type={showApiKey ? 'text' : 'password'}
+                      placeholder={t('settings.api_key_ph')}
+                      value={settings.apiKeys?.[settings.provider] || ''}
+                      onChange={(e): void =>
+                        updateSettings({ apiKeys: { [settings.provider]: e.target.value } })
+                      }
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={(): void => setShowApiKey(!showApiKey)}
+                    title={showApiKey ? t('settings.hide_api_key') : t('settings.show_api_key')}
+                  >
+                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground">{t('settings.api_key_desc')}</p>
               </div>
             )}
@@ -285,7 +302,7 @@ export const Settings = (): React.JSX.Element => {
                 try {
                   const result = await window.electron.ipcRenderer.invoke('ai:test', {
                     provider: settings.provider,
-                    apiKey: settings.apiKey,
+                    apiKey: settings.apiKeys?.[settings.provider] || '',
                     model: settings.model,
                     baseUrl: settings.baseUrl
                   })

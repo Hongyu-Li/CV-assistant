@@ -1,17 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
+import { AIProvider } from '../lib/provider'
 export interface AppSettings {
-  provider:
-    | 'openai'
-    | 'anthropic'
-    | 'google'
-    | 'deepseek'
-    | 'ollama'
-    | 'openrouter'
-    | 'groq'
-    | 'mistral'
-    | 'custom'
-  apiKey: string
+  provider: AIProvider
+  apiKeys: Partial<Record<AIProvider, string>>
   model: string
   baseUrl: string
   theme: 'light' | 'dark' | 'system'
@@ -28,7 +19,7 @@ export interface SettingsContextType {
 
 const defaultSettings: AppSettings = {
   provider: 'openai',
-  apiKey: '',
+  apiKeys: {},
   model: 'gpt-4o',
   baseUrl: '',
   theme: 'system',
@@ -50,7 +41,15 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         const loaded = await window.electron.ipcRenderer.invoke('settings:load')
         if (loaded && Object.keys(loaded).length > 0) {
-          setSettings({ ...defaultSettings, ...loaded })
+          // Migrate old apiKey (string) to apiKeys (Record) format
+          let apiKeys: Partial<Record<AIProvider, string>> = loaded.apiKeys || {}
+          if (!loaded.apiKeys && loaded.apiKey) {
+            const provider = (loaded.provider as AIProvider) || 'openai'
+            apiKeys = { [provider]: loaded.apiKey }
+          }
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { apiKey: _oldApiKey, ...rest } = loaded
+          setSettings({ ...defaultSettings, ...rest, apiKeys })
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load settings')
@@ -86,7 +85,12 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const updateSettings = async (newSettings: Partial<AppSettings>): Promise<void> => {
     try {
-      const updated = { ...settings, ...newSettings }
+      const updated = {
+        ...settings,
+        ...newSettings,
+        // Deep-merge apiKeys so switching providers doesn't wipe other keys
+        ...(newSettings.apiKeys ? { apiKeys: { ...settings.apiKeys, ...newSettings.apiKeys } } : {})
+      }
       // Optimistic update
       setSettings(updated)
       await window.electron.ipcRenderer.invoke('settings:save', updated)

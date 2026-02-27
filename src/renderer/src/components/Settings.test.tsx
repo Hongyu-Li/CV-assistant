@@ -61,7 +61,7 @@ describe('Settings Component', () => {
   const mockUpdateSettings = vi.fn()
   const defaultSettings = {
     provider: 'openai',
-    apiKey: '',
+    apiKeys: {},
     model: 'gpt-4o',
     baseUrl: '',
     theme: 'system',
@@ -124,7 +124,34 @@ describe('Settings Component', () => {
     const apiKeyInput = document.querySelector('input[type="password"]')
     expect(apiKeyInput).not.toBeNull()
     fireEvent.change(apiKeyInput!, { target: { value: 'sk-test-key' } })
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ apiKey: 'sk-test-key' })
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ apiKeys: { openai: 'sk-test-key' } })
+  })
+
+  it('toggles API key visibility when eye button is clicked', () => {
+    render(<Settings />)
+    // Initially password field
+    const apiKeyInput = document.querySelector('input[type="password"]')
+    expect(apiKeyInput).not.toBeNull()
+    // Click the eye toggle button
+    const toggleBtn = screen.getByTitle('settings.show_api_key')
+    fireEvent.click(toggleBtn)
+    // Now should be text type
+    const visibleInput = document.querySelector(
+      'input[type="text"][placeholder="settings.api_key_ph"]'
+    )
+    expect(visibleInput).not.toBeNull()
+  })
+
+  it('shows per-provider API key value', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, apiKeys: { openai: 'sk-stored-key' } },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    const apiKeyInput = document.querySelector('input[type="password"]') as HTMLInputElement
+    expect(apiKeyInput.value).toBe('sk-stored-key')
   })
 
   it('shows change directory button', () => {

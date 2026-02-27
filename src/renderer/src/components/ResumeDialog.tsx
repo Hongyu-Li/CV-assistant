@@ -133,7 +133,7 @@ export function ResumeDialog({
         profile: profileText,
         jobDescription,
         provider: settings.provider,
-        apiKey: settings.apiKey,
+        apiKey: settings.apiKeys?.[settings.provider] || '',
         model: settings.model,
         baseUrl: settings.baseUrl,
         language: cvLanguage
