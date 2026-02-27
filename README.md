@@ -10,6 +10,8 @@ AI-powered resume/CV assistant desktop app — generate tailored resumes from yo
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-blue.svg)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**[Download Latest Release](https://github.com/tc9011/CV-assistant/releases)**
+
 ## Features
 
 - AI-powered CV generation from personal profile + job description

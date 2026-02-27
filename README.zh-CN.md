@@ -10,6 +10,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-blue.svg)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**[下载最新版本](https://github.com/tc9011/CV-assistant/releases)**
+
 ## 功能特性
 
 - 基于 AI 的简历生成：输入个人资料 + 目标职位描述，自动生成匹配的简历
