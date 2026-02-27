@@ -300,3 +300,54 @@ describe('precheckWorkspaceMigration with .md files', () => {
     expect(result.conflicts).toEqual(['resume.md'])
   })
 })
+
+describe('writeWorkspaceFile with subdirectory auto-creation (resume save flow)', () => {
+  let workspaceDir: string
+
+  beforeEach(async () => {
+    const base = await fsp.mkdtemp(join(tmpdir(), 'cv-resume-save-test-'))
+    workspaceDir = base
+  })
+
+  it('creates resumes/ directory and writes .md + .json files', async () => {
+    const { writeWorkspaceFile, readWorkspaceFile } = await import('../fs')
+
+    // Simulate cv:save handler: write .md content and .json metadata
+    const mdContent = '# Senior Engineer Resume\n\n**5+ years** of experience'
+    const jsonMetadata = JSON.stringify({ title: 'My Resume', mdFile: 'resume-001.md' }, null, 2)
+
+    await writeWorkspaceFile('resumes/resume-001.md', mdContent, workspaceDir)
+    await writeWorkspaceFile('resumes/resume-001.json', jsonMetadata, workspaceDir)
+
+    // Verify both files exist and contain correct content
+    const readMd = await readWorkspaceFile('resumes/resume-001.md', workspaceDir)
+    expect(readMd).toBe(mdContent)
+
+    const readJson = await readWorkspaceFile('resumes/resume-001.json', workspaceDir)
+    const parsed = JSON.parse(readJson)
+    expect(parsed.title).toBe('My Resume')
+    expect(parsed.mdFile).toBe('resume-001.md')
+
+    // Verify directory was auto-created
+    const stat = await fsp.stat(join(workspaceDir, 'resumes'))
+    expect(stat.isDirectory()).toBe(true)
+  })
+
+  it('reads back .md content referenced by .json metadata', async () => {
+    const { writeWorkspaceFile, readWorkspaceFile } = await import('../fs')
+
+    const generatedCV = '# Full Stack Developer\n\n- React\n- Node.js\n- TypeScript'
+    const metadata = { title: 'Dev Resume', mdFile: 'dev-resume.md', language: 'en' }
+
+    await writeWorkspaceFile('resumes/dev-resume.md', generatedCV, workspaceDir)
+    await writeWorkspaceFile('resumes/dev-resume.json', JSON.stringify(metadata), workspaceDir)
+
+    // Simulate cv:read handler: read JSON, then read .md via mdFile reference
+    const jsonContent = await readWorkspaceFile('resumes/dev-resume.json', workspaceDir)
+    const data = JSON.parse(jsonContent)
+    const mdContent = await readWorkspaceFile(`resumes/${data.mdFile}`, workspaceDir)
+
+    expect(mdContent).toBe(generatedCV)
+    expect(data.language).toBe('en')
+  })
+})
