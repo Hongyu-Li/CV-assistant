@@ -21,7 +21,7 @@ vi.mock('../lib/provider', () => ({
     openai: {
       label: 'OpenAI',
       defaultBaseUrl: 'https://api.openai.com/v1',
-      defaultModel: 'gpt-4o',
+      defaultModel: 'gpt-5.2',
       requiresApiKey: true
     },
     anthropic: {
@@ -62,7 +62,7 @@ describe('Settings Component', () => {
   const defaultSettings = {
     provider: 'openai',
     apiKeys: {},
-    model: 'gpt-4o',
+    model: 'gpt-5.2',
     baseUrl: '',
     theme: 'system',
     language: 'en',
@@ -98,12 +98,12 @@ describe('Settings Component', () => {
   it('shows model field with current model value', () => {
     render(<Settings />)
     expect(screen.getByText('settings.model')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('gpt-4o')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('gpt-5.2')).toBeInTheDocument()
   })
 
   it('calls updateSettings when model is changed', () => {
     render(<Settings />)
-    const input = screen.getByDisplayValue('gpt-4o')
+    const input = screen.getByDisplayValue('gpt-5.2')
     fireEvent.change(input, { target: { value: 'gpt-4-turbo' } })
     expect(mockUpdateSettings).toHaveBeenCalledWith({ model: 'gpt-4-turbo' })
   })

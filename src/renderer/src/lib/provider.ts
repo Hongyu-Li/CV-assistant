@@ -23,7 +23,7 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   openai: {
     label: 'OpenAI',
     defaultBaseUrl: 'https://api.openai.com/v1',
-    defaultModel: 'gpt-4o',
+    defaultModel: 'gpt-5.2',
     requiresApiKey: true
   },
   anthropic: {
@@ -35,7 +35,7 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   google: {
     label: 'Google Gemini',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    defaultModel: 'gemini-3-flash-preview',
+    defaultModel: 'gemini-2.5-flash',
     requiresApiKey: true
   },
   deepseek: {
@@ -53,7 +53,7 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   openrouter: {
     label: 'OpenRouter',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'anthropic/claude-sonnet-4.6',
+    defaultModel: 'anthropic/claude-sonnet-4-6',
     requiresApiKey: true
   },
   groq: {
@@ -77,13 +77,13 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   zhipu: {
     label: 'Zhipu (GLM)',
     defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4/',
-    defaultModel: 'glm-4-flash',
+    defaultModel: 'glm-5',
     requiresApiKey: true
   },
   kimi: {
     label: 'Kimi (Moonshot)',
     defaultBaseUrl: 'https://api.moonshot.cn/v1',
-    defaultModel: 'moonshot-v1-8k',
+    defaultModel: 'kimi-k2.5',
     requiresApiKey: true
   },
   custom: {

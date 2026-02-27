@@ -20,7 +20,7 @@ export interface SettingsContextType {
 const defaultSettings: AppSettings = {
   provider: 'openai',
   apiKeys: {},
-  model: 'gpt-4o',
+  model: 'gpt-5.2',
   baseUrl: '',
   theme: 'system',
   language: 'en',

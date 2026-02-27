@@ -18,7 +18,7 @@ vi.mock('../lib/provider', () => ({
     openai: {
       label: 'OpenAI',
       defaultBaseUrl: 'https://api.openai.com/v1',
-      defaultModel: 'gpt-4o',
+      defaultModel: 'gpt-5.2',
       requiresApiKey: true
     }
   }
