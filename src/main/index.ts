@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -72,6 +72,19 @@ function createWindow(): BrowserWindow {
 app.whenReady().then(async () => {
   // Set app name for macOS menu bar
   app.setName('简历助手')
+
+  // Set About panel options (icon, app name, version)
+  const appIcon = nativeImage.createFromPath(icon)
+  app.setAboutPanelOptions({
+    applicationName: '简历助手 - CV Assistant',
+    applicationVersion: app.getVersion(),
+    iconPath: icon
+  })
+
+  // Set dock icon on macOS (ensures correct icon in dev mode)
+  if (process.platform === 'darwin') {
+    app.dock?.setIcon(appIcon)
+  }
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.cv-assistant')
