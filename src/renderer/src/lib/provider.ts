@@ -7,6 +7,9 @@ export type AIProvider =
   | 'openrouter'
   | 'groq'
   | 'mistral'
+  | 'qwen'
+  | 'zhipu'
+  | 'kimi'
   | 'custom'
 
 export interface ProviderConfig {
@@ -63,6 +66,24 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
     label: 'Mistral',
     defaultBaseUrl: 'https://api.mistral.ai/v1',
     defaultModel: 'mistral-large-latest',
+    requiresApiKey: true
+  },
+  qwen: {
+    label: 'Qwen (Alibaba)',
+    defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    defaultModel: 'qwen-plus',
+    requiresApiKey: true
+  },
+  zhipu: {
+    label: 'Zhipu (GLM)',
+    defaultBaseUrl: 'https://open.bigmodel.cn/api/paas/v4/',
+    defaultModel: 'glm-4-flash',
+    requiresApiKey: true
+  },
+  kimi: {
+    label: 'Kimi (Moonshot)',
+    defaultBaseUrl: 'https://api.moonshot.cn/v1',
+    defaultModel: 'moonshot-v1-8k',
     requiresApiKey: true
   },
   custom: {
