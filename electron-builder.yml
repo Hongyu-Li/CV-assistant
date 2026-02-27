@@ -39,5 +39,6 @@ appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
 publish:
-  provider: generic
-  url: https://github.com/user/cv-assistant/releases
+  provider: github
+  owner: user
+  repo: cv-assistant
