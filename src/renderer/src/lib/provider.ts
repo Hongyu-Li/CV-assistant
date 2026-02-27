@@ -26,13 +26,13 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   anthropic: {
     label: 'Anthropic',
     defaultBaseUrl: 'https://api.anthropic.com/v1',
-    defaultModel: 'claude-3-5-sonnet-20241022',
+    defaultModel: 'claude-sonnet-4-6',
     requiresApiKey: true
   },
   google: {
     label: 'Google Gemini',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    defaultModel: 'gemini-2.0-flash-exp',
+    defaultModel: 'gemini-3-flash-preview',
     requiresApiKey: true
   },
   deepseek: {
@@ -50,7 +50,7 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   openrouter: {
     label: 'OpenRouter',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'anthropic/claude-3.5-sonnet',
+    defaultModel: 'anthropic/claude-sonnet-4.6',
     requiresApiKey: true
   },
   groq: {

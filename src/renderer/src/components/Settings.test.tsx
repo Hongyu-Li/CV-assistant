@@ -27,7 +27,7 @@ vi.mock('../lib/provider', () => ({
     anthropic: {
       label: 'Anthropic',
       defaultBaseUrl: 'https://api.anthropic.com/v1',
-      defaultModel: 'claude-3-5-sonnet-20241022',
+      defaultModel: 'claude-sonnet-4-6',
       requiresApiKey: true
     },
     ollama: {
