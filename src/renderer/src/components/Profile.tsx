@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
-import { Textarea } from './ui/textarea'
+import { MarkdownEditor } from './MarkdownEditor'
 import { Button } from './ui/button'
 import { toast } from 'sonner'
+import { useSettings } from '../context/SettingsContext'
 
 interface WorkExperience {
   id: string
@@ -47,11 +48,15 @@ export function Profile(): React.JSX.Element {
   const [profile, setProfile] = useState<ProfileData>(initialProfile)
   const [loading, setLoading] = useState(true)
   const { t } = useTranslation()
+  const { settings } = useSettings()
 
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
       try {
-        const data = await window.electron.ipcRenderer.invoke('profile:load')
+        const data = await window.electron.ipcRenderer.invoke(
+          'profile:load',
+          settings.workspacePath
+        )
         if (data && Object.keys(data).length > 0) {
           setProfile(data)
         }
@@ -63,11 +68,15 @@ export function Profile(): React.JSX.Element {
       }
     }
     loadProfile()
-  }, [t])
+  }, [t, settings.workspacePath])
 
   const handleSave = async (): Promise<void> => {
     try {
-      const result = await window.electron.ipcRenderer.invoke('profile:save', profile)
+      const result = await window.electron.ipcRenderer.invoke(
+        'profile:save',
+        profile,
+        settings.workspacePath
+      )
       if (result.success) {
         toast.success(t('profile.save_success'))
       } else {
@@ -182,11 +191,11 @@ export function Profile(): React.JSX.Element {
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">{t('profile.summary')}</label>
-            <Textarea
+            <MarkdownEditor
               value={profile.personalInfo.summary}
-              onChange={(e) => updatePersonalInfo('summary', e.target.value)}
+              onChange={(val) => updatePersonalInfo('summary', val)}
               placeholder={t('profile.summary_ph')}
-              className="min-h-[100px]"
+              minHeight="100px"
             />
           </div>
         </CardContent>
@@ -242,11 +251,11 @@ export function Profile(): React.JSX.Element {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('profile.description')}</label>
-                <Textarea
+                <MarkdownEditor
                   value={exp.description}
-                  onChange={(e) => updateWorkExperience(exp.id, 'description', e.target.value)}
+                  onChange={(val) => updateWorkExperience(exp.id, 'description', val)}
                   placeholder={t('profile.description_ph')}
-                  className="min-h-[80px]"
+                  minHeight="80px"
                 />
               </div>
             </div>
@@ -301,11 +310,11 @@ export function Profile(): React.JSX.Element {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('profile.description')}</label>
-                <Textarea
+                <MarkdownEditor
                   value={proj.description}
-                  onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
+                  onChange={(val) => updateProject(proj.id, 'description', val)}
                   placeholder={t('profile.project_description_ph')}
-                  className="min-h-[80px]"
+                  minHeight="80px"
                 />
               </div>
             </div>

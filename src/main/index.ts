@@ -3,8 +3,6 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import {
-  readUserDataFile,
-  writeUserDataFile,
   listWorkspaceFiles,
   readWorkspaceFile,
   getWorkspaceLastModified,
@@ -61,19 +59,165 @@ app.whenReady().then(async () => {
   })
 
   // Profile Management IPC
-  ipcMain.handle('profile:load', async () => {
+  ipcMain.handle('profile:load', async (_, workspacePath?: string) => {
     try {
-      const data = await readUserDataFile('profile.json')
-      return JSON.parse(data)
+      // Read index file
+      const indexRaw = await readWorkspaceFile('profile/index.json', workspacePath)
+      const index = JSON.parse(indexRaw)
+
+      // Read summary markdown
+      let summary = ''
+      if (index.personalInfo?.summaryFile) {
+        try {
+          summary = await readWorkspaceFile(
+            `profile/${index.personalInfo.summaryFile}`,
+            workspacePath
+          )
+        } catch {
+          /* file may not exist */
+        }
+      }
+
+      // Read work experience descriptions
+      const workExperience = await Promise.all(
+        (index.workExperience || []).map(
+          async (exp: {
+            id: string
+            company: string
+            role: string
+            date: string
+            descriptionFile?: string
+          }) => {
+            let description = ''
+            if (exp.descriptionFile) {
+              try {
+                description = await readWorkspaceFile(
+                  `profile/${exp.descriptionFile}`,
+                  workspacePath
+                )
+              } catch {
+                /* file may not exist */
+              }
+            }
+            return {
+              id: exp.id,
+              company: exp.company,
+              role: exp.role,
+              date: exp.date,
+              description
+            }
+          }
+        )
+      )
+
+      // Read project descriptions
+      const projects = await Promise.all(
+        (index.projects || []).map(
+          async (proj: {
+            id: string
+            name: string
+            techStack: string
+            descriptionFile?: string
+          }) => {
+            let description = ''
+            if (proj.descriptionFile) {
+              try {
+                description = await readWorkspaceFile(
+                  `profile/${proj.descriptionFile}`,
+                  workspacePath
+                )
+              } catch {
+                /* file may not exist */
+              }
+            }
+            return {
+              id: proj.id,
+              name: proj.name,
+              techStack: proj.techStack,
+              description
+            }
+          }
+        )
+      )
+
+      return {
+        personalInfo: {
+          name: index.personalInfo?.name || '',
+          email: index.personalInfo?.email || '',
+          phone: index.personalInfo?.phone || '',
+          summary
+        },
+        workExperience,
+        projects
+      }
     } catch (error) {
       console.warn('Failed to load profile (may not exist yet):', error)
       return {}
     }
   })
 
-  ipcMain.handle('profile:save', async (_, data) => {
+  ipcMain.handle('profile:save', async (_, data, workspacePath?: string) => {
     try {
-      await writeUserDataFile('profile.json', JSON.stringify(data, null, 2))
+      // Write summary markdown
+      const summaryFile = 'summary.md'
+      await writeWorkspaceFile(
+        `profile/${summaryFile}`,
+        data.personalInfo?.summary || '',
+        workspacePath
+      )
+
+      // Write work experience descriptions
+      const workExperience = await Promise.all(
+        (data.workExperience || []).map(
+          async (exp: {
+            id: string
+            company: string
+            role: string
+            date: string
+            description: string
+          }) => {
+            const descFile = `work-exp-${exp.id}.md`
+            await writeWorkspaceFile(`profile/${descFile}`, exp.description || '', workspacePath)
+            return {
+              id: exp.id,
+              company: exp.company,
+              role: exp.role,
+              date: exp.date,
+              descriptionFile: descFile
+            }
+          }
+        )
+      )
+
+      // Write project descriptions
+      const projects = await Promise.all(
+        (data.projects || []).map(
+          async (proj: { id: string; name: string; techStack: string; description: string }) => {
+            const descFile = `project-${proj.id}.md`
+            await writeWorkspaceFile(`profile/${descFile}`, proj.description || '', workspacePath)
+            return {
+              id: proj.id,
+              name: proj.name,
+              techStack: proj.techStack,
+              descriptionFile: descFile
+            }
+          }
+        )
+      )
+
+      // Write index
+      const index = {
+        personalInfo: {
+          name: data.personalInfo?.name || '',
+          email: data.personalInfo?.email || '',
+          phone: data.personalInfo?.phone || '',
+          summaryFile
+        },
+        workExperience,
+        projects
+      }
+      await writeWorkspaceFile('profile/index.json', JSON.stringify(index, null, 2), workspacePath)
+
       return { success: true }
     } catch (error) {
       console.error('Failed to save profile:', error)

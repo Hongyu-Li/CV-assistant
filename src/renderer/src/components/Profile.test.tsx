@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Profile } from './Profile'
+import { SettingsProvider } from '../context/SettingsContext'
 
 // Mock toast
 vi.mock('sonner', () => ({
@@ -9,6 +10,10 @@ vi.mock('sonner', () => ({
     error: vi.fn()
   }
 }))
+
+const renderWithProvider = (ui: React.ReactElement): ReturnType<typeof render> => {
+  return render(<SettingsProvider>{ui}</SettingsProvider>)
+}
 
 describe('Profile Component', () => {
   beforeEach(() => {
@@ -31,6 +36,9 @@ describe('Profile Component', () => {
           if (channel === 'profile:save') {
             return { success: true }
           }
+          if (channel === 'settings:load') {
+            return { workspacePath: '' }
+          }
           return undefined
         }),
         send: vi.fn(),
@@ -42,7 +50,7 @@ describe('Profile Component', () => {
   })
 
   it('renders correctly and loads data', async () => {
-    render(<Profile />)
+    renderWithProvider(<Profile />)
 
     // Initially loading
     expect(screen.getByText('profile.loading')).toBeInTheDocument()
@@ -56,11 +64,12 @@ describe('Profile Component', () => {
     expect(screen.getByDisplayValue('Test Name')).toBeInTheDocument()
     expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument()
     expect(screen.getByDisplayValue('1234567890')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('A test summary')).toBeInTheDocument()
+    // Summary is rendered inside MarkdownEditor (Tiptap), check text content
+    expect(screen.getByText('A test summary')).toBeInTheDocument()
   })
 
   it('can update personal info and save', async () => {
-    render(<Profile />)
+    renderWithProvider(<Profile />)
     await waitFor(() => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
@@ -80,13 +89,14 @@ describe('Profile Component', () => {
           personalInfo: expect.objectContaining({
             name: 'Updated Name'
           })
-        })
+        }),
+        expect.anything() // workspacePath
       )
     })
   })
 
   it('can add and remove work experience', async () => {
-    render(<Profile />)
+    renderWithProvider(<Profile />)
     await waitFor(() => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
@@ -114,7 +124,7 @@ describe('Profile Component', () => {
   })
 
   it('can add and remove projects', async () => {
-    render(<Profile />)
+    renderWithProvider(<Profile />)
     await waitFor(() => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
