@@ -38,33 +38,6 @@ const defaultSettings: AppSettings = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
 
-// Mock IPC calls for now
-const mockLoadSettings = async (): Promise<AppSettings> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const stored = localStorage.getItem('mock_settings')
-      if (stored) {
-        try {
-          resolve({ ...defaultSettings, ...JSON.parse(stored) })
-        } catch {
-          resolve(defaultSettings)
-        }
-      } else {
-        resolve(defaultSettings)
-      }
-    }, 100)
-  })
-}
-
-const mockSaveSettings = async (settings: AppSettings): Promise<void> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      localStorage.setItem('mock_settings', JSON.stringify(settings))
-      resolve()
-    }, 100)
-  })
-}
-
 export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(true)
@@ -74,9 +47,11 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     const loadInitialSettings = async (): Promise<void> => {
       try {
         setIsLoading(true)
-        // In the future, replace with window.electron.ipcRenderer.invoke('get-settings')
-        const loadedSettings = await mockLoadSettings()
-        setSettings(loadedSettings)
+
+        const loaded = await window.electron.ipcRenderer.invoke('settings:load')
+        if (loaded && Object.keys(loaded).length > 0) {
+          setSettings({ ...defaultSettings, ...loaded })
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load settings')
       } finally {
@@ -114,8 +89,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       const updated = { ...settings, ...newSettings }
       // Optimistic update
       setSettings(updated)
-      // In the future, replace with window.electron.ipcRenderer.invoke('save-settings', updated)
-      await mockSaveSettings(updated)
+      await window.electron.ipcRenderer.invoke('settings:save', updated)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings')
       // Revert on failure could be implemented here

@@ -81,6 +81,28 @@ app.whenReady().then(async () => {
     }
   })
 
+  // Settings Management IPC
+  ipcMain.handle('settings:load', async () => {
+    try {
+      const data = await readWorkspaceFile('settings.json')
+      return JSON.parse(data)
+    } catch (error) {
+      // Settings file doesn't exist yet — return empty object (use defaults)
+      console.warn('Failed to load settings (may not exist yet):', error)
+      return {}
+    }
+  })
+
+  ipcMain.handle('settings:save', async (_, data) => {
+    try {
+      await writeWorkspaceFile('settings.json', JSON.stringify(data, null, 2))
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
   // CV Management IPC
   ipcMain.handle('cv:list', async (_, workspacePath?: string) => {
     try {
