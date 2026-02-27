@@ -3,6 +3,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Profile } from './Profile'
 import { SettingsProvider } from '../context/SettingsContext'
 
+// Mock MarkdownEditor since Tiptap does not render text in jsdom
+vi.mock('./MarkdownEditor', () => ({
+  MarkdownEditor: ({
+    value,
+    onChange
+  }: {
+    value: string
+    onChange: (v: string) => void
+  }): React.ReactElement => (
+    <textarea
+      data-testid="markdown-editor"
+      value={value}
+      onChange={(e): void => onChange(e.target.value)}
+    />
+  )
+}))
+
 // Mock toast
 vi.mock('sonner', () => ({
   toast: {
@@ -64,8 +81,8 @@ describe('Profile Component', () => {
     expect(screen.getByDisplayValue('Test Name')).toBeInTheDocument()
     expect(screen.getByDisplayValue('test@example.com')).toBeInTheDocument()
     expect(screen.getByDisplayValue('1234567890')).toBeInTheDocument()
-    // Summary is rendered inside MarkdownEditor (Tiptap), check text content
-    expect(screen.getByText('A test summary')).toBeInTheDocument()
+    // Summary is rendered inside mocked MarkdownEditor (textarea)
+    expect(screen.getByDisplayValue('A test summary')).toBeInTheDocument()
   })
 
   it('can update personal info and save', async () => {

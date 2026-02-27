@@ -11,6 +11,7 @@ import {
 } from './ui/dialog'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
+import { MarkdownEditor } from './MarkdownEditor'
 import { Button } from './ui/button'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select'
 import { useSettings } from '../context/SettingsContext'
@@ -94,9 +95,42 @@ export function ResumeDialog({
     }
     setIsGenerating(true)
     try {
-      const profile = 'Mock Profile Data'
+      // Load real profile data
+      const profileData = await window.electron.ipcRenderer.invoke(
+        'profile:load',
+        settings.workspacePath
+      )
+
+      // Format profile as readable text for the AI prompt
+      let profileText = ''
+      if (profileData?.personalInfo) {
+        const pi = profileData.personalInfo
+        if (pi.name) profileText += `Name: ${pi.name}\n`
+        if (pi.email) profileText += `Email: ${pi.email}\n`
+        if (pi.phone) profileText += `Phone: ${pi.phone}\n`
+        if (pi.summary) profileText += `\nSummary:\n${pi.summary}\n`
+      }
+      if (profileData?.workExperience?.length > 0) {
+        profileText += '\nWork Experience:\n'
+        for (const exp of profileData.workExperience) {
+          profileText += `- ${exp.role} at ${exp.company} (${exp.date})\n`
+          if (exp.description) profileText += `  ${exp.description}\n`
+        }
+      }
+      if (profileData?.projects?.length > 0) {
+        profileText += '\nProjects:\n'
+        for (const proj of profileData.projects) {
+          profileText += `- ${proj.name} [${proj.techStack}]\n`
+          if (proj.description) profileText += `  ${proj.description}\n`
+        }
+      }
+
+      if (!profileText.trim()) {
+        profileText = 'No profile data available. Generate a generic professional CV.'
+      }
+
       const result = await generateCV({
-        profile,
+        profile: profileText,
         jobDescription,
         provider: settings.provider,
         apiKey: settings.apiKey,
@@ -300,9 +334,12 @@ export function ResumeDialog({
                 </Button>
               </div>
             </div>
-            <div className="max-h-[200px] overflow-y-auto p-4 rounded-md border bg-muted/50 whitespace-pre-wrap font-mono text-sm">
-              {generatedCV}
-            </div>
+            <MarkdownEditor
+              value={generatedCV}
+              onChange={setGeneratedCV}
+              minHeight="200px"
+              className="max-h-[400px] overflow-y-auto"
+            />
           </div>
         )}
 

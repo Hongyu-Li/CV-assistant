@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import {
   listWorkspaceFiles,
+  listWorkspaceSubdirFiles,
   readWorkspaceFile,
   getWorkspaceLastModified,
   writeWorkspaceFile,
@@ -250,13 +251,14 @@ app.whenReady().then(async () => {
   // CV Management IPC
   ipcMain.handle('cv:list', async (_, workspacePath?: string) => {
     try {
-      const files = await listWorkspaceFiles(workspacePath)
+      const files = await listWorkspaceSubdirFiles('resumes', workspacePath)
+      const jsonFiles = files.filter((f) => f.endsWith('.json'))
       const drafts = await Promise.all(
-        files.map(async (file) => {
+        jsonFiles.map(async (file) => {
           try {
-            const content = await readWorkspaceFile(file, workspacePath)
+            const content = await readWorkspaceFile(`resumes/${file}`, workspacePath)
             const data = JSON.parse(content)
-            const modified = await getWorkspaceLastModified(file, workspacePath)
+            const modified = await getWorkspaceLastModified(`resumes/${file}`, workspacePath)
             return {
               ...data,
               id: file.replace('.json', ''),
@@ -279,7 +281,24 @@ app.whenReady().then(async () => {
   ipcMain.handle('cv:save', async (_, { filename, data, workspacePath }) => {
     try {
       const safeFilename = filename.endsWith('.json') ? filename : `${filename}.json`
-      await writeWorkspaceFile(safeFilename, JSON.stringify(data, null, 2), workspacePath)
+      const baseName = safeFilename.replace('.json', '')
+
+      // If there's generated CV content, save it as a separate .md file
+      let mdFile: string | undefined = data.mdFile
+      if (data.generatedCV) {
+        mdFile = `${baseName}.md`
+        await writeWorkspaceFile(`resumes/${mdFile}`, data.generatedCV, workspacePath)
+      }
+
+      // Save JSON metadata WITHOUT generatedCV content — use mdFile reference instead
+      const metadata = { ...data, mdFile }
+      delete metadata.generatedCV
+      const jsonData = metadata
+      await writeWorkspaceFile(
+        `resumes/${safeFilename}`,
+        JSON.stringify(jsonData, null, 2),
+        workspacePath
+      )
       return { success: true }
     } catch (error) {
       console.error('Failed to save CV:', error)
@@ -289,7 +308,15 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('cv:delete', async (_, { filename, workspacePath }) => {
     try {
-      await deleteWorkspaceFile(filename, workspacePath)
+      // Delete JSON file
+      await deleteWorkspaceFile(`resumes/${filename}`, workspacePath)
+      // Also delete companion .md file if it exists
+      const mdFilename = filename.replace('.json', '.md')
+      try {
+        await deleteWorkspaceFile(`resumes/${mdFilename}`, workspacePath)
+      } catch {
+        // .md file may not exist — that's fine
+      }
       return { success: true }
     } catch (error) {
       console.error('Failed to delete CV:', error)
@@ -299,8 +326,21 @@ app.whenReady().then(async () => {
 
   ipcMain.handle('cv:read', async (_, { filename, workspacePath }) => {
     try {
-      const content = await readWorkspaceFile(filename, workspacePath)
-      return { success: true, data: JSON.parse(content) }
+      const content = await readWorkspaceFile(`resumes/${filename}`, workspacePath)
+      const data = JSON.parse(content)
+
+      // If there's a mdFile reference, read the .md content and return as generatedCV
+      if (data.mdFile) {
+        try {
+          const mdContent = await readWorkspaceFile(`resumes/${data.mdFile}`, workspacePath)
+          data.generatedCV = mdContent
+        } catch {
+          // .md file may not exist
+          data.generatedCV = ''
+        }
+      }
+
+      return { success: true, data }
     } catch (error) {
       console.error('Failed to read CV:', error)
       return { success: false, error: (error as Error).message }
