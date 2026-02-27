@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -125,4 +126,31 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Tiptap ProseMirror editor styles */
+.tiptap {
+  outline: none;
+  min-height: inherit;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+
+/* Ensure prose styles override global resets inside editor */
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  font-weight: bold;
+}
+
+.prose :where(strong, b) {
+  font-weight: bold;
+}
+
+.prose :where(em, i) {
+  font-style: italic;
 }

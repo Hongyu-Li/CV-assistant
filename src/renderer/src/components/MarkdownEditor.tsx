@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
+import Placeholder from '@tiptap/extension-placeholder'
 
 interface MarkdownEditorProps {
   value: string
@@ -20,29 +21,50 @@ export function MarkdownEditor({
   className,
   minHeight = '100px'
 }: MarkdownEditorProps): React.JSX.Element {
+  // Track whether updates are from external sync to avoid feedback loops
+  const isExternalUpdate = useRef(false)
+
   const editor = useEditor({
-    extensions: [StarterKit, Markdown],
-    content: value,
-    contentType: 'markdown',
+    extensions: [
+      StarterKit,
+      Markdown,
+      ...(placeholder ? [Placeholder.configure({ placeholder })] : [])
+    ],
+    content: value || '',
+    // Only set contentType when there's actual markdown content to parse
+    ...(value ? { contentType: 'markdown' as const } : {}),
     immediatelyRender: false,
     onUpdate: ({ editor: e }) => {
+      // Skip onChange if this update was triggered by our own setContent
+      if (isExternalUpdate.current) {
+        return
+      }
       onChange(e.getMarkdown())
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none',
-        ...(placeholder ? { 'data-placeholder': placeholder } : {})
+        class:
+          'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[inherit] [&_p]:my-1 [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0'
       }
     }
   })
 
   // Sync external value changes into the editor
   useEffect(() => {
-    if (editor && !editor.isDestroyed) {
-      const currentMarkdown = editor.getMarkdown()
-      if (value !== currentMarkdown) {
-        editor.commands.setContent(value || '', { contentType: 'markdown' })
-      }
+    if (!editor || editor.isDestroyed) return
+
+    const currentMarkdown = editor.getMarkdown()
+    // Normalize: both empty string and undefined should match
+    const normalizedValue = value ?? ''
+    const normalizedCurrent = currentMarkdown ?? ''
+
+    if (normalizedValue !== normalizedCurrent) {
+      isExternalUpdate.current = true
+      editor.commands.setContent(normalizedValue, {
+        contentType: 'markdown',
+        emitUpdate: false
+      })
+      isExternalUpdate.current = false
     }
   }, [value, editor])
 

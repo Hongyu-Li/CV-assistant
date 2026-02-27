@@ -31,7 +31,7 @@
   --color-text: var(--ev-c-text-1);
 }
 
-*,
+*:not(.prose *):not(.prose),
 *::before,
 *::after {
   box-sizing: border-box;
@@ -39,7 +39,7 @@
   font-weight: normal;
 }
 
-ul {
+ul:not(.prose ul) {
   list-style: none;
 }
 
