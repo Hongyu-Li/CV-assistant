@@ -40,5 +40,5 @@ appImage:
 npmRebuild: false
 publish:
   provider: github
-  owner: user
-  repo: cv-assistant
+  owner: tc9011
+  repo: CV-assistant

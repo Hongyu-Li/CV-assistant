@@ -4,7 +4,7 @@
   "description": "AI-powered resume/CV assistant desktop app",
   "main": "./out/main/index.js",
   "author": "",
-  "homepage": "https://github.com/user/cv-assistant",
+  "homepage": "https://github.com/tc9011/CV-assistant",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
