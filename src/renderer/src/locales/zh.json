@@ -69,7 +69,9 @@
     "auto_update_downloaded": "更新就绪 - 重启以安装",
     "auto_update_error": "更新出错: {{error}}",
     "auto_update_restart": "重启更新",
-    "auto_update_version": "当前版本"
+    "auto_update_version": "当前版本",
+    "lang_english": "English",
+    "lang_chinese": "中文"
   },
   "profile": {
     "title": "个人资料",
@@ -176,6 +178,7 @@
     "lang_fr": "法语",
     "lang_de": "德语",
     "lang_es": "西班牙语",
-    "copy_error": "复制到剪贴板失败"
+    "copy_error": "复制到剪贴板失败",
+    "default_filename": "简历"
   }
 }

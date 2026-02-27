@@ -158,7 +158,7 @@ export function ResumeDialog({
         setIsCopied(false)
       }, 2000)
     } catch {
-      toast.error(t('resumes.copy_error') || 'Failed to copy to clipboard')
+      toast.error(t('resumes.copy_error'))
     }
   }
 
@@ -168,7 +168,7 @@ export function ResumeDialog({
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${jobTitle || 'resume'}.md`
+    a.download = `${jobTitle || t('resumes.default_filename')}.md`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

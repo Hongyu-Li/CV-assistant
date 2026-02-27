@@ -69,7 +69,9 @@
     "auto_update_downloaded": "Update ready — restart to install",
     "auto_update_error": "Update error: {{error}}",
     "auto_update_restart": "Restart to Update",
-    "auto_update_version": "Current Version"
+    "auto_update_version": "Current Version",
+    "lang_english": "English",
+    "lang_chinese": "中文"
   },
   "profile": {
     "title": "Profile",
@@ -176,6 +178,7 @@
     "lang_fr": "French",
     "lang_de": "German",
     "lang_es": "Spanish",
-    "copy_error": "Failed to copy to clipboard"
+    "copy_error": "Failed to copy to clipboard",
+    "default_filename": "resume"
   }
 }

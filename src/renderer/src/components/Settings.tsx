@@ -267,8 +267,8 @@ export const Settings = (): React.JSX.Element => {
                   <SelectValue placeholder={t('settings.select_language_ph')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="zh">中文</SelectItem>
+                  <SelectItem value="en">{t('settings.lang_english')}</SelectItem>
+                  <SelectItem value="zh">{t('settings.lang_chinese')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
