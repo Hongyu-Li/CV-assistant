@@ -124,6 +124,30 @@ export interface MigrationPrecheck {
   conflicts: string[]
 }
 
+async function collectFilesRecursively(dir: string, prefix: string): Promise<string[]> {
+  let entries: string[]
+  try {
+    entries = await fs.readdir(dir)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+    throw error
+  }
+  const result: string[] = []
+  for (const entry of entries) {
+    if (entry.startsWith('.')) continue
+    const fullPath = join(dir, entry)
+    const stat = await fs.stat(fullPath)
+    const relativePath = prefix ? `${prefix}/${entry}` : entry
+    if (stat.isDirectory()) {
+      const nested = await collectFilesRecursively(fullPath, relativePath)
+      result.push(...nested)
+    } else if (stat.isFile()) {
+      result.push(relativePath)
+    }
+  }
+  return result
+}
+
 export async function precheckWorkspaceMigration(
   from: string,
   to: string
@@ -144,46 +168,25 @@ export async function precheckWorkspaceMigration(
     throw new Error('Source directory cannot be inside the target directory')
   }
 
-  // List files in source
-  let sourceFiles: string[]
-  try {
-    sourceFiles = await fs.readdir(normalFrom)
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return { fileCount: 0, files: [], conflicts: [] }
-    }
-    throw error
-  }
+  // Collect all files recursively (excluding dot-files like .DS_Store)
+  const files = await collectFilesRecursively(normalFrom, '')
 
-  if (sourceFiles.length === 0) {
+  if (files.length === 0) {
     return { fileCount: 0, files: [], conflicts: [] }
-  }
-
-  // Filter to .json files only, exclude directories
-  const files: string[] = []
-  for (const file of sourceFiles) {
-    if (!file.endsWith('.json') && !file.endsWith('.md')) continue
-    const stat = await fs.stat(join(normalFrom, file))
-    if (stat.isFile()) {
-      files.push(file)
-    }
   }
 
   // Check for conflicts in target
   const conflicts: string[] = []
-  try {
-    const targetFiles = await fs.readdir(normalTo)
-    const targetSet = new Set(targetFiles)
-    for (const file of files) {
-      if (targetSet.has(file)) {
-        conflicts.push(file)
+  for (const file of files) {
+    try {
+      await fs.stat(join(normalTo, file))
+      conflicts.push(file)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw error
       }
+      // File doesn't exist in target — no conflict
     }
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      throw error
-    }
-    // Target doesn't exist yet — no conflicts
   }
 
   return { fileCount: files.length, files, conflicts }
@@ -240,6 +243,8 @@ export async function migrateWorkspaceFiles(
       }
 
       try {
+        // Ensure target subdirectory exists for nested files
+        await fs.mkdir(dirname(targetPath), { recursive: true })
         // Try atomic rename first (only works on same volume)
         await fs.rename(sourcePath, targetPath)
         migrated.push(file)
@@ -248,6 +253,7 @@ export async function migrateWorkspaceFiles(
           // Cross-volume: copy + preserve timestamps + delete original
           try {
             const stat = await fs.stat(sourcePath)
+            await fs.mkdir(dirname(targetPath), { recursive: true })
             await fs.copyFile(sourcePath, targetPath)
             await fs.utimes(targetPath, stat.atime, stat.mtime)
             await fs.unlink(sourcePath)

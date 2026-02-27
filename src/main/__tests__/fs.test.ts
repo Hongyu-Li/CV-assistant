@@ -26,11 +26,11 @@ describe('precheckWorkspaceMigration', () => {
     await fsp.mkdir(targetDir, { recursive: true })
   })
 
-  it('returns json files from source and identifies conflicts', async () => {
+  it('returns files from source recursively and identifies conflicts', async () => {
     await fsp.writeFile(join(sourceDir, 'resume1.json'), '{"name":"test1"}')
     await fsp.writeFile(join(sourceDir, 'resume2.json'), '{"name":"test2"}')
     await fsp.writeFile(join(targetDir, 'resume1.json'), '{"name":"existing"}')
-    // Non-json file should be ignored
+    // Dot-files should be ignored
     await fsp.writeFile(join(sourceDir, '.DS_Store'), '')
 
     const { precheckWorkspaceMigration } = await import('../fs')
@@ -43,7 +43,7 @@ describe('precheckWorkspaceMigration', () => {
     expect(result.files).not.toContain('.DS_Store')
   })
 
-  it('returns empty arrays when source has no json files', async () => {
+  it('returns empty arrays when source has only dot-files', async () => {
     await fsp.writeFile(join(sourceDir, '.DS_Store'), '')
 
     const { precheckWorkspaceMigration } = await import('../fs')
@@ -83,6 +83,45 @@ describe('precheckWorkspaceMigration', () => {
 
     const { precheckWorkspaceMigration } = await import('../fs')
     await expect(precheckWorkspaceMigration(nestedSource, targetDir)).rejects.toThrow('inside')
+  })
+
+  it('recursively collects files from subdirectories', async () => {
+    // Create nested structure: profile/ and resumes/
+    await fsp.mkdir(join(sourceDir, 'profile'), { recursive: true })
+    await fsp.mkdir(join(sourceDir, 'resumes'), { recursive: true })
+    await fsp.writeFile(join(sourceDir, 'settings.json'), '{}')
+    await fsp.writeFile(join(sourceDir, 'profile', 'index.json'), '{}')
+    await fsp.writeFile(join(sourceDir, 'profile', 'summary.md'), '# Summary')
+    await fsp.writeFile(join(sourceDir, 'resumes', 'resume-001.json'), '{}')
+    await fsp.writeFile(join(sourceDir, 'resumes', 'resume-001.md'), '# CV')
+    // Dot-file in subdir should be excluded
+    await fsp.writeFile(join(sourceDir, 'profile', '.DS_Store'), '')
+
+    const { precheckWorkspaceMigration } = await import('../fs')
+    const result = await precheckWorkspaceMigration(sourceDir, targetDir)
+
+    expect(result.files).toContain('settings.json')
+    expect(result.files).toContain('profile/index.json')
+    expect(result.files).toContain('profile/summary.md')
+    expect(result.files).toContain('resumes/resume-001.json')
+    expect(result.files).toContain('resumes/resume-001.md')
+    expect(result.fileCount).toBe(5)
+    expect(result.files).not.toContain('profile/.DS_Store')
+  })
+
+  it('detects conflicts in subdirectories', async () => {
+    await fsp.mkdir(join(sourceDir, 'resumes'), { recursive: true })
+    await fsp.mkdir(join(targetDir, 'resumes'), { recursive: true })
+    await fsp.writeFile(join(sourceDir, 'resumes', 'cv.md'), '# New')
+    await fsp.writeFile(join(targetDir, 'resumes', 'cv.md'), '# Existing')
+    await fsp.writeFile(join(sourceDir, 'settings.json'), '{}')
+
+    const { precheckWorkspaceMigration } = await import('../fs')
+    const result = await precheckWorkspaceMigration(sourceDir, targetDir)
+
+    expect(result.files).toContain('resumes/cv.md')
+    expect(result.files).toContain('settings.json')
+    expect(result.conflicts).toEqual(['resumes/cv.md'])
   })
 })
 
@@ -163,7 +202,7 @@ describe('migrateWorkspaceFiles', () => {
     expect(Math.abs(stats.mtime.getTime() - pastDate.getTime())).toBeLessThan(1000)
   })
 
-  it('ignores non-json files', async () => {
+  it('migrates all non-dot files and ignores dot-files', async () => {
     await fsp.writeFile(join(sourceDir, 'resume1.json'), '{}')
     await fsp.writeFile(join(sourceDir, '.DS_Store'), '')
     await fsp.writeFile(join(sourceDir, 'notes.txt'), 'hello')
@@ -171,12 +210,15 @@ describe('migrateWorkspaceFiles', () => {
     const { migrateWorkspaceFiles } = await import('../fs')
     const result = await migrateWorkspaceFiles(sourceDir, targetDir, false)
 
-    expect(result.migrated).toEqual(['resume1.json'])
+    expect(result.migrated).toContain('resume1.json')
+    expect(result.migrated).toContain('notes.txt')
+    expect(result.migrated).toHaveLength(2)
 
-    // Non-json files should still be in source
+    // Dot-files should still be in source
     const sourceFiles = await fsp.readdir(sourceDir)
     expect(sourceFiles).toContain('.DS_Store')
-    expect(sourceFiles).toContain('notes.txt')
+    expect(sourceFiles).not.toContain('resume1.json')
+    expect(sourceFiles).not.toContain('notes.txt')
   })
 
   it('creates target directory if it does not exist', async () => {
@@ -211,6 +253,67 @@ describe('migrateWorkspaceFiles', () => {
     const result = await migrateWorkspaceFiles(sourceDir, targetDir, false)
 
     expect(result.success).toBe(true)
+  })
+
+  it('migrates files from subdirectories preserving structure', async () => {
+    // Create full workspace structure
+    await fsp.mkdir(join(sourceDir, 'profile'), { recursive: true })
+    await fsp.mkdir(join(sourceDir, 'resumes'), { recursive: true })
+    await fsp.writeFile(join(sourceDir, 'settings.json'), '{"theme":"dark"}')
+    await fsp.writeFile(join(sourceDir, 'profile', 'index.json'), '{"name":"John"}')
+    await fsp.writeFile(join(sourceDir, 'profile', 'summary.md'), '# Summary')
+    await fsp.writeFile(join(sourceDir, 'resumes', 'resume-001.json'), '{"title":"CV"}')
+    await fsp.writeFile(join(sourceDir, 'resumes', 'resume-001.md'), '# My CV')
+
+    const { migrateWorkspaceFiles } = await import('../fs')
+    const result = await migrateWorkspaceFiles(sourceDir, targetDir, false)
+
+    expect(result.success).toBe(true)
+    expect(result.migrated).toContain('settings.json')
+    expect(result.migrated).toContain('profile/index.json')
+    expect(result.migrated).toContain('profile/summary.md')
+    expect(result.migrated).toContain('resumes/resume-001.json')
+    expect(result.migrated).toContain('resumes/resume-001.md')
+    expect(result.migrated).toHaveLength(5)
+
+    // Verify files exist in target with correct content
+    const profileJson = await fsp.readFile(join(targetDir, 'profile', 'index.json'), 'utf-8')
+    expect(JSON.parse(profileJson).name).toBe('John')
+    const resumeMd = await fsp.readFile(join(targetDir, 'resumes', 'resume-001.md'), 'utf-8')
+    expect(resumeMd).toBe('# My CV')
+
+    // Verify source files are gone
+    await expect(fsp.stat(join(sourceDir, 'profile', 'index.json'))).rejects.toThrow()
+    await expect(fsp.stat(join(sourceDir, 'resumes', 'resume-001.md'))).rejects.toThrow()
+  })
+
+  it('handles subdirectory conflicts with overwrite', async () => {
+    await fsp.mkdir(join(sourceDir, 'resumes'), { recursive: true })
+    await fsp.mkdir(join(targetDir, 'resumes'), { recursive: true })
+    await fsp.writeFile(join(sourceDir, 'resumes', 'cv.md'), '# Updated CV')
+    await fsp.writeFile(join(targetDir, 'resumes', 'cv.md'), '# Old CV')
+
+    const { migrateWorkspaceFiles } = await import('../fs')
+    const resultSkip = await migrateWorkspaceFiles(sourceDir, targetDir, false)
+
+    expect(resultSkip.skipped).toContain('resumes/cv.md')
+    // Old content should be preserved
+    const oldContent = await fsp.readFile(join(targetDir, 'resumes', 'cv.md'), 'utf-8')
+    expect(oldContent).toBe('# Old CV')
+  })
+
+  it('handles subdirectory conflicts with overwrite enabled', async () => {
+    await fsp.mkdir(join(sourceDir, 'profile'), { recursive: true })
+    await fsp.mkdir(join(targetDir, 'profile'), { recursive: true })
+    await fsp.writeFile(join(sourceDir, 'profile', 'index.json'), '{"v":2}')
+    await fsp.writeFile(join(targetDir, 'profile', 'index.json'), '{"v":1}')
+
+    const { migrateWorkspaceFiles } = await import('../fs')
+    const result = await migrateWorkspaceFiles(sourceDir, targetDir, true)
+
+    expect(result.migrated).toContain('profile/index.json')
+    const content = await fsp.readFile(join(targetDir, 'profile', 'index.json'), 'utf-8')
+    expect(JSON.parse(content).v).toBe(2)
   })
 })
 
