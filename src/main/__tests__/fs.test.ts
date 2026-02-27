@@ -10,8 +10,8 @@ import * as nodeFs from 'node:fs'
 // promises object lets us intercept calls the source module actually makes.
 const origRename = nodeFs.promises.rename
 const origCopyFile = nodeFs.promises.copyFile
-const renameImpl: ((...args: unknown[]) => unknown) | null = null
-const copyFileImpl: ((...args: unknown[]) => unknown) | null = null
+let renameImpl: ((...args: unknown[]) => unknown) | null = null
+let copyFileImpl: ((...args: unknown[]) => unknown) | null = null
 
 Object.defineProperty(nodeFs.promises, 'rename', {
   configurable: true,
@@ -848,8 +848,8 @@ describe('migrateWorkspaceFiles - EXDEV cross-volume fallback', () => {
   })
 
   afterEach(() => {
-    mockRename.mockReset()
-    mockCopyFile.mockReset()
+    renameImpl = null
+    copyFileImpl = null
   })
 
   it('falls back to copy+delete when rename throws EXDEV', async () => {
@@ -857,12 +857,11 @@ describe('migrateWorkspaceFiles - EXDEV cross-volume fallback', () => {
     await fsp.writeFile(join(sourceDir, 'cross-vol.json'), '{"cross":"volume"}')
     await fsp.utimes(join(sourceDir, 'cross-vol.json'), pastDate, pastDate)
 
-    // Configure mockRename to throw EXDEV
-    mockRename.mockImplementation(() => {
-      return Promise.reject(
+    // Intercept rename to throw EXDEV
+    renameImpl = () =>
+      Promise.reject(
         Object.assign(new Error('EXDEV: cross-device link not permitted'), { code: 'EXDEV' })
       )
-    })
 
     const { migrateWorkspaceFiles } = await import('../fs')
     const result = await migrateWorkspaceFiles(sourceDir, targetDir, false)
