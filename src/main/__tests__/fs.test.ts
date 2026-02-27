@@ -1,7 +1,30 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { promises as fsp } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import * as nodeFs from 'node:fs'
+
+// Module-level interception for fs.promises.rename and fs.promises.copyFile.
+// vi.mock('fs') factory replacement does NOT affect the source module's binding
+// (it imports `promises` once, at load time). Object.defineProperty on the REAL
+// promises object lets us intercept calls the source module actually makes.
+const origRename = nodeFs.promises.rename
+const origCopyFile = nodeFs.promises.copyFile
+const renameImpl: ((...args: unknown[]) => unknown) | null = null
+const copyFileImpl: ((...args: unknown[]) => unknown) | null = null
+
+Object.defineProperty(nodeFs.promises, 'rename', {
+  configurable: true,
+  get() {
+    return renameImpl ?? origRename
+  }
+})
+Object.defineProperty(nodeFs.promises, 'copyFile', {
+  configurable: true,
+  get() {
+    return copyFileImpl ?? origCopyFile
+  }
+})
 
 // Mock electron's app module since fs.ts imports it at top level
 vi.mock('electron', () => ({
@@ -13,6 +36,12 @@ vi.mock('electron', () => ({
     })
   }
 }))
+
+// Mock 'fs' — spread the real module so all other fs operations work normally.
+vi.mock('fs', async () => {
+  const actual = await import('node:fs')
+  return { ...actual, default: actual }
+})
 
 describe('precheckWorkspaceMigration', () => {
   let sourceDir: string
@@ -452,5 +481,404 @@ describe('writeWorkspaceFile with subdirectory auto-creation (resume save flow)'
 
     expect(mdContent).toBe(generatedCV)
     expect(data.language).toBe('en')
+  })
+})
+
+describe('getSafeFilePath (via readUserDataFile)', () => {
+  it('rejects path traversal with ../', async () => {
+    const { readUserDataFile } = await import('../fs')
+    await expect(readUserDataFile('../../etc/passwd')).rejects.toThrow('Invalid file path')
+  })
+
+  it('rejects path traversal with nested ../', async () => {
+    const { readUserDataFile } = await import('../fs')
+    await expect(readUserDataFile('../secret/data.json')).rejects.toThrow('Invalid file path')
+  })
+
+  it('allows valid simple filenames', async () => {
+    // This should NOT throw 'Invalid file path' — it may throw ENOENT since the file doesn't exist
+    const { readUserDataFile } = await import('../fs')
+    await expect(readUserDataFile('valid-file.json')).rejects.toThrow()
+    // Verify it's a filesystem error, not a path safety error
+    try {
+      await readUserDataFile('valid-file.json')
+    } catch (error) {
+      expect((error as Error).message).not.toBe('Invalid file path')
+    }
+  })
+
+  it('allows valid nested filenames', async () => {
+    const { readUserDataFile } = await import('../fs')
+    try {
+      await readUserDataFile('subdir/nested-file.json')
+    } catch (error) {
+      expect((error as Error).message).not.toBe('Invalid file path')
+    }
+  })
+})
+
+describe('getWorkspaceFilePath (via readWorkspaceFile)', () => {
+  it('rejects path traversal with ../', async () => {
+    const tmpBase = await fsp.mkdtemp(join(tmpdir(), 'cv-wspath-test-'))
+    const { readWorkspaceFile } = await import('../fs')
+    await expect(readWorkspaceFile('../../etc/passwd', tmpBase)).rejects.toThrow(
+      'Invalid file path'
+    )
+  })
+
+  it('rejects path traversal with ../ in nested path', async () => {
+    const tmpBase = await fsp.mkdtemp(join(tmpdir(), 'cv-wspath-test-'))
+    const { readWorkspaceFile } = await import('../fs')
+    await expect(readWorkspaceFile('../secret', tmpBase)).rejects.toThrow('Invalid file path')
+  })
+
+  it('allows valid paths within workspace', async () => {
+    const tmpBase = await fsp.mkdtemp(join(tmpdir(), 'cv-wspath-test-'))
+    await fsp.writeFile(join(tmpBase, 'valid.json'), '{}')
+
+    const { readWorkspaceFile } = await import('../fs')
+    const content = await readWorkspaceFile('valid.json', tmpBase)
+    expect(content).toBe('{}')
+  })
+})
+
+describe('readUserDataFile', () => {
+  beforeEach(async () => {
+    // Ensure the mock userData directory exists
+    await fsp.mkdir('/tmp/mock-userData', { recursive: true })
+  })
+
+  it('reads an existing file', async () => {
+    await fsp.writeFile('/tmp/mock-userData/test-read.json', '{"hello":"world"}')
+
+    const { readUserDataFile } = await import('../fs')
+    const content = await readUserDataFile('test-read.json')
+    expect(content).toBe('{"hello":"world"}')
+
+    // Cleanup
+    await fsp.unlink('/tmp/mock-userData/test-read.json')
+  })
+
+  it('throws when file does not exist', async () => {
+    const { readUserDataFile } = await import('../fs')
+    await expect(readUserDataFile('nonexistent-file.json')).rejects.toThrow()
+  })
+})
+
+describe('writeUserDataFile', () => {
+  beforeEach(async () => {
+    await fsp.mkdir('/tmp/mock-userData', { recursive: true })
+  })
+
+  it('writes a file and reads it back', async () => {
+    const { writeUserDataFile, readUserDataFile } = await import('../fs')
+
+    await writeUserDataFile('test-write.json', '{"written":true}')
+    const content = await readUserDataFile('test-write.json')
+    expect(content).toBe('{"written":true}')
+
+    // Cleanup
+    await fsp.unlink('/tmp/mock-userData/test-write.json')
+  })
+
+  it('auto-creates parent directories', async () => {
+    const { writeUserDataFile, readUserDataFile } = await import('../fs')
+
+    await writeUserDataFile('nested/deep/test-write.json', '{"nested":true}')
+    const content = await readUserDataFile('nested/deep/test-write.json')
+    expect(content).toBe('{"nested":true}')
+
+    // Verify directory was created
+    const stat = await fsp.stat('/tmp/mock-userData/nested/deep')
+    expect(stat.isDirectory()).toBe(true)
+
+    // Cleanup
+    await fsp.rm('/tmp/mock-userData/nested', { recursive: true })
+  })
+
+  it('overwrites existing file', async () => {
+    const { writeUserDataFile, readUserDataFile } = await import('../fs')
+
+    await writeUserDataFile('overwrite-test.json', 'original')
+    await writeUserDataFile('overwrite-test.json', 'updated')
+    const content = await readUserDataFile('overwrite-test.json')
+    expect(content).toBe('updated')
+
+    // Cleanup
+    await fsp.unlink('/tmp/mock-userData/overwrite-test.json')
+  })
+})
+
+describe('listUserDataFiles', () => {
+  let testDir: string
+
+  beforeEach(async () => {
+    // Create a unique subdirectory under mock-userData for isolation
+    testDir = 'list-test-' + Date.now()
+    await fsp.mkdir(join('/tmp/mock-userData', testDir), { recursive: true })
+  })
+
+  it('lists files in a directory', async () => {
+    await fsp.writeFile(join('/tmp/mock-userData', testDir, 'a.json'), '{}')
+    await fsp.writeFile(join('/tmp/mock-userData', testDir, 'b.json'), '{}')
+
+    const { listUserDataFiles } = await import('../fs')
+    const files = await listUserDataFiles(testDir)
+
+    expect(files).toContain('a.json')
+    expect(files).toContain('b.json')
+    expect(files).toHaveLength(2)
+
+    // Cleanup
+    await fsp.rm(join('/tmp/mock-userData', testDir), { recursive: true })
+  })
+
+  it('returns empty array for non-existent directory', async () => {
+    const { listUserDataFiles } = await import('../fs')
+    const files = await listUserDataFiles('completely-nonexistent-dir-12345')
+    expect(files).toEqual([])
+  })
+
+  it('returns empty array for empty directory', async () => {
+    const { listUserDataFiles } = await import('../fs')
+    const files = await listUserDataFiles(testDir)
+    expect(files).toEqual([])
+
+    // Cleanup
+    await fsp.rm(join('/tmp/mock-userData', testDir), { recursive: true })
+  })
+})
+
+describe('deleteUserDataFile', () => {
+  beforeEach(async () => {
+    await fsp.mkdir('/tmp/mock-userData', { recursive: true })
+  })
+
+  it('deletes an existing file', async () => {
+    await fsp.writeFile('/tmp/mock-userData/to-delete.json', '{}')
+
+    const { deleteUserDataFile } = await import('../fs')
+    await deleteUserDataFile('to-delete.json')
+
+    await expect(fsp.stat('/tmp/mock-userData/to-delete.json')).rejects.toThrow()
+  })
+
+  it('throws when deleting non-existent file', async () => {
+    const { deleteUserDataFile } = await import('../fs')
+    await expect(deleteUserDataFile('nonexistent-delete-target.json')).rejects.toThrow()
+  })
+})
+
+describe('getLastModified', () => {
+  beforeEach(async () => {
+    await fsp.mkdir('/tmp/mock-userData', { recursive: true })
+  })
+
+  it('returns modification time of existing file', async () => {
+    const pastDate = new Date('2024-06-15T12:00:00Z')
+    await fsp.writeFile('/tmp/mock-userData/mtime-test.json', '{}')
+    await fsp.utimes('/tmp/mock-userData/mtime-test.json', pastDate, pastDate)
+
+    const { getLastModified } = await import('../fs')
+    const mtime = await getLastModified('mtime-test.json')
+
+    expect(mtime).toBeInstanceOf(Date)
+    expect(Math.abs(mtime.getTime() - pastDate.getTime())).toBeLessThan(1000)
+
+    // Cleanup
+    await fsp.unlink('/tmp/mock-userData/mtime-test.json')
+  })
+
+  it('throws for non-existent file', async () => {
+    const { getLastModified } = await import('../fs')
+    await expect(getLastModified('nonexistent-mtime.json')).rejects.toThrow()
+  })
+})
+
+describe('readWorkspaceFile', () => {
+  let workspaceDir: string
+
+  beforeEach(async () => {
+    workspaceDir = await fsp.mkdtemp(join(tmpdir(), 'cv-read-ws-test-'))
+  })
+
+  it('reads an existing workspace file', async () => {
+    await fsp.writeFile(join(workspaceDir, 'settings.json'), '{"theme":"dark"}')
+
+    const { readWorkspaceFile } = await import('../fs')
+    const content = await readWorkspaceFile('settings.json', workspaceDir)
+    expect(content).toBe('{"theme":"dark"}')
+  })
+
+  it('reads a file in a subdirectory', async () => {
+    await fsp.mkdir(join(workspaceDir, 'profile'), { recursive: true })
+    await fsp.writeFile(join(workspaceDir, 'profile', 'bio.md'), '# Bio')
+
+    const { readWorkspaceFile } = await import('../fs')
+    const content = await readWorkspaceFile('profile/bio.md', workspaceDir)
+    expect(content).toBe('# Bio')
+  })
+
+  it('throws for non-existent workspace file', async () => {
+    const { readWorkspaceFile } = await import('../fs')
+    await expect(readWorkspaceFile('nope.json', workspaceDir)).rejects.toThrow()
+  })
+})
+
+describe('getWorkspaceLastModified', () => {
+  let workspaceDir: string
+
+  beforeEach(async () => {
+    workspaceDir = await fsp.mkdtemp(join(tmpdir(), 'cv-ws-mtime-test-'))
+  })
+
+  it('returns modification time of workspace file', async () => {
+    const pastDate = new Date('2024-03-10T08:00:00Z')
+    await fsp.writeFile(join(workspaceDir, 'data.json'), '{}')
+    await fsp.utimes(join(workspaceDir, 'data.json'), pastDate, pastDate)
+
+    const { getWorkspaceLastModified } = await import('../fs')
+    const mtime = await getWorkspaceLastModified('data.json', workspaceDir)
+
+    expect(mtime).toBeInstanceOf(Date)
+    expect(Math.abs(mtime.getTime() - pastDate.getTime())).toBeLessThan(1000)
+  })
+
+  it('throws for non-existent workspace file', async () => {
+    const { getWorkspaceLastModified } = await import('../fs')
+    await expect(getWorkspaceLastModified('nope.json', workspaceDir)).rejects.toThrow()
+  })
+})
+
+describe('listWorkspaceFiles', () => {
+  let workspaceDir: string
+
+  beforeEach(async () => {
+    workspaceDir = await fsp.mkdtemp(join(tmpdir(), 'cv-list-ws-test-'))
+  })
+
+  it('lists files in the workspace root', async () => {
+    await fsp.writeFile(join(workspaceDir, 'settings.json'), '{}')
+    await fsp.writeFile(join(workspaceDir, 'profile.json'), '{}')
+
+    const { listWorkspaceFiles } = await import('../fs')
+    const files = await listWorkspaceFiles(workspaceDir)
+
+    expect(files).toContain('settings.json')
+    expect(files).toContain('profile.json')
+    expect(files).toHaveLength(2)
+  })
+
+  it('returns empty array for empty workspace', async () => {
+    const { listWorkspaceFiles } = await import('../fs')
+    const files = await listWorkspaceFiles(workspaceDir)
+    expect(files).toEqual([])
+  })
+
+  it('returns empty array for non-existent workspace directory', async () => {
+    const { listWorkspaceFiles } = await import('../fs')
+    const files = await listWorkspaceFiles('/tmp/nonexistent-ws-dir-99999')
+    expect(files).toEqual([])
+  })
+})
+
+describe('migrateWorkspaceFiles - concurrent guard', () => {
+  let sourceDir: string
+  let targetDir: string
+
+  beforeEach(async () => {
+    const base = await fsp.mkdtemp(join(tmpdir(), 'cv-concurrent-test-'))
+    sourceDir = join(base, 'source')
+    targetDir = join(base, 'target')
+    await fsp.mkdir(sourceDir, { recursive: true })
+    await fsp.mkdir(targetDir, { recursive: true })
+  })
+
+  it('throws when a second migration starts while first is running', async () => {
+    // Create enough files so the first migration takes some time
+    for (let i = 0; i < 10; i++) {
+      await fsp.writeFile(join(sourceDir, `file-${i}.json`), JSON.stringify({ i }))
+    }
+
+    const { migrateWorkspaceFiles } = await import('../fs')
+
+    // Start first migration but don't await it
+    const first = migrateWorkspaceFiles(sourceDir, targetDir, false)
+
+    // Immediately start second migration — should throw
+    await expect(migrateWorkspaceFiles(sourceDir, targetDir, false)).rejects.toThrow(
+      'A migration is already in progress'
+    )
+
+    // Wait for first to complete so the flag resets for other tests
+    await first
+  })
+
+  it('allows migration after previous one completes', async () => {
+    await fsp.writeFile(join(sourceDir, 'file1.json'), '{}')
+
+    const { migrateWorkspaceFiles } = await import('../fs')
+
+    // First migration
+    const result1 = await migrateWorkspaceFiles(sourceDir, targetDir, false)
+    expect(result1.success).toBe(true)
+
+    // Add another file to source and create a fresh target
+    await fsp.writeFile(join(sourceDir, 'file2.json'), '{}')
+    const base2 = await fsp.mkdtemp(join(tmpdir(), 'cv-concurrent-test2-'))
+    const targetDir2 = join(base2, 'target')
+    await fsp.mkdir(targetDir2, { recursive: true })
+
+    // Second migration should succeed (flag was reset in finally block)
+    const result2 = await migrateWorkspaceFiles(sourceDir, targetDir2, false)
+    expect(result2.success).toBe(true)
+  })
+})
+
+describe('migrateWorkspaceFiles - EXDEV cross-volume fallback', () => {
+  let sourceDir: string
+  let targetDir: string
+
+  beforeEach(async () => {
+    const base = await fsp.mkdtemp(join(tmpdir(), 'cv-exdev-test-'))
+    sourceDir = join(base, 'source')
+    targetDir = join(base, 'target')
+    await fsp.mkdir(sourceDir, { recursive: true })
+    await fsp.mkdir(targetDir, { recursive: true })
+  })
+
+  afterEach(() => {
+    mockRename.mockReset()
+    mockCopyFile.mockReset()
+  })
+
+  it('falls back to copy+delete when rename throws EXDEV', async () => {
+    const pastDate = new Date('2024-05-20T10:00:00Z')
+    await fsp.writeFile(join(sourceDir, 'cross-vol.json'), '{"cross":"volume"}')
+    await fsp.utimes(join(sourceDir, 'cross-vol.json'), pastDate, pastDate)
+
+    // Configure mockRename to throw EXDEV
+    mockRename.mockImplementation(() => {
+      return Promise.reject(
+        Object.assign(new Error('EXDEV: cross-device link not permitted'), { code: 'EXDEV' })
+      )
+    })
+
+    const { migrateWorkspaceFiles } = await import('../fs')
+    const result = await migrateWorkspaceFiles(sourceDir, targetDir, false)
+
+    expect(result.success).toBe(true)
+    expect(result.migrated).toContain('cross-vol.json')
+
+    // Verify file was copied to target
+    const content = await fsp.readFile(join(targetDir, 'cross-vol.json'), 'utf-8')
+    expect(content).toBe('{"cross":"volume"}')
+
+    // Verify source file was deleted (unlink happens after copy)
+    await expect(fsp.stat(join(sourceDir, 'cross-vol.json'))).rejects.toThrow()
+
+    // Verify timestamps were preserved
+    const stats = await fsp.stat(join(targetDir, 'cross-vol.json'))
+    expect(Math.abs(stats.mtime.getTime() - pastDate.getTime())).toBeLessThan(1000)
   })
 })

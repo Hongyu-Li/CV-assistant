@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import App from './App'
 import { SettingsProvider } from './context/SettingsContext'
@@ -30,5 +30,91 @@ describe('App', () => {
       </SettingsProvider>
     )
     expect(screen.getByText('app.title')).toBeInTheDocument()
+  })
+})
+
+// Mock child components to avoid deep rendering
+vi.mock('./components/Profile', () => ({
+  Profile: (): React.JSX.Element => <div data-testid="profile-view">Profile</div>
+}))
+vi.mock('./components/Settings', () => ({
+  Settings: (): React.JSX.Element => <div data-testid="settings-view">Settings</div>
+}))
+vi.mock('./components/Resumes', () => ({
+  Resumes: (): React.JSX.Element => <div data-testid="resumes-view">Resumes</div>
+}))
+vi.mock('./components/ui/sonner', () => ({
+  Toaster: (): React.JSX.Element => <div data-testid="toaster" />
+}))
+
+function renderApp(): void {
+  render(
+    <SettingsProvider>
+      <App />
+    </SettingsProvider>
+  )
+}
+
+describe('App navigation', () => {
+  describe('default view', () => {
+    it('renders Resumes view by default', (): void => {
+      renderApp()
+      expect(screen.getByTestId('resumes-view')).toBeInTheDocument()
+      expect(screen.queryByTestId('profile-view')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('settings-view')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('view switching', () => {
+    it('switches to Profile view when Profile button is clicked', (): void => {
+      renderApp()
+      fireEvent.click(screen.getByText('app.profile'))
+      expect(screen.getByTestId('profile-view')).toBeInTheDocument()
+      expect(screen.queryByTestId('resumes-view')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('settings-view')).not.toBeInTheDocument()
+    })
+
+    it('switches to Settings view when Settings button is clicked', (): void => {
+      renderApp()
+      fireEvent.click(screen.getByText('app.settings'))
+      expect(screen.getByTestId('settings-view')).toBeInTheDocument()
+      expect(screen.queryByTestId('resumes-view')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('profile-view')).not.toBeInTheDocument()
+    })
+
+    it('switches back to Resumes view from another view', (): void => {
+      renderApp()
+      fireEvent.click(screen.getByText('app.settings'))
+      expect(screen.getByTestId('settings-view')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByText('app.resumes'))
+      expect(screen.getByTestId('resumes-view')).toBeInTheDocument()
+      expect(screen.queryByTestId('settings-view')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('button styling', () => {
+    it('applies secondary variant to the active button and ghost to inactive buttons', (): void => {
+      renderApp()
+      const resumesBtn = screen.getByText('app.resumes')
+      const profileBtn = screen.getByText('app.profile')
+      const settingsBtn = screen.getByText('app.settings')
+
+      // Default: Resumes is active
+      expect(resumesBtn.closest('button')).toHaveClass('bg-secondary')
+      expect(profileBtn.closest('button')).not.toHaveClass('bg-secondary')
+      expect(settingsBtn.closest('button')).not.toHaveClass('bg-secondary')
+    })
+
+    it('updates button styling when switching views', (): void => {
+      renderApp()
+      fireEvent.click(screen.getByText('app.profile'))
+
+      const resumesBtn = screen.getByText('app.resumes')
+      const profileBtn = screen.getByText('app.profile')
+
+      expect(profileBtn.closest('button')).toHaveClass('bg-secondary')
+      expect(resumesBtn.closest('button')).not.toHaveClass('bg-secondary')
+    })
   })
 })
