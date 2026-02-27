@@ -131,6 +131,16 @@ app.whenReady().then(async () => {
     }
   })
 
+  ipcMain.handle('cv:read', async (_, { filename, workspacePath }) => {
+    try {
+      const content = await readWorkspaceFile(filename, workspacePath)
+      return { success: true, data: JSON.parse(content) }
+    } catch (error) {
+      console.error('Failed to read CV:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
   // Directory Picker IPC
   ipcMain.handle('dialog:openDirectory', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
