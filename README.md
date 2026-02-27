@@ -1,5 +1,7 @@
 # 简历助手 (CV Assistant)
 
+English | [中文](./README.zh-CN.md)
+
 AI-powered resume/CV assistant desktop app — generate tailored resumes from your profile using multiple AI providers.
 
 [![Electron](https://img.shields.io/badge/Electron-39.0.0-blue.svg)](https://www.electronjs.org/)
@@ -35,7 +37,7 @@ AI-powered resume/CV assistant desktop app — generate tailored resumes from yo
 | i18n     | i18next, react-i18next                                       |
 | Testing  | Vitest, Testing Library, Playwright                          |
 | Linting  | ESLint 9, Prettier                                           |
-| CI/DX    | Husky, lint-staged                                           |
+| CI/DX    | Husky, lint-staged, GitHub Actions                           |
 
 ## Prerequisites
 
@@ -44,8 +46,8 @@ Node.js >= 18, npm
 ## Getting Started
 
 ```bash
-git clone https://github.com/user/cv-assistant.git
-cd cv-assistant
+git clone https://github.com/tc9011/CV-assistant.git
+cd CV-assistant
 npm install
 npm run dev
 ```
