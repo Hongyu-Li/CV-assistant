@@ -88,6 +88,22 @@ export async function listWorkspaceFiles(workspaceDir?: string): Promise<string[
   }
 }
 
+export async function listWorkspaceSubdirFiles(
+  subdir: string,
+  workspaceDir?: string
+): Promise<string[]> {
+  const dirPath = getWorkspaceFilePath(subdir, workspaceDir)
+  try {
+    const entries = await fs.readdir(dirPath)
+    return entries
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return []
+    }
+    throw error
+  }
+}
+
 export async function deleteWorkspaceFile(filename: string, workspaceDir?: string): Promise<void> {
   const filePath = getWorkspaceFilePath(filename, workspaceDir)
   await fs.unlink(filePath)
@@ -146,7 +162,7 @@ export async function precheckWorkspaceMigration(
   // Filter to .json files only, exclude directories
   const files: string[] = []
   for (const file of sourceFiles) {
-    if (!file.endsWith('.json')) continue
+    if (!file.endsWith('.json') && !file.endsWith('.md')) continue
     const stat = await fs.stat(join(normalFrom, file))
     if (stat.isFile()) {
       files.push(file)

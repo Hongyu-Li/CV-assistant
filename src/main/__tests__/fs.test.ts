@@ -213,3 +213,90 @@ describe('migrateWorkspaceFiles', () => {
     expect(result.success).toBe(true)
   })
 })
+
+describe('listWorkspaceSubdirFiles', () => {
+  let workspaceDir: string
+
+  beforeEach(async () => {
+    const base = await fsp.mkdtemp(join(tmpdir(), 'cv-subdir-test-'))
+    workspaceDir = base
+  })
+
+  it('lists files in a subdirectory', async () => {
+    const subdir = join(workspaceDir, 'resumes')
+    await fsp.mkdir(subdir, { recursive: true })
+    await fsp.writeFile(join(subdir, 'cv1.json'), '{}')
+    await fsp.writeFile(join(subdir, 'cv1.md'), '# CV')
+
+    const { listWorkspaceSubdirFiles } = await import('../fs')
+    const files = await listWorkspaceSubdirFiles('resumes', workspaceDir)
+
+    expect(files).toContain('cv1.json')
+    expect(files).toContain('cv1.md')
+    expect(files).toHaveLength(2)
+  })
+
+  it('returns empty array when subdirectory does not exist', async () => {
+    const { listWorkspaceSubdirFiles } = await import('../fs')
+    const files = await listWorkspaceSubdirFiles('nonexistent', workspaceDir)
+    expect(files).toEqual([])
+  })
+})
+
+describe('deleteWorkspaceFile with subdirectory paths', () => {
+  let workspaceDir: string
+
+  beforeEach(async () => {
+    const base = await fsp.mkdtemp(join(tmpdir(), 'cv-delete-subdir-test-'))
+    workspaceDir = base
+  })
+
+  it('deletes a file in a subdirectory', async () => {
+    const subdir = join(workspaceDir, 'resumes')
+    await fsp.mkdir(subdir, { recursive: true })
+    await fsp.writeFile(join(subdir, 'cv1.md'), '# CV')
+
+    const { deleteWorkspaceFile } = await import('../fs')
+    await deleteWorkspaceFile('resumes/cv1.md', workspaceDir)
+
+    const files = await fsp.readdir(subdir)
+    expect(files).not.toContain('cv1.md')
+  })
+})
+
+describe('precheckWorkspaceMigration with .md files', () => {
+  let sourceDir: string
+  let targetDir: string
+
+  beforeEach(async () => {
+    const base = await fsp.mkdtemp(join(tmpdir(), 'cv-migrate-md-test-'))
+    sourceDir = join(base, 'source')
+    targetDir = join(base, 'target')
+    await fsp.mkdir(sourceDir, { recursive: true })
+    await fsp.mkdir(targetDir, { recursive: true })
+  })
+
+  it('includes .md files in migration precheck', async () => {
+    await fsp.writeFile(join(sourceDir, 'resume.json'), '{}')
+    await fsp.writeFile(join(sourceDir, 'resume.md'), '# Resume')
+    await fsp.writeFile(join(sourceDir, '.DS_Store'), '')
+
+    const { precheckWorkspaceMigration } = await import('../fs')
+    const result = await precheckWorkspaceMigration(sourceDir, targetDir)
+
+    expect(result.files).toContain('resume.json')
+    expect(result.files).toContain('resume.md')
+    expect(result.files).toHaveLength(2)
+    expect(result.files).not.toContain('.DS_Store')
+  })
+
+  it('detects .md file conflicts', async () => {
+    await fsp.writeFile(join(sourceDir, 'resume.md'), '# New')
+    await fsp.writeFile(join(targetDir, 'resume.md'), '# Existing')
+
+    const { precheckWorkspaceMigration } = await import('../fs')
+    const result = await precheckWorkspaceMigration(sourceDir, targetDir)
+
+    expect(result.conflicts).toEqual(['resume.md'])
+  })
+})
