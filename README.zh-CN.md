@@ -1,4 +1,4 @@
-# 简历助手 (CV Assistant)
+# 简历助手
 
 [English](./README.md) | 中文
 
