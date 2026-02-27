@@ -86,7 +86,7 @@ describe('generateCV', () => {
 
   beforeEach((): void => {
     mockInvoke.mockReset()
-    mockInvoke.mockResolvedValue('# Generated CV\n\nContent here')
+    mockInvoke.mockResolvedValue({ success: true, content: '# Generated CV\n\nContent here' })
   })
 
   it('calls IPC with correct arguments', async (): Promise<void> => {
@@ -106,7 +106,7 @@ describe('generateCV', () => {
   })
 
   it('returns the IPC result as a string', async (): Promise<void> => {
-    mockInvoke.mockResolvedValue('# My CV\n\nGreat content')
+    mockInvoke.mockResolvedValue({ success: true, content: '# My CV\n\nGreat content' })
 
     const result = await generateCV(baseOptions)
 
@@ -244,6 +244,12 @@ describe('generateCV', () => {
     mockInvoke.mockRejectedValue(new Error('IPC connection failed'))
 
     await expect(generateCV(baseOptions)).rejects.toThrow('IPC connection failed')
+  })
+
+  it('throws when IPC returns structured error', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: false, error: 'API key invalid' })
+
+    await expect(generateCV(baseOptions)).rejects.toThrow('API key invalid')
   })
 
   it('works with different providers using their config defaults', async (): Promise<void> => {

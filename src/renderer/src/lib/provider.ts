@@ -152,5 +152,9 @@ Generate the CV now.${options.language ? ` Write the CV entirely in ${languageNa
     baseUrl
   })
 
-  return result as string
+  if (!result.success) {
+    throw new Error(result.error)
+  }
+
+  return result.content as string
 }

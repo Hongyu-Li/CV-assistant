@@ -471,18 +471,18 @@ app.whenReady().then(async () => {
         const response = await fetch(url, { method: 'POST', headers, body })
         if (!response.ok) {
           const errorText = await response.text()
-          throw new Error(`API error ${response.status}: ${errorText}`)
+          return { success: false, error: `API error ${response.status}: ${errorText}` }
         }
 
         const data = await response.json()
 
         // Extract content
         if (provider === 'anthropic') {
-          return data.content?.[0]?.text || ''
+          return { success: true, content: data.content?.[0]?.text || '' }
         }
-        return data.choices?.[0]?.message?.content || ''
+        return { success: true, content: data.choices?.[0]?.message?.content || '' }
       } catch (error) {
-        throw new Error(`AI chat failed: ${(error as Error).message}`)
+        return { success: false, error: `AI chat failed: ${(error as Error).message}` }
       }
     }
   )
