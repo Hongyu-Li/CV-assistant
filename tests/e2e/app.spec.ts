@@ -35,33 +35,27 @@ test.describe('Electron App', () => {
     // Wait for the window to load
     await window.waitForLoadState('domcontentloaded')
 
-    // Wait for app to fully render
-    await window.waitForTimeout(1000)
+    // The sidebar nav contains 3 buttons. Use nav > button selector for resilience.
+    // Default language is English: Profile, Resumes, Settings.
+    const navButtons = window.locator('nav button')
+    await expect(navButtons).toHaveCount(3, { timeout: 5000 })
 
-    // Check that the sidebar navigation buttons exist
-    const profileButton = window.locator('button:has-text("app.profile")')
-    const resumesButton = window.locator('button:has-text("app.resumes")')
-    const settingsButton = window.locator('button:has-text("app.settings")')
+    // Click each sidebar button and verify active state changes.
+    // The active button gets a 'bg-primary/10' class via Tailwind.
+    const profileBtn = navButtons.nth(0)
+    const resumesBtn = navButtons.nth(1)
+    const settingsBtn = navButtons.nth(2)
 
-    // Verify buttons exist (using presence check)
-    expect(await profileButton.count()).toBeGreaterThan(0)
-    expect(await resumesButton.count()).toBeGreaterThan(0)
-    expect(await settingsButton.count()).toBeGreaterThan(0)
+    // Click Profile tab
+    await profileBtn.click()
+    await expect(profileBtn).toHaveClass(/border-primary/, { timeout: 2000 })
 
-    // Click on the Profile tab
-    await profileButton.first().click()
-    await window.waitForTimeout(500)
+    // Click Settings tab
+    await settingsBtn.click()
+    await expect(settingsBtn).toHaveClass(/border-primary/, { timeout: 2000 })
 
-    // Click on the Settings tab
-    await settingsButton.first().click()
-    await window.waitForTimeout(500)
-
-    // Click back to Resumes tab
-    await resumesButton.first().click()
-    await window.waitForTimeout(500)
-
-    // Verify we can click buttons without errors
-    // (success is no exceptions thrown)
-    expect(true).toBe(true)
+    // Click Resumes tab
+    await resumesBtn.click()
+    await expect(resumesBtn).toHaveClass(/border-primary/, { timeout: 2000 })
   })
 })
