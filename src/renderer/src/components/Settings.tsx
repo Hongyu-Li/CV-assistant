@@ -12,6 +12,110 @@ import { toast } from 'sonner'
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
+  const [isMigrating, setIsMigrating] = React.useState(false)
+
+  const handleMigration = async (currentPath: string, newDir: string): Promise<void> => {
+    // Determine actual source path
+    const fromPath =
+      currentPath || (await window.electron.ipcRenderer.invoke('app:getDefaultWorkspacePath'))
+
+    // If newDir not yet selected, open directory picker
+    let toPath = newDir
+    if (!toPath) {
+      toPath = await window.electron.ipcRenderer.invoke('dialog:openDirectory')
+      if (!toPath) return // User cancelled
+    }
+
+    // Same directory check
+    if (fromPath === toPath) {
+      toast.info(t('settings.migration_same_dir'))
+      return
+    }
+
+    setIsMigrating(true)
+    try {
+      // Step 1: Precheck
+      const precheck = await window.electron.ipcRenderer.invoke('workspace:precheck', {
+        from: fromPath,
+        to: toPath
+      })
+
+      if (!precheck.success) {
+        toast.error(t('settings.migration_error', { error: precheck.error }))
+        return
+      }
+
+      // No files to migrate — just update path
+      if (precheck.fileCount === 0) {
+        updateSettings({ workspacePath: toPath })
+        return
+      }
+
+      // Step 2: Confirmation dialog
+      const confirmed = window.confirm(
+        t('settings.migration_confirm', { count: precheck.fileCount })
+      )
+      if (!confirmed) return
+
+      // Step 3: Handle conflicts
+      let overwriteConflicts = false
+      if (precheck.conflicts.length > 0) {
+        overwriteConflicts = window.confirm(
+          t('settings.migration_conflict', { count: precheck.conflicts.length })
+        )
+      }
+
+      // Step 4: Execute migration
+      const result = await window.electron.ipcRenderer.invoke('workspace:migrate', {
+        from: fromPath,
+        to: toPath,
+        overwriteConflicts
+      })
+
+      if (result.success) {
+        // All files migrated successfully — update path
+        updateSettings({ workspacePath: toPath })
+        toast.success(t('settings.migration_success', { count: result.migrated.length }))
+      } else if (result.migrated.length > 0) {
+        // Partial failure — don't update path
+        toast.error(
+          t('settings.migration_partial', {
+            migrated: result.migrated.length,
+            failed: result.errors.length
+          })
+        )
+      } else {
+        // Total failure
+        const errorMsg = result.errors[0]?.error || 'Unknown error'
+        toast.error(t('settings.migration_error', { error: errorMsg }))
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      toast.error(t('settings.migration_error', { error: msg }))
+    } finally {
+      setIsMigrating(false)
+    }
+  }
+
+  // Listen for first-run migration prompt from main process
+  React.useEffect(() => {
+    const handler = (_event: unknown, data: { oldPath: string; fileCount: number }): void => {
+      toast.info(t('settings.migration_first_run'), {
+        duration: 10000,
+        action: {
+          label: t('settings.change_dir'),
+          onClick: async () => {
+            await handleMigration(data.oldPath, '')
+          }
+        }
+      })
+    }
+    window.electron.ipcRenderer.on('workspace:first-run-migration', handler)
+    return () => {
+      window.electron.ipcRenderer.removeListener('workspace:first-run-migration', handler)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleProviderChange = (value: string): void => {
     const provider = value as AIProvider
@@ -59,14 +163,15 @@ export const Settings = (): React.JSX.Element => {
                 />
                 <Button
                   variant="outline"
+                  disabled={isMigrating}
                   onClick={async (): Promise<void> => {
                     const dir = await window.electron.ipcRenderer.invoke('dialog:openDirectory')
                     if (dir) {
-                      updateSettings({ workspacePath: dir })
+                      await handleMigration(settings.workspacePath || '', dir)
                     }
                   }}
                 >
-                  {t('settings.change_dir')}
+                  {isMigrating ? t('settings.migration_in_progress') : t('settings.change_dir')}
                 </Button>
                 <Button
                   variant="outline"

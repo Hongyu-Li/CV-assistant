@@ -68,7 +68,15 @@
     "provider_custom": "自定义",
     "test_connection": "测试连接",
     "connection_success": "服务商连接成功！",
-    "connection_failed": "连接服务商失败。请检查设置。"
+    "connection_failed": "连接服务商失败。请检查设置。",
+    "migration_confirm": "当前工作目录中有 {{count}} 个文件。是否将它们迁移到新位置？",
+    "migration_conflict": "目标目录中已存在 {{count}} 个同名文件。是否覆盖？",
+    "migration_success": "成功迁移 {{count}} 个文件到新工作目录。",
+    "migration_partial": "迁移部分完成。{{migrated}} 个已迁移，{{failed}} 个失败。工作目录路径未更改。",
+    "migration_error": "迁移失败：{{error}}",
+    "migration_same_dir": "所选目录与当前工作目录相同。",
+    "migration_first_run": "在旧的默认位置发现了简历文件。点击此处将它们迁移到新的工作目录。",
+    "migration_in_progress": "正在迁移文件..."
   },
   "profile": {
     "title": "个人资料",

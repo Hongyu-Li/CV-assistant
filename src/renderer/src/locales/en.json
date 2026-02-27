@@ -68,7 +68,15 @@
     "provider_custom": "Custom",
     "test_connection": "Test Connection",
     "connection_success": "Provider connected successfully!",
-    "connection_failed": "Failed to connect to provider. Please check your settings."
+    "connection_failed": "Failed to connect to provider. Please check your settings.",
+    "migration_confirm": "Found {{count}} file(s) in the current workspace. Move them to the new location?",
+    "migration_conflict": "{{count}} file(s) already exist in the target directory. Overwrite them?",
+    "migration_success": "Successfully migrated {{count}} file(s) to the new workspace.",
+    "migration_partial": "Migration partially completed. {{migrated}} moved, {{failed}} failed. Workspace path was not changed.",
+    "migration_error": "Migration failed: {{error}}",
+    "migration_same_dir": "Selected directory is the same as the current workspace.",
+    "migration_first_run": "Found CV files at the old default location. Click here to migrate them to the new workspace.",
+    "migration_in_progress": "Migrating files..."
   },
   "profile": {
     "title": "Profile",

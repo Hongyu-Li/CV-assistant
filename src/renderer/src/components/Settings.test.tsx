@@ -45,6 +45,18 @@ vi.mock('../lib/provider', () => ({
   }
 }))
 
+// Mock window.electron for IPC calls (first-run migration useEffect, dialog, shell)
+Object.defineProperty(window, 'electron', {
+  value: {
+    ipcRenderer: {
+      on: vi.fn(),
+      removeListener: vi.fn(),
+      invoke: vi.fn()
+    }
+  },
+  writable: true
+})
+
 describe('Settings Component', () => {
   const mockUpdateSettings = vi.fn()
   const defaultSettings = {
@@ -113,5 +125,26 @@ describe('Settings Component', () => {
     expect(apiKeyInput).not.toBeNull()
     fireEvent.change(apiKeyInput!, { target: { value: 'sk-test-key' } })
     expect(mockUpdateSettings).toHaveBeenCalledWith({ apiKey: 'sk-test-key' })
+  })
+
+  it('shows change directory button', () => {
+    render(<Settings />)
+    expect(screen.getByText('settings.change_dir')).toBeInTheDocument()
+  })
+
+  it('shows workspace directory input', () => {
+    render(<Settings />)
+    expect(screen.getByText('settings.workspace_dir')).toBeInTheDocument()
+  })
+
+  it('shows current workspace path in input', () => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: { ...defaultSettings, workspacePath: '/custom/path' },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    render(<Settings />)
+    expect(screen.getByDisplayValue('/custom/path')).toBeInTheDocument()
   })
 })

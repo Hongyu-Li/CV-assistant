@@ -9,7 +9,9 @@ import {
   readWorkspaceFile,
   getWorkspaceLastModified,
   writeWorkspaceFile,
-  deleteWorkspaceFile
+  deleteWorkspaceFile,
+  precheckWorkspaceMigration,
+  migrateWorkspaceFiles
 } from './fs'
 
 function createWindow(): void {
@@ -47,7 +49,7 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -150,6 +152,36 @@ app.whenReady().then(() => {
   ipcMain.handle('app:getDefaultWorkspacePath', () => {
     return join(app.getPath('home'), '.cv-assistant')
   })
+
+  // Workspace migration IPC
+  ipcMain.handle('workspace:precheck', async (_, { from, to }: { from: string; to: string }) => {
+    try {
+      const result = await precheckWorkspaceMigration(from, to)
+      return { success: true, ...result }
+    } catch (error) {
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  ipcMain.handle(
+    'workspace:migrate',
+    async (
+      _,
+      { from, to, overwriteConflicts }: { from: string; to: string; overwriteConflicts: boolean }
+    ) => {
+      try {
+        const result = await migrateWorkspaceFiles(from, to, overwriteConflicts)
+        return result
+      } catch (error) {
+        return {
+          success: false,
+          migrated: [],
+          skipped: [],
+          errors: [{ file: '', error: (error as Error).message }]
+        }
+      }
+    }
+  )
 
   // AI API proxy IPC — all external HTTP from main process to bypass CSP
   ipcMain.handle(
@@ -277,6 +309,31 @@ app.whenReady().then(() => {
     }
   )
   createWindow()
+
+  // First-run migration check: detect files at old default location
+  const oldDefaultPath = join(app.getPath('userData'), 'drafts')
+  const newDefaultPath = join(app.getPath('home'), '.cv-assistant')
+  try {
+    const oldFiles = await listWorkspaceFiles(oldDefaultPath)
+    if (oldFiles.length > 0) {
+      // Check if new default has any files
+      const newFiles = await listWorkspaceFiles(newDefaultPath)
+      if (newFiles.length === 0) {
+        // Old location has files, new doesn't — notify renderer
+        const mainWindow = BrowserWindow.getAllWindows()[0]
+        if (mainWindow) {
+          mainWindow.webContents.once('did-finish-load', () => {
+            mainWindow.webContents.send('workspace:first-run-migration', {
+              oldPath: oldDefaultPath,
+              fileCount: oldFiles.length
+            })
+          })
+        }
+      }
+    }
+  } catch {
+    // Silently ignore — not critical
+  }
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
