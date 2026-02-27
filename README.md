@@ -46,8 +46,8 @@ Node.js >= 18, npm
 ## Getting Started
 
 ```bash
-git clone https://github.com/tc9011/CV-assistant-.git
-cd CV-assistant-
+git clone https://github.com/tc9011/CV-assistant.git
+cd CV-assistant
 npm install
 npm run dev
 ```
