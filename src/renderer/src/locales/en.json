@@ -149,6 +149,15 @@
     "validation_error": "Please fill in the job title",
     "company": "Company",
     "status_draft": "Draft",
-    "status_generated": "Generated"
+    "status_generated": "Generated",
+    "cv_language": "CV Language",
+    "cv_language_ph": "Select language",
+    "lang_en": "English",
+    "lang_zh": "Chinese (Simplified)",
+    "lang_ja": "Japanese",
+    "lang_ko": "Korean",
+    "lang_fr": "French",
+    "lang_de": "German",
+    "lang_es": "Spanish"
   }
 }

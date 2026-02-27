@@ -149,6 +149,15 @@
     "validation_error": "请填写应聘职位",
     "company": "公司",
     "status_draft": "草稿",
-    "status_generated": "已生成"
+    "status_generated": "已生成",
+    "cv_language": "简历语言",
+    "cv_language_ph": "选择语言",
+    "lang_en": "英语",
+    "lang_zh": "中文（简体）",
+    "lang_ja": "日语",
+    "lang_ko": "韩语",
+    "lang_fr": "法语",
+    "lang_de": "德语",
+    "lang_es": "西班牙语"
   }
 }
