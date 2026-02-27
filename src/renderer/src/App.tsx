@@ -24,19 +24,19 @@ function App(): React.JSX.Element {
         <nav className="flex flex-col gap-2">
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''}`}
-            onClick={(): void => setCurrentView('resumes')}
-          >
-            <FileText className="h-4 w-4" />
-            {t('app.resumes')}
-          </Button>
-          <Button
-            variant="ghost"
             className={`justify-start gap-2 transition-all duration-200 ${currentView === 'profile' ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('profile')}
           >
             <User className="h-4 w-4" />
             {t('app.profile')}
+          </Button>
+          <Button
+            variant="ghost"
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''}`}
+            onClick={(): void => setCurrentView('resumes')}
+          >
+            <FileText className="h-4 w-4" />
+            {t('app.resumes')}
           </Button>
           <Button
             variant="ghost"
