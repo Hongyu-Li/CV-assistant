@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { autoUpdater } from 'electron-updater'
 import {
   listWorkspaceFiles,
   listWorkspaceSubdirFiles,
@@ -14,7 +15,7 @@ import {
   readUserDataFile
 } from './fs'
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     title: '简历助手 - CV Assistant',
@@ -45,6 +46,7 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+  return mainWindow
 }
 
 // This method will be called when Electron has finished
@@ -543,7 +545,71 @@ app.whenReady().then(async () => {
       }
     }
   )
-  createWindow()
+
+  // Auto-update IPC handlers
+  ipcMain.handle('auto-update:check', async () => {
+    try {
+      const result = await autoUpdater.checkForUpdates()
+      return { success: true, version: result?.updateInfo?.version }
+    } catch (error) {
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  ipcMain.handle('auto-update:install', () => {
+    autoUpdater.quitAndInstall()
+  })
+
+  ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) => {
+    autoUpdater.autoDownload = enabled
+  })
+
+  ipcMain.handle('app:getVersion', () => {
+    return app.getVersion()
+  })
+  const mainWindow = createWindow()
+
+  // Setup auto-updater
+  try {
+    const settingsRaw = await readWorkspaceFile('settings.json')
+    const savedSettings = JSON.parse(settingsRaw)
+    autoUpdater.autoDownload = savedSettings.autoUpdate !== false
+  } catch {
+    // Settings not found — default to auto-download enabled
+    autoUpdater.autoDownload = true
+  }
+  autoUpdater.autoInstallOnAppQuit = true
+
+  // Auto-updater events → renderer
+  autoUpdater.on('checking-for-update', () => {
+    mainWindow.webContents.send('auto-update:checking')
+  })
+  autoUpdater.on('update-available', (info) => {
+    mainWindow.webContents.send('auto-update:available', { version: info.version })
+  })
+  autoUpdater.on('update-not-available', () => {
+    mainWindow.webContents.send('auto-update:not-available')
+  })
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow.webContents.send('auto-update:download-progress', {
+      percent: Math.round(progress.percent)
+    })
+  })
+  autoUpdater.on('update-downloaded', (info) => {
+    mainWindow.webContents.send('auto-update:downloaded', { version: info.version })
+  })
+  autoUpdater.on('error', (err) => {
+    mainWindow.webContents.send('auto-update:error', { error: err.message })
+  })
+
+  // Check for updates after window is ready (non-blocking)
+  mainWindow.webContents.once('did-finish-load', () => {
+    if (autoUpdater.autoDownload) {
+      autoUpdater.checkForUpdates().catch(() => {
+        // Silently ignore — update check is best-effort
+      })
+    }
+  })
 
   // First-run migration check: detect files at old default location
   const oldDefaultPath = join(app.getPath('userData'), 'drafts')

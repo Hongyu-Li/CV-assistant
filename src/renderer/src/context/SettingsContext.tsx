@@ -8,6 +8,7 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system'
   language: 'en' | 'zh'
   workspacePath?: string
+  autoUpdate?: boolean
 }
 
 export interface SettingsContextType {
@@ -24,7 +25,8 @@ const defaultSettings: AppSettings = {
   baseUrl: '',
   theme: 'system',
   language: 'en',
-  workspacePath: ''
+  workspacePath: '',
+  autoUpdate: true
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)

@@ -57,7 +57,19 @@
     "migration_error": "迁移失败：{{error}}",
     "migration_same_dir": "所选目录与当前工作目录相同。",
     "migration_first_run": "在旧的默认位置发现了简历文件。点击此处将它们迁移到新的工作目录。",
-    "migration_in_progress": "正在迁移文件..."
+    "migration_in_progress": "正在迁移文件...",
+    "auto_update": "更新",
+    "auto_update_desc": "管理应用程序更新。",
+    "auto_update_enabled": "启用自动更新",
+    "auto_update_check": "检查更新",
+    "auto_update_checking": "检查中...",
+    "auto_update_available": "有新版本: v{{version}}",
+    "auto_update_not_available": "已是最新版本",
+    "auto_update_downloading": "下载中... {{percent}}%",
+    "auto_update_downloaded": "更新就绪 - 重启以安装",
+    "auto_update_error": "更新出错: {{error}}",
+    "auto_update_restart": "重启更新",
+    "auto_update_version": "当前版本"
   },
   "profile": {
     "title": "个人资料",

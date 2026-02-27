@@ -90,6 +90,26 @@ vi.mock('./ui/select', async () => {
   }
 })
 
+// Mock Switch component
+vi.mock('./ui/switch', async () => {
+  const React = await import('react')
+  return {
+    Switch: ({
+      checked,
+      onCheckedChange
+    }: {
+      checked?: boolean
+      onCheckedChange?: (checked: boolean) => void
+    }): React.ReactElement =>
+      React.createElement('button', {
+        role: 'switch',
+        'aria-checked': String(checked),
+        'data-testid': 'auto-update-switch',
+        onClick: (): void => onCheckedChange?.(!checked)
+      })
+  }
+})
+
 // Mock window.electron for IPC calls (first-run migration useEffect, dialog, shell)
 Object.defineProperty(window, 'electron', {
   value: {
@@ -111,7 +131,8 @@ describe('Settings Component', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: ''
+    workspacePath: '',
+    autoUpdate: true
   }
 
   beforeEach(() => {
@@ -122,6 +143,12 @@ describe('Settings Component', () => {
       isLoading: false,
       error: null
     })
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      (channel: string): Promise<unknown> => {
+        if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+        return Promise.resolve(undefined)
+      }
+    )
   })
 
   it('renders settings page', () => {
@@ -230,7 +257,8 @@ describe('Settings - Provider/Theme/Language Changes', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: ''
+    workspacePath: '',
+    autoUpdate: true
   }
 
   beforeEach((): void => {
@@ -241,6 +269,12 @@ describe('Settings - Provider/Theme/Language Changes', () => {
       isLoading: false,
       error: null
     })
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      (channel: string): Promise<unknown> => {
+        if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+        return Promise.resolve(undefined)
+      }
+    )
   })
 
   it('calls updateSettings with new provider, default model, and baseUrl when provider changes', (): void => {
@@ -299,7 +333,8 @@ describe('Settings - Test Connection', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: ''
+    workspacePath: '',
+    autoUpdate: true
   }
 
   beforeEach((): void => {
@@ -310,10 +345,18 @@ describe('Settings - Test Connection', () => {
       isLoading: false,
       error: null
     })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      return Promise.resolve(undefined)
+    })
   })
 
   it('shows success toast when test connection succeeds', async (): Promise<void> => {
-    mockInvoke.mockResolvedValueOnce({ success: true })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'ai:test') return Promise.resolve({ success: true })
+      return Promise.resolve(undefined)
+    })
     render(<Settings />)
     const testBtn = screen.getByText('settings.test_connection')
     await act(async (): Promise<void> => {
@@ -326,7 +369,12 @@ describe('Settings - Test Connection', () => {
   })
 
   it('shows error toast when test connection returns failure', async (): Promise<void> => {
-    mockInvoke.mockResolvedValueOnce({ success: false, error: 'Invalid API key' })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'ai:test')
+        return Promise.resolve({ success: false, error: 'Invalid API key' })
+      return Promise.resolve(undefined)
+    })
     render(<Settings />)
     const testBtn = screen.getByText('settings.test_connection')
     await act(async (): Promise<void> => {
@@ -339,7 +387,11 @@ describe('Settings - Test Connection', () => {
   })
 
   it('shows error toast when test connection throws', async (): Promise<void> => {
-    mockInvoke.mockRejectedValueOnce(new Error('Network error'))
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'ai:test') return Promise.reject(new Error('Network error'))
+      return Promise.resolve(undefined)
+    })
     render(<Settings />)
     const testBtn = screen.getByText('settings.test_connection')
     await act(async (): Promise<void> => {
@@ -362,7 +414,8 @@ describe('Settings - Workspace Directory', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '/test/workspace'
+    workspacePath: '/test/workspace',
+    autoUpdate: true
   }
 
   beforeEach((): void => {
@@ -372,6 +425,10 @@ describe('Settings - Workspace Directory', () => {
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      return Promise.resolve(undefined)
     })
   })
 
@@ -430,7 +487,8 @@ describe('Settings - Migration Flow', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '/old/workspace'
+    workspacePath: '/old/workspace',
+    autoUpdate: true
   }
 
   beforeEach((): void => {
@@ -440,6 +498,10 @@ describe('Settings - Migration Flow', () => {
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      return Promise.resolve(undefined)
     })
   })
 
@@ -645,6 +707,12 @@ describe('Settings - API Key Visibility by Provider', () => {
 
   beforeEach((): void => {
     vi.clearAllMocks()
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      (channel: string): Promise<unknown> => {
+        if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+        return Promise.resolve(undefined)
+      }
+    )
   })
 
   it('hides API key field when provider does not require it (ollama)', (): void => {
@@ -656,7 +724,8 @@ describe('Settings - API Key Visibility by Provider', () => {
         baseUrl: 'http://localhost:11434/v1',
         theme: 'system',
         language: 'en',
-        workspacePath: ''
+        workspacePath: '',
+        autoUpdate: true
       },
       updateSettings: mockUpdateSettings,
       isLoading: false,
@@ -676,7 +745,8 @@ describe('Settings - API Key Visibility by Provider', () => {
         baseUrl: '',
         theme: 'system',
         language: 'en',
-        workspacePath: ''
+        workspacePath: '',
+        autoUpdate: true
       },
       updateSettings: mockUpdateSettings,
       isLoading: false,
@@ -702,12 +772,19 @@ describe('Settings - First-Run Migration Listener', () => {
         baseUrl: '',
         theme: 'system',
         language: 'en',
-        workspacePath: ''
+        workspacePath: '',
+        autoUpdate: true
       },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
     })
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      (channel: string): Promise<unknown> => {
+        if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+        return Promise.resolve(undefined)
+      }
+    )
   })
 
   it('registers IPC listener for workspace:first-run-migration on mount', (): void => {
@@ -741,5 +818,119 @@ describe('Settings - First-Run Migration Listener', () => {
     })
     const { toast } = await import('sonner')
     expect(toast.info).toHaveBeenCalled()
+  })
+})
+
+describe('Settings - Auto Update', () => {
+  const mockUpdateSettings = vi.fn()
+  const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
+  const mockOn = window.electron.ipcRenderer.on as ReturnType<typeof vi.fn>
+  const mockRemoveListener = window.electron.ipcRenderer.removeListener as ReturnType<typeof vi.fn>
+  const defaultSettings = {
+    provider: 'openai',
+    apiKeys: {},
+    model: 'gpt-5.2',
+    baseUrl: '',
+    theme: 'system',
+    language: 'en',
+    workspacePath: '',
+    autoUpdate: true
+  }
+
+  beforeEach((): void => {
+    vi.clearAllMocks()
+    ;(useSettings as Mock).mockReturnValue({
+      settings: defaultSettings,
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      return Promise.resolve(undefined)
+    })
+  })
+
+  it('renders auto-update section with title', (): void => {
+    render(<Settings />)
+    expect(screen.getByText('settings.auto_update')).toBeInTheDocument()
+  })
+
+  it('renders auto-update toggle switch', (): void => {
+    render(<Settings />)
+    expect(screen.getByTestId('auto-update-switch')).toBeInTheDocument()
+  })
+
+  it('displays app version from IPC', async (): Promise<void> => {
+    render(<Settings />)
+    await waitFor((): void => {
+      expect(screen.getByText(/1\.0\.2/)).toBeInTheDocument()
+    })
+  })
+
+  it('renders check for updates button', (): void => {
+    render(<Settings />)
+    expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
+  })
+
+  it('calls auto-update:check IPC when check button is clicked', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      return Promise.resolve(undefined)
+    })
+    render(<Settings />)
+    const checkBtn = screen.getByText('settings.auto_update_check')
+    await act(async (): Promise<void> => {
+      fireEvent.click(checkBtn)
+    })
+    expect(mockInvoke).toHaveBeenCalledWith('auto-update:check')
+  })
+
+  it('toggles auto-update setting when switch is clicked', async (): Promise<void> => {
+    render(<Settings />)
+    const switchEl = screen.getByTestId('auto-update-switch')
+    await act(async (): Promise<void> => {
+      fireEvent.click(switchEl)
+    })
+    expect(mockUpdateSettings).toHaveBeenCalledWith({ autoUpdate: false })
+    expect(mockInvoke).toHaveBeenCalledWith('auto-update:set-auto-download', false)
+  })
+
+  it('registers and removes auto-update IPC listeners on mount/unmount', (): void => {
+    const { unmount } = render(<Settings />)
+    // Check that all 6 auto-update channels are registered
+    const channels = mockOn.mock.calls.map((call: unknown[]) => call[0])
+    expect(channels).toContain('auto-update:checking')
+    expect(channels).toContain('auto-update:available')
+    expect(channels).toContain('auto-update:not-available')
+    expect(channels).toContain('auto-update:download-progress')
+    expect(channels).toContain('auto-update:downloaded')
+    expect(channels).toContain('auto-update:error')
+    // Unmount and verify listeners are removed
+    unmount()
+    const removeListenerCalls = mockRemoveListener.mock.calls.map((call: unknown[]) => call[0])
+    expect(removeListenerCalls).toContain('auto-update:checking')
+    expect(removeListenerCalls).toContain('auto-update:available')
+    expect(removeListenerCalls).toContain('auto-update:not-available')
+    expect(removeListenerCalls).toContain('auto-update:download-progress')
+    expect(removeListenerCalls).toContain('auto-update:downloaded')
+    expect(removeListenerCalls).toContain('auto-update:error')
+  })
+
+  it('shows update status when auto-update:not-available event fires', async (): Promise<void> => {
+    render(<Settings />)
+    // Get the onNotAvailable handler from the registered listeners
+    const notAvailableCall = mockOn.mock.calls.find(
+      (call: unknown[]) => call[0] === 'auto-update:not-available'
+    )
+    expect(notAvailableCall).toBeDefined()
+    const handler = notAvailableCall![1] as () => void
+    // Fire the handler
+    await act(async (): Promise<void> => {
+      handler()
+    })
+    await waitFor((): void => {
+      expect(screen.getByText('settings.auto_update_not_available')).toBeInTheDocument()
+    })
   })
 })

@@ -155,6 +155,24 @@ describe('SettingsContext', () => {
       expect(screen.getByTestId('provider').textContent).toBe('openai')
       expect(screen.getByTestId('model').textContent).toBe('gpt-5.2')
     })
+
+    it('should include autoUpdate in default settings', async () => {
+      mockInvoke.mockResolvedValueOnce(null)
+      renderWithProvider()
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading').textContent).toBe('false')
+      })
+      // autoUpdate defaults to true but isn't rendered by TestConsumer,
+      // so we verify the save call includes it when updating
+      mockInvoke.mockResolvedValueOnce(undefined)
+      await act(async () => {
+        screen.getByTestId('update-btn').click()
+      })
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'settings:save',
+        expect.objectContaining({ autoUpdate: true })
+      )
+    })
   })
 
   describe('migration from old apiKey format', () => {

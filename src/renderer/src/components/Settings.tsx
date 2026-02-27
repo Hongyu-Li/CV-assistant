@@ -9,12 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button'
 import { toast } from 'sonner'
 import { Eye, EyeOff } from 'lucide-react'
+import { Switch } from './ui/switch'
 
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
   const [isMigrating, setIsMigrating] = React.useState(false)
   const [showApiKey, setShowApiKey] = React.useState(false)
+  const [updateStatus, setUpdateStatus] = React.useState<string>('')
+  const [appVersion, setAppVersion] = React.useState<string>('')
+  const [isCheckingUpdate, setIsCheckingUpdate] = React.useState(false)
 
   const handleMigration = async (currentPath: string, newDir: string): Promise<void> => {
     // Determine actual source path
@@ -117,6 +121,54 @@ export const Settings = (): React.JSX.Element => {
       window.electron.ipcRenderer.removeListener('workspace:first-run-migration', handler)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  React.useEffect(() => {
+    window.electron.ipcRenderer.invoke('app:getVersion').then((version: string) => {
+      setAppVersion(version)
+    })
+  }, [])
+
+  React.useEffect(() => {
+    const onChecking = (): void => {
+      setUpdateStatus('checking')
+      setIsCheckingUpdate(true)
+    }
+    const onAvailable = (_event: unknown, data: { version: string }): void => {
+      setUpdateStatus(`available:${data.version}`)
+      setIsCheckingUpdate(false)
+    }
+    const onNotAvailable = (): void => {
+      setUpdateStatus('not-available')
+      setIsCheckingUpdate(false)
+    }
+    const onProgress = (_event: unknown, data: { percent: number }): void => {
+      setUpdateStatus(`downloading:${data.percent}`)
+    }
+    const onDownloaded = (_event: unknown, data: { version: string }): void => {
+      setUpdateStatus(`downloaded:${data.version}`)
+      setIsCheckingUpdate(false)
+    }
+    const onError = (_event: unknown, data: { error: string }): void => {
+      setUpdateStatus(`error:${data.error}`)
+      setIsCheckingUpdate(false)
+    }
+
+    window.electron.ipcRenderer.on('auto-update:checking', onChecking)
+    window.electron.ipcRenderer.on('auto-update:available', onAvailable)
+    window.electron.ipcRenderer.on('auto-update:not-available', onNotAvailable)
+    window.electron.ipcRenderer.on('auto-update:download-progress', onProgress)
+    window.electron.ipcRenderer.on('auto-update:downloaded', onDownloaded)
+    window.electron.ipcRenderer.on('auto-update:error', onError)
+
+    return (): void => {
+      window.electron.ipcRenderer.removeListener('auto-update:checking', onChecking)
+      window.electron.ipcRenderer.removeListener('auto-update:available', onAvailable)
+      window.electron.ipcRenderer.removeListener('auto-update:not-available', onNotAvailable)
+      window.electron.ipcRenderer.removeListener('auto-update:download-progress', onProgress)
+      window.electron.ipcRenderer.removeListener('auto-update:downloaded', onDownloaded)
+      window.electron.ipcRenderer.removeListener('auto-update:error', onError)
+    }
   }, [])
 
   const handleProviderChange = (value: string): void => {
@@ -319,6 +371,80 @@ export const Settings = (): React.JSX.Element => {
             >
               {t('settings.test_connection')}
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Updates */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.auto_update')}</CardTitle>
+            <CardDescription>{t('settings.auto_update_desc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium leading-none">
+                {t('settings.auto_update_enabled')}
+              </label>
+              <Switch
+                checked={settings.autoUpdate !== false}
+                onCheckedChange={(checked): void => {
+                  updateSettings({ autoUpdate: checked })
+                  window.electron.ipcRenderer.invoke('auto-update:set-auto-download', checked)
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {t('settings.auto_update_version')}: {appVersion || '...'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                disabled={isCheckingUpdate}
+                onClick={async (): Promise<void> => {
+                  setIsCheckingUpdate(true)
+                  setUpdateStatus('')
+                  try {
+                    await window.electron.ipcRenderer.invoke('auto-update:check')
+                  } catch {
+                    setIsCheckingUpdate(false)
+                  }
+                }}
+              >
+                {isCheckingUpdate
+                  ? t('settings.auto_update_checking')
+                  : t('settings.auto_update_check')}
+              </Button>
+              {updateStatus.startsWith('downloaded:') && (
+                <Button
+                  onClick={(): void => {
+                    window.electron.ipcRenderer.invoke('auto-update:install')
+                  }}
+                >
+                  {t('settings.auto_update_restart')}
+                </Button>
+              )}
+            </div>
+            {updateStatus && (
+              <p className="text-sm text-muted-foreground">
+                {updateStatus === 'checking' && t('settings.auto_update_checking')}
+                {updateStatus.startsWith('available:') &&
+                  t('settings.auto_update_available', {
+                    version: updateStatus.split(':')[1]
+                  })}
+                {updateStatus === 'not-available' && t('settings.auto_update_not_available')}
+                {updateStatus.startsWith('downloading:') &&
+                  t('settings.auto_update_downloading', {
+                    percent: updateStatus.split(':')[1]
+                  })}
+                {updateStatus.startsWith('downloaded:') && t('settings.auto_update_downloaded')}
+                {updateStatus.startsWith('error:') &&
+                  t('settings.auto_update_error', {
+                    error: updateStatus.split(':').slice(1).join(':')
+                  })}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
