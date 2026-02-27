@@ -148,7 +148,7 @@ app.whenReady().then(() => {
 
   // Get default workspace path (userData/drafts)
   ipcMain.handle('app:getDefaultWorkspacePath', () => {
-    return join(app.getPath('userData'), 'drafts')
+    return join(app.getPath('home'), '.cv-assistant')
   })
 
   // AI API proxy IPC — all external HTTP from main process to bypass CSP

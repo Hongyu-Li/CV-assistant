@@ -38,7 +38,7 @@
     "theme_dark": "Dark",
     "theme_system": "System",
     "workspace_dir": "Workspace Directory",
-    "workspace_dir_ph": "Default (userData/drafts)",
+    "workspace_dir_ph": "Default (~/.cv-assistant)",
     "change_dir": "Change...",
     "workspace_dir_desc": "Choose where to save CV drafts locally.",
     "open_folder": "Open Folder",

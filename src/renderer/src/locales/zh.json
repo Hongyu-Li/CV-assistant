@@ -38,7 +38,7 @@
     "theme_dark": "深色",
     "theme_system": "跟随系统",
     "workspace_dir": "工作目录",
-    "workspace_dir_ph": "默认 (userData/drafts)",
+    "workspace_dir_ph": "默认 (~/.cv-assistant)",
     "change_dir": "更改...",
     "workspace_dir_desc": "选择简历草稿的本地保存位置。",
     "open_folder": "打开文件夹",
