@@ -147,7 +147,7 @@ export const Settings = (): React.JSX.Element => {
 
       <div className="grid gap-6">
         {/* General Settings */}
-        <Card className="card-hover">
+        <Card>
           <CardHeader>
             <CardTitle>{t('settings.general')}</CardTitle>
             <CardDescription></CardDescription>
@@ -224,7 +224,7 @@ export const Settings = (): React.JSX.Element => {
         </Card>
 
         {/* AI Provider Settings */}
-        <Card className="card-hover">
+        <Card>
           <CardHeader>
             <CardTitle>{t('settings.ai_provider')}</CardTitle>
             <CardDescription>{t('settings.ai_provider_desc')}</CardDescription>

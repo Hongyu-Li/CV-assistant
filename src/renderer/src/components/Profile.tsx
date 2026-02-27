@@ -167,7 +167,7 @@ export function Profile(): React.JSX.Element {
       </div>
 
       {/* Personal Info */}
-      <Card className="card-hover">
+      <Card>
         <CardHeader>
           <CardTitle>{t('profile.personal_info')}</CardTitle>
           <CardDescription>{t('profile.personal_info_desc')}</CardDescription>
@@ -212,7 +212,7 @@ export function Profile(): React.JSX.Element {
       </Card>
 
       {/* Work Experience */}
-      <Card className="card-hover">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.work_experience')}</CardTitle>
@@ -279,7 +279,7 @@ export function Profile(): React.JSX.Element {
       </Card>
 
       {/* Projects */}
-      <Card className="card-hover">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.projects')}</CardTitle>
