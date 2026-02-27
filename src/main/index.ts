@@ -17,6 +17,7 @@ import {
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    title: '简历助手 - CV Assistant',
     width: 900,
     height: 670,
     show: false,
@@ -51,7 +52,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  electronApp.setAppUserModelId('com.cv-assistant')
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
