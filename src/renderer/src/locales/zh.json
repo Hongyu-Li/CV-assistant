@@ -163,6 +163,7 @@
     "lang_ko": "韩语",
     "lang_fr": "法语",
     "lang_de": "德语",
-    "lang_es": "西班牙语"
+    "lang_es": "西班牙语",
+    "copy_error": "复制到剪贴板失败"
   }
 }

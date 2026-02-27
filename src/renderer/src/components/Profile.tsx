@@ -100,7 +100,7 @@ export function Profile(): React.JSX.Element {
       ...prev,
       workExperience: [
         ...prev.workExperience,
-        { id: Date.now().toString(), company: '', role: '', date: '', description: '' }
+        { id: crypto.randomUUID(), company: '', role: '', date: '', description: '' }
       ]
     }))
   }

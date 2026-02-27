@@ -163,6 +163,7 @@
     "lang_ko": "Korean",
     "lang_fr": "French",
     "lang_de": "German",
-    "lang_es": "Spanish"
+    "lang_es": "Spanish",
+    "copy_error": "Failed to copy to clipboard"
   }
 }

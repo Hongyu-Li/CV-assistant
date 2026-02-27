@@ -360,8 +360,16 @@ app.whenReady().then(async () => {
   })
 
   // Open folder in OS file manager
-  ipcMain.handle('shell:openPath', async (_, path: string) => {
-    const result = await shell.openPath(path)
+  ipcMain.handle('shell:openPath', async (_, requestedPath: string) => {
+    // Validate path is within workspace to prevent arbitrary file access
+    const defaultWorkspace = join(app.getPath('home'), '.cv-assistant')
+    const resolvedPath = join(requestedPath)
+    const normalizedDefault = join(defaultWorkspace)
+    // Allow workspace path and home directory
+    if (!resolvedPath.startsWith(normalizedDefault) && resolvedPath !== app.getPath('home')) {
+      return 'Access denied: path is outside workspace'
+    }
+    const result = await shell.openPath(resolvedPath)
     return result // empty string = success
   })
 
@@ -419,51 +427,57 @@ app.whenReady().then(async () => {
         baseUrl: string
       }
     ) => {
-      // Build URL
-      let url: string
-      if (provider === 'anthropic') {
-        url = `${baseUrl || 'https://api.anthropic.com/v1'}/messages`
-      } else {
-        url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
-      }
+      try {
+        // Build URL
+        let url: string
+        if (provider === 'anthropic') {
+          url = `${baseUrl || 'https://api.anthropic.com/v1'}/messages`
+        } else {
+          url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
+        }
 
-      // Build headers
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      if (provider === 'anthropic') {
-        headers['x-api-key'] = apiKey
-        headers['anthropic-version'] = '2023-06-01'
-      } else if (provider !== 'ollama') {
-        headers['Authorization'] = `Bearer ${apiKey}`
-      }
+        // Build headers
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        if (provider === 'anthropic') {
+          headers['x-api-key'] = apiKey
+          headers['anthropic-version'] = '2023-06-01'
+        } else if (provider !== 'ollama') {
+          headers['Authorization'] = `Bearer ${apiKey}`
+        }
 
-      // Build body
-      let body: string
-      if (provider === 'anthropic') {
-        const systemMsgs = messages.filter((m) => m.role === 'system')
-        const nonSystemMsgs = messages.filter((m) => m.role !== 'system')
-        body = JSON.stringify({
-          model,
-          max_tokens: 4096,
-          ...(systemMsgs.length > 0 ? { system: systemMsgs.map((m) => m.content).join('\n') } : {}),
-          messages: nonSystemMsgs
-        })
-      } else {
-        body = JSON.stringify({ model, messages })
-      }
+        // Build body
+        let body: string
+        if (provider === 'anthropic') {
+          const systemMsgs = messages.filter((m) => m.role === 'system')
+          const nonSystemMsgs = messages.filter((m) => m.role !== 'system')
+          body = JSON.stringify({
+            model,
+            max_tokens: 4096,
+            ...(systemMsgs.length > 0
+              ? { system: systemMsgs.map((m) => m.content).join('\n') }
+              : {}),
+            messages: nonSystemMsgs
+          })
+        } else {
+          body = JSON.stringify({ model, messages })
+        }
 
-      const response = await fetch(url, { method: 'POST', headers, body })
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`API error ${response.status}: ${errorText}`)
-      }
+        const response = await fetch(url, { method: 'POST', headers, body })
+        if (!response.ok) {
+          const errorText = await response.text()
+          throw new Error(`API error ${response.status}: ${errorText}`)
+        }
 
-      const data = await response.json()
+        const data = await response.json()
 
-      // Extract content
-      if (provider === 'anthropic') {
-        return data.content?.[0]?.text || ''
+        // Extract content
+        if (provider === 'anthropic') {
+          return data.content?.[0]?.text || ''
+        }
+        return data.choices?.[0]?.message?.content || ''
+      } catch (error) {
+        throw new Error(`AI chat failed: ${(error as Error).message}`)
       }
-      return data.choices?.[0]?.message?.content || ''
     }
   )
 

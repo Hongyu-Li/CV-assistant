@@ -84,6 +84,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [settings.language])
 
   const updateSettings = async (newSettings: Partial<AppSettings>): Promise<void> => {
+    const previousSettings = settings
     try {
       const updated = {
         ...settings,
@@ -95,8 +96,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       setSettings(updated)
       await window.electron.ipcRenderer.invoke('settings:save', updated)
     } catch (err) {
+      // Revert optimistic update on failure
+      setSettings(previousSettings)
       setError(err instanceof Error ? err.message : 'Failed to save settings')
-      // Revert on failure could be implemented here
     }
   }
 

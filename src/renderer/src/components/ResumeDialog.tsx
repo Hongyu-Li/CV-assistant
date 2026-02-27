@@ -150,12 +150,16 @@ export function ResumeDialog({
 
   const handleCopy = async (): Promise<void> => {
     if (!generatedCV) return
-    await navigator.clipboard.writeText(generatedCV)
-    setIsCopied(true)
-    toast.success(t('resumes.copied'))
-    setTimeout((): void => {
-      setIsCopied(false)
-    }, 2000)
+    try {
+      await navigator.clipboard.writeText(generatedCV)
+      setIsCopied(true)
+      toast.success(t('resumes.copied'))
+      setTimeout((): void => {
+        setIsCopied(false)
+      }, 2000)
+    } catch {
+      toast.error(t('resumes.copy_error') || 'Failed to copy to clipboard')
+    }
   }
 
   const handleExport = (): void => {

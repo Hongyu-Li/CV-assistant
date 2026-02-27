@@ -23,7 +23,7 @@ export function Resumes(): React.JSX.Element {
       // Ensure data is an array before calling sort
       if (Array.isArray(data)) {
         // Sort by lastModified descending
-        const sorted = data.sort((a: CV, b: CV): number => {
+        const sorted = [...data].sort((a: CV, b: CV): number => {
           if (!a.lastModified) return 1
           if (!b.lastModified) return -1
           return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
