@@ -15,18 +15,7 @@ vi.mock('../i18n', () => ({
   default: { changeLanguage: mockChangeLanguage }
 }))
 
-// Mock window.electron for IPC calls
-const mockInvoke = vi.fn()
-Object.defineProperty(window, 'electron', {
-  value: {
-    ipcRenderer: {
-      invoke: mockInvoke,
-      on: vi.fn(),
-      removeListener: vi.fn()
-    }
-  },
-  writable: true
-})
+const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
 
 const defaultSettings: AppSettings = {
   provider: 'openai',

@@ -34,39 +34,31 @@ const renderWithProvider = (ui: React.ReactElement): ReturnType<typeof render> =
 }
 
 describe('Profile Component', () => {
-  beforeEach(() => {
-    // Reset the mock before each test
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return {
-              personalInfo: {
-                name: 'Test Name',
-                email: 'test@example.com',
-                phone: '1234567890',
-                summary: 'A test summary'
-              },
-              workExperience: [],
-              projects: []
-            }
+  beforeEach((): void => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: {
+              name: 'Test Name',
+              email: 'test@example.com',
+              phone: '1234567890',
+              summary: 'A test summary'
+            },
+            workExperience: [],
+            projects: []
           }
-          if (channel === 'profile:save') {
-            return { success: true }
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
   })
-
   it('renders correctly and loads data', async () => {
     const { container } = renderWithProvider(<Profile />)
 
@@ -170,35 +162,26 @@ describe('Profile Component', () => {
 })
 
 describe('Profile - Save Error Paths', () => {
-  beforeEach(() => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return {
-              personalInfo: {
-                name: 'Test Name',
-                email: 'test@example.com',
-                phone: '1234567890',
-                summary: 'A test summary'
-              },
-              workExperience: [],
-              projects: []
-            }
+  beforeEach((): void => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
           }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
   })
-
   it('shows error toast when save returns success: false', async (): Promise<void> => {
     ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
       async (channel: string) => {
@@ -266,23 +249,17 @@ describe('Profile - Save Error Paths', () => {
 
 describe('Profile - Load Error Paths', () => {
   it('shows error toast when load throws an exception', async (): Promise<void> => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            throw new Error('load failed')
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel) => {
+        if (channel === 'profile:load') {
+          throw new Error('load failed')
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
 
     renderWithProvider(<Profile />)
 
@@ -292,23 +269,17 @@ describe('Profile - Load Error Paths', () => {
   })
 
   it('keeps initial empty state when load returns empty data', async (): Promise<void> => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return {}
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel) => {
+        if (channel === 'profile:load') {
+          return {}
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
 
     renderWithProvider(<Profile />)
 
@@ -324,23 +295,17 @@ describe('Profile - Load Error Paths', () => {
   })
 
   it('keeps initial empty state when load returns null', async (): Promise<void> => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return null
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel) => {
+        if (channel === 'profile:load') {
+          return null
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
 
     renderWithProvider(<Profile />)
 
@@ -354,33 +319,26 @@ describe('Profile - Load Error Paths', () => {
 })
 
 describe('Profile - Work Experience CRUD', () => {
-  beforeEach(() => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return {
-              personalInfo: { name: '', email: '', phone: '', summary: '' },
-              workExperience: [],
-              projects: []
-            }
+  beforeEach((): void => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
           }
-          if (channel === 'profile:save') {
-            return { success: true }
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
   })
-
   it('can add two work experiences and verify both render', async (): Promise<void> => {
     renderWithProvider(<Profile />)
     await waitFor(() => {
@@ -492,33 +450,26 @@ describe('Profile - Work Experience CRUD', () => {
 })
 
 describe('Profile - Project CRUD', () => {
-  beforeEach(() => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return {
-              personalInfo: { name: '', email: '', phone: '', summary: '' },
-              workExperience: [],
-              projects: []
-            }
+  beforeEach((): void => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
           }
-          if (channel === 'profile:save') {
-            return { success: true }
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
   })
-
   it('can add two projects and verify both render', async (): Promise<void> => {
     renderWithProvider(<Profile />)
     await waitFor(() => {
@@ -607,33 +558,26 @@ describe('Profile - Project CRUD', () => {
 })
 
 describe('Profile - Edge Cases', () => {
-  beforeEach(() => {
-    window.electron = {
-      ipcRenderer: {
-        invoke: vi.fn().mockImplementation(async (channel) => {
-          if (channel === 'profile:load') {
-            return {
-              personalInfo: { name: '', email: '', phone: '', summary: '' },
-              workExperience: [],
-              projects: []
-            }
+  beforeEach((): void => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
           }
-          if (channel === 'profile:save') {
-            return { success: true }
-          }
-          if (channel === 'settings:load') {
-            return { workspacePath: '' }
-          }
-          return undefined
-        }),
-        send: vi.fn(),
-        on: vi.fn(),
-        once: vi.fn(),
-        removeAllListeners: vi.fn()
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
       }
-    } as unknown as Window['electron']
+    )
   })
-
   it('shows empty state message when no work experiences exist', async (): Promise<void> => {
     renderWithProvider(<Profile />)
     await waitFor(() => {

@@ -4,15 +4,11 @@ import Versions from './Versions'
 
 describe('Versions Component', () => {
   beforeEach((): void => {
-    Object.defineProperty(window, 'electron', {
+    Object.defineProperty(window.electron.process, 'versions', {
       value: {
-        process: {
-          versions: {
-            electron: '28.0.0',
-            chrome: '120.0.0',
-            node: '18.0.0'
-          }
-        }
+        electron: '28.0.0',
+        chrome: '120.0.0',
+        node: '18.0.0'
       },
       writable: true,
       configurable: true

@@ -2,18 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { PROVIDER_CONFIGS, generateCV, type AIProvider, type GenerateCVOptions } from './provider'
 
 // Mock window.electron for IPC calls
-const mockInvoke = vi.fn()
-Object.defineProperty(window, 'electron', {
-  value: {
-    ipcRenderer: {
-      invoke: mockInvoke,
-      on: vi.fn(),
-      removeListener: vi.fn()
-    }
-  },
-  writable: true
-})
-
+const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
 describe('PROVIDER_CONFIGS', () => {
   it('defines exactly 12 providers', (): void => {
     const providers = Object.keys(PROVIDER_CONFIGS)

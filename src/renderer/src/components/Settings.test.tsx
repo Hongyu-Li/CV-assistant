@@ -110,18 +110,6 @@ vi.mock('./ui/switch', async () => {
   }
 })
 
-// Mock window.electron for IPC calls (first-run migration useEffect, dialog, shell)
-Object.defineProperty(window, 'electron', {
-  value: {
-    ipcRenderer: {
-      on: vi.fn(),
-      removeListener: vi.fn(),
-      invoke: vi.fn()
-    }
-  },
-  writable: true
-})
-
 describe('Settings Component', () => {
   const mockUpdateSettings = vi.fn()
   const defaultSettings = {
