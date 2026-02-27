@@ -80,6 +80,21 @@ export interface GenerateCVOptions {
   apiKey: string
   model: string
   baseUrl: string
+  language?: string
+}
+
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: 'English',
+  zh: 'Chinese (Simplified)',
+  ja: 'Japanese',
+  ko: 'Korean',
+  fr: 'French',
+  de: 'German',
+  es: 'Spanish'
+}
+
+function getLanguageName(code: string): string {
+  return LANGUAGE_NAMES[code] ?? 'English'
 }
 
 export async function generateCV(options: GenerateCVOptions): Promise<string> {
@@ -87,8 +102,11 @@ export async function generateCV(options: GenerateCVOptions): Promise<string> {
   const baseUrl = options.baseUrl || config.defaultBaseUrl
   const model = options.model || config.defaultModel
 
-  const systemPrompt =
-    'You are a professional CV/resume writer. Generate a well-structured, ATS-friendly CV in Markdown format tailored to the job description. Highlight relevant skills and experience. Be concise and professional.'
+  const languageName = options.language ? getLanguageName(options.language) : ''
+  const languageInstruction =
+    options.language && options.language !== 'en' ? ` Output the entire CV in ${languageName}.` : ''
+
+  const systemPrompt = `You are a professional CV/resume writer. Generate a well-structured, ATS-friendly CV in Markdown format tailored to the job description. Highlight relevant skills and experience. Be concise and professional.${languageInstruction}`
 
   const userPrompt = `Based on the following profile and job description, generate a tailored professional CV in Markdown format.
 
@@ -98,7 +116,7 @@ ${options.profile}
 ## Target Job Description
 ${options.jobDescription}
 
-Generate the CV now.`
+Generate the CV now.${options.language ? ` Write the CV entirely in ${languageName}.` : ''}`
 
   const messages = [
     { role: 'system', content: systemPrompt },

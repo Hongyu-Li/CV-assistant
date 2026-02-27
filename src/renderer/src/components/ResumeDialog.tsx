@@ -27,6 +27,7 @@ export interface CV {
   notes?: string
   jobDescription?: string
   generatedCV?: string
+  cvLanguage?: string
   createdAt?: string
   lastModified?: string
   status?: string
@@ -58,6 +59,7 @@ export function ResumeDialog({
   const [generatedCV, setGeneratedCV] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
+  const [cvLanguage, setCvLanguage] = useState('en')
 
   useEffect(() => {
     if (open) {
@@ -69,6 +71,7 @@ export function ResumeDialog({
         setNotes(resume.notes ?? '')
         setJobDescription(resume.jobDescription ?? '')
         setGeneratedCV(resume.generatedCV ?? '')
+        setCvLanguage(resume.cvLanguage ?? 'en')
       } else {
         setJobTitle('')
         setExperienceLevel('')
@@ -77,6 +80,7 @@ export function ResumeDialog({
         setNotes('')
         setJobDescription('')
         setGeneratedCV('')
+        setCvLanguage('en')
       }
       setIsGenerating(false)
       setIsCopied(false)
@@ -97,7 +101,8 @@ export function ResumeDialog({
         provider: settings.provider,
         apiKey: settings.apiKey,
         model: settings.model,
-        baseUrl: settings.baseUrl
+        baseUrl: settings.baseUrl,
+        language: cvLanguage
       })
       setGeneratedCV(result)
       toast.success(t('resumes.generate_success'))
@@ -150,6 +155,7 @@ export function ResumeDialog({
         notes,
         jobDescription,
         generatedCV,
+        cvLanguage,
         createdAt: resume?.createdAt ?? new Date().toISOString(),
         lastModified: new Date().toISOString(),
         status: generatedCV ? 'generated' : 'draft'
@@ -222,6 +228,23 @@ export function ResumeDialog({
               onChange={(e): void => setTargetSalary(e.target.value)}
             />
           </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
+          <Select value={cvLanguage} onValueChange={setCvLanguage}>
+            <SelectTrigger>
+              <SelectValue placeholder={t('resumes.cv_language_ph')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
+              <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
+              <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
+              <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
+              <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
+              <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
+              <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Notes */}
