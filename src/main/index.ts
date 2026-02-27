@@ -4,14 +4,31 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { autoUpdater } from 'electron-updater'
 import {
+  handleAiChat,
+  handleAiTest,
+  handleAutoUpdateCheck,
+  handleAutoUpdateInstall,
+  handleAutoUpdateSetAutoDownload,
+  handleCvDelete,
+  handleCvList,
+  handleCvRead,
+  handleCvSave,
+  handleDialogOpenDirectory,
+  handleGetDefaultWorkspacePath,
+  handleGetVersion,
+  handleProfileLoad,
+  handleProfileSave,
+  handleSettingsLoad,
+  handleSettingsSave,
+  handleShellOpenPath,
+  handleWorkspaceMigrate,
+  handleWorkspacePrecheck
+} from './handlers'
+import {
   listWorkspaceFiles,
-  listWorkspaceSubdirFiles,
   readWorkspaceFile,
-  getWorkspaceLastModified,
   writeWorkspaceFile,
   deleteWorkspaceFile,
-  precheckWorkspaceMigration,
-  migrateWorkspaceFiles,
   readUserDataFile
 } from './fs'
 
@@ -67,506 +84,69 @@ app.whenReady().then(async () => {
   })
 
   // Profile Management IPC
-  ipcMain.handle('profile:load', async (_, workspacePath?: string) => {
-    try {
-      // Read index file
-      const indexRaw = await readWorkspaceFile('profile/index.json', workspacePath)
-      const index = JSON.parse(indexRaw)
+  ipcMain.handle('profile:load', (_, workspacePath?: string) => handleProfileLoad(workspacePath))
 
-      // Read summary markdown
-      let summary = ''
-      if (index.personalInfo?.summaryFile) {
-        try {
-          summary = await readWorkspaceFile(
-            `profile/${index.personalInfo.summaryFile}`,
-            workspacePath
-          )
-        } catch {
-          /* file may not exist */
-        }
-      }
-
-      // Read work experience descriptions
-      const workExperience = await Promise.all(
-        (index.workExperience || []).map(
-          async (exp: {
-            id: string
-            company: string
-            role: string
-            date: string
-            descriptionFile?: string
-          }) => {
-            let description = ''
-            if (exp.descriptionFile) {
-              try {
-                description = await readWorkspaceFile(
-                  `profile/${exp.descriptionFile}`,
-                  workspacePath
-                )
-              } catch {
-                /* file may not exist */
-              }
-            }
-            return {
-              id: exp.id,
-              company: exp.company,
-              role: exp.role,
-              date: exp.date,
-              description
-            }
-          }
-        )
-      )
-
-      // Read project descriptions
-      const projects = await Promise.all(
-        (index.projects || []).map(
-          async (proj: {
-            id: string
-            name: string
-            techStack: string
-            descriptionFile?: string
-          }) => {
-            let description = ''
-            if (proj.descriptionFile) {
-              try {
-                description = await readWorkspaceFile(
-                  `profile/${proj.descriptionFile}`,
-                  workspacePath
-                )
-              } catch {
-                /* file may not exist */
-              }
-            }
-            return {
-              id: proj.id,
-              name: proj.name,
-              techStack: proj.techStack,
-              description
-            }
-          }
-        )
-      )
-
-      return {
-        personalInfo: {
-          name: index.personalInfo?.name || '',
-          email: index.personalInfo?.email || '',
-          phone: index.personalInfo?.phone || '',
-          summary
-        },
-        workExperience,
-        projects
-      }
-    } catch (error) {
-      console.warn('Failed to load profile (may not exist yet):', error)
-      return {}
-    }
-  })
-
-  ipcMain.handle('profile:save', async (_, data, workspacePath?: string) => {
-    try {
-      // Write summary markdown
-      const summaryFile = 'summary.md'
-      await writeWorkspaceFile(
-        `profile/${summaryFile}`,
-        data.personalInfo?.summary || '',
-        workspacePath
-      )
-
-      // Write work experience descriptions
-      const workExperience = await Promise.all(
-        (data.workExperience || []).map(
-          async (exp: {
-            id: string
-            company: string
-            role: string
-            date: string
-            description: string
-          }) => {
-            const descFile = `work-exp-${exp.id}.md`
-            await writeWorkspaceFile(`profile/${descFile}`, exp.description || '', workspacePath)
-            return {
-              id: exp.id,
-              company: exp.company,
-              role: exp.role,
-              date: exp.date,
-              descriptionFile: descFile
-            }
-          }
-        )
-      )
-
-      // Write project descriptions
-      const projects = await Promise.all(
-        (data.projects || []).map(
-          async (proj: { id: string; name: string; techStack: string; description: string }) => {
-            const descFile = `project-${proj.id}.md`
-            await writeWorkspaceFile(`profile/${descFile}`, proj.description || '', workspacePath)
-            return {
-              id: proj.id,
-              name: proj.name,
-              techStack: proj.techStack,
-              descriptionFile: descFile
-            }
-          }
-        )
-      )
-
-      // Write index
-      const index = {
-        personalInfo: {
-          name: data.personalInfo?.name || '',
-          email: data.personalInfo?.email || '',
-          phone: data.personalInfo?.phone || '',
-          summaryFile
-        },
-        workExperience,
-        projects
-      }
-      await writeWorkspaceFile('profile/index.json', JSON.stringify(index, null, 2), workspacePath)
-
-      return { success: true }
-    } catch (error) {
-      console.error('Failed to save profile:', error)
-      return { success: false, error: (error as Error).message }
-    }
-  })
+  ipcMain.handle('profile:save', (_, data, workspacePath?: string) =>
+    handleProfileSave(data, workspacePath)
+  )
 
   // Settings Management IPC
-  ipcMain.handle('settings:load', async () => {
-    try {
-      const data = await readWorkspaceFile('settings.json')
-      return JSON.parse(data)
-    } catch (error) {
-      // Settings file doesn't exist yet — return empty object (use defaults)
-      console.warn('Failed to load settings (may not exist yet):', error)
-      return {}
-    }
-  })
+  ipcMain.handle('settings:load', () => handleSettingsLoad())
 
-  ipcMain.handle('settings:save', async (_, data) => {
-    try {
-      await writeWorkspaceFile('settings.json', JSON.stringify(data, null, 2))
-      return { success: true }
-    } catch (error) {
-      console.error('Failed to save settings:', error)
-      return { success: false, error: (error as Error).message }
-    }
-  })
+  ipcMain.handle('settings:save', (_, data) => handleSettingsSave(data))
 
   // CV Management IPC
-  ipcMain.handle('cv:list', async (_, workspacePath?: string) => {
-    try {
-      const files = await listWorkspaceSubdirFiles('resumes', workspacePath)
-      const jsonFiles = files.filter((f) => f.endsWith('.json'))
-      const drafts = await Promise.all(
-        jsonFiles.map(async (file) => {
-          try {
-            const content = await readWorkspaceFile(`resumes/${file}`, workspacePath)
-            const data = JSON.parse(content)
-            const modified = await getWorkspaceLastModified(`resumes/${file}`, workspacePath)
-            return {
-              ...data,
-              id: file.replace('.json', ''),
-              filename: file,
-              lastModified: modified.toISOString()
-            }
-          } catch (e) {
-            console.warn(`Skipping invalid CV file: ${file}`, e)
-            return null
-          }
-        })
-      )
-      return drafts.filter(Boolean)
-    } catch (error) {
-      console.warn('Failed to list CVs:', error)
-      return []
-    }
-  })
+  ipcMain.handle('cv:list', (_, workspacePath?: string) => handleCvList(workspacePath))
 
-  ipcMain.handle('cv:save', async (_, { filename, data, workspacePath }) => {
-    try {
-      const safeFilename = filename.endsWith('.json') ? filename : `${filename}.json`
-      const baseName = safeFilename.replace('.json', '')
+  ipcMain.handle('cv:save', (_, { filename, data, workspacePath }) =>
+    handleCvSave({ filename, data, workspacePath })
+  )
 
-      // If there's generated CV content, save it as a separate .md file
-      let mdFile: string | undefined = data.mdFile
-      if (data.generatedCV) {
-        mdFile = `${baseName}.md`
-        await writeWorkspaceFile(`resumes/${mdFile}`, data.generatedCV, workspacePath)
-      }
+  ipcMain.handle('cv:delete', (_, { filename, workspacePath }) =>
+    handleCvDelete({ filename, workspacePath })
+  )
 
-      // Save JSON metadata WITHOUT generatedCV content — use mdFile reference instead
-      const metadata = { ...data, mdFile }
-      delete metadata.generatedCV
-      const jsonData = metadata
-      await writeWorkspaceFile(
-        `resumes/${safeFilename}`,
-        JSON.stringify(jsonData, null, 2),
-        workspacePath
-      )
-      return { success: true }
-    } catch (error) {
-      console.error('Failed to save CV:', error)
-      return { success: false, error: (error as Error).message }
-    }
-  })
-
-  ipcMain.handle('cv:delete', async (_, { filename, workspacePath }) => {
-    try {
-      // Delete JSON file
-      await deleteWorkspaceFile(`resumes/${filename}`, workspacePath)
-      // Also delete companion .md file if it exists
-      const mdFilename = filename.replace('.json', '.md')
-      try {
-        await deleteWorkspaceFile(`resumes/${mdFilename}`, workspacePath)
-      } catch {
-        // .md file may not exist — that's fine
-      }
-      return { success: true }
-    } catch (error) {
-      console.error('Failed to delete CV:', error)
-      return { success: false, error: (error as Error).message }
-    }
-  })
-
-  ipcMain.handle('cv:read', async (_, { filename, workspacePath }) => {
-    try {
-      const content = await readWorkspaceFile(`resumes/${filename}`, workspacePath)
-      const data = JSON.parse(content)
-
-      // If there's a mdFile reference, read the .md content and return as generatedCV
-      if (data.mdFile) {
-        try {
-          const mdContent = await readWorkspaceFile(`resumes/${data.mdFile}`, workspacePath)
-          data.generatedCV = mdContent
-        } catch {
-          // .md file may not exist
-          data.generatedCV = ''
-        }
-      }
-
-      return { success: true, data }
-    } catch (error) {
-      console.error('Failed to read CV:', error)
-      return { success: false, error: (error as Error).message }
-    }
-  })
+  ipcMain.handle('cv:read', (_, { filename, workspacePath }) =>
+    handleCvRead({ filename, workspacePath })
+  )
 
   // Directory Picker IPC
-  ipcMain.handle('dialog:openDirectory', async () => {
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      properties: ['openDirectory', 'createDirectory']
-    })
-    if (canceled) {
-      return null
-    }
-    return filePaths[0]
-  })
+  ipcMain.handle('dialog:openDirectory', () => handleDialogOpenDirectory({ dialog }))
 
   // Open folder in OS file manager
-  ipcMain.handle('shell:openPath', async (_, requestedPath: string) => {
-    // Validate path is within workspace to prevent arbitrary file access
-    const defaultWorkspace = join(app.getPath('home'), '.cv-assistant')
-    const resolvedPath = join(requestedPath)
-    const normalizedDefault = join(defaultWorkspace)
-    // Allow workspace path and home directory
-    if (!resolvedPath.startsWith(normalizedDefault) && resolvedPath !== app.getPath('home')) {
-      return 'Access denied: path is outside workspace'
-    }
-    const result = await shell.openPath(resolvedPath)
-    return result // empty string = success
-  })
+  ipcMain.handle('shell:openPath', (_, requestedPath: string) =>
+    handleShellOpenPath(requestedPath, { shell, app })
+  )
 
   // Get default workspace path (userData/drafts)
-  ipcMain.handle('app:getDefaultWorkspacePath', () => {
-    return join(app.getPath('home'), '.cv-assistant')
-  })
+  ipcMain.handle('app:getDefaultWorkspacePath', () => handleGetDefaultWorkspacePath({ app }))
 
   // Workspace migration IPC
-  ipcMain.handle('workspace:precheck', async (_, { from, to }: { from: string; to: string }) => {
-    try {
-      const result = await precheckWorkspaceMigration(from, to)
-      return { success: true, ...result }
-    } catch (error) {
-      return { success: false, error: (error as Error).message }
-    }
-  })
+  ipcMain.handle('workspace:precheck', (_, { from, to }) => handleWorkspacePrecheck({ from, to }))
 
-  ipcMain.handle(
-    'workspace:migrate',
-    async (
-      _,
-      { from, to, overwriteConflicts }: { from: string; to: string; overwriteConflicts: boolean }
-    ) => {
-      try {
-        const result = await migrateWorkspaceFiles(from, to, overwriteConflicts)
-        return result
-      } catch (error) {
-        return {
-          success: false,
-          migrated: [],
-          skipped: [],
-          errors: [{ file: '', error: (error as Error).message }]
-        }
-      }
-    }
+  ipcMain.handle('workspace:migrate', (_, { from, to, overwriteConflicts }) =>
+    handleWorkspaceMigrate({ from, to, overwriteConflicts })
   )
 
   // AI API proxy IPC — all external HTTP from main process to bypass CSP
-  ipcMain.handle(
-    'ai:chat',
-    async (
-      _,
-      {
-        provider,
-        apiKey,
-        model,
-        messages,
-        baseUrl
-      }: {
-        provider: string
-        apiKey: string
-        model: string
-        messages: Array<{ role: string; content: string }>
-        baseUrl: string
-      }
-    ) => {
-      try {
-        // Build URL
-        let url: string
-        if (provider === 'anthropic') {
-          url = `${baseUrl || 'https://api.anthropic.com/v1'}/messages`
-        } else {
-          url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
-        }
-
-        // Build headers
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (provider === 'anthropic') {
-          headers['x-api-key'] = apiKey
-          headers['anthropic-version'] = '2023-06-01'
-        } else if (provider !== 'ollama') {
-          headers['Authorization'] = `Bearer ${apiKey}`
-        }
-
-        // Build body
-        let body: string
-        if (provider === 'anthropic') {
-          const systemMsgs = messages.filter((m) => m.role === 'system')
-          const nonSystemMsgs = messages.filter((m) => m.role !== 'system')
-          body = JSON.stringify({
-            model,
-            max_tokens: 4096,
-            ...(systemMsgs.length > 0
-              ? { system: systemMsgs.map((m) => m.content).join('\n') }
-              : {}),
-            messages: nonSystemMsgs
-          })
-        } else {
-          body = JSON.stringify({ model, messages })
-        }
-
-        const response = await fetch(url, { method: 'POST', headers, body })
-        if (!response.ok) {
-          const errorText = await response.text()
-          return { success: false, error: `API error ${response.status}: ${errorText}` }
-        }
-
-        const data = await response.json()
-
-        // Extract content
-        if (provider === 'anthropic') {
-          return { success: true, content: data.content?.[0]?.text || '' }
-        }
-        return { success: true, content: data.choices?.[0]?.message?.content || '' }
-      } catch (error) {
-        return { success: false, error: `AI chat failed: ${(error as Error).message}` }
-      }
-    }
+  ipcMain.handle('ai:chat', (_, { provider, apiKey, model, messages, baseUrl }) =>
+    handleAiChat({ provider, apiKey, model, messages, baseUrl })
   )
 
-  ipcMain.handle(
-    'ai:test',
-    async (
-      _,
-      {
-        provider,
-        apiKey,
-        model,
-        baseUrl
-      }: {
-        provider: string
-        apiKey: string
-        model: string
-        baseUrl: string
-      }
-    ) => {
-      try {
-        let url: string
-        if (provider === 'anthropic') {
-          url = `${baseUrl || 'https://api.anthropic.com/v1'}/messages`
-        } else {
-          url = `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
-        }
-
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-        if (provider === 'anthropic') {
-          headers['x-api-key'] = apiKey
-          headers['anthropic-version'] = '2023-06-01'
-        } else if (provider !== 'ollama') {
-          headers['Authorization'] = `Bearer ${apiKey}`
-        }
-
-        let body: string
-        if (provider === 'anthropic') {
-          body = JSON.stringify({
-            model,
-            max_tokens: 10,
-            messages: [{ role: 'user', content: 'Hi' }]
-          })
-        } else {
-          body = JSON.stringify({
-            model,
-            messages: [{ role: 'user', content: 'Hi' }],
-            max_tokens: 10
-          })
-        }
-
-        const response = await fetch(url, { method: 'POST', headers, body })
-        if (!response.ok) {
-          const errorText = await response.text()
-          return { success: false, error: `HTTP ${response.status}: ${errorText}` }
-        }
-        return { success: true }
-      } catch (error) {
-        return { success: false, error: (error as Error).message }
-      }
-    }
+  ipcMain.handle('ai:test', (_, { provider, apiKey, model, baseUrl }) =>
+    handleAiTest({ provider, apiKey, model, baseUrl })
   )
 
   // Auto-update IPC handlers
-  ipcMain.handle('auto-update:check', async () => {
-    try {
-      const result = await autoUpdater.checkForUpdates()
-      return { success: true, version: result?.updateInfo?.version }
-    } catch (error) {
-      return { success: false, error: (error as Error).message }
-    }
-  })
+  ipcMain.handle('auto-update:check', () => handleAutoUpdateCheck({ autoUpdater }))
 
-  ipcMain.handle('auto-update:install', () => {
-    autoUpdater.quitAndInstall()
-  })
+  ipcMain.handle('auto-update:install', () => handleAutoUpdateInstall({ autoUpdater }))
 
-  ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) => {
-    autoUpdater.autoDownload = enabled
-  })
+  ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) =>
+    handleAutoUpdateSetAutoDownload(enabled, { autoUpdater })
+  )
 
-  ipcMain.handle('app:getVersion', () => {
-    return app.getVersion()
-  })
+  ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
   const mainWindow = createWindow()
 
   // Setup auto-updater
