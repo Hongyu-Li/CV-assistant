@@ -146,18 +146,28 @@ export function Profile(): React.JSX.Element {
   }
 
   if (loading) {
-    return <div className="p-6">{t('profile.loading')}</div>
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
+        <div className="flex justify-between items-center">
+          <div className="h-8 w-48 rounded-lg animate-shimmer" />
+          <div className="h-10 w-32 rounded-lg animate-shimmer" />
+        </div>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-64 rounded-xl animate-shimmer" />
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h2>
         <Button onClick={handleSave}>{t('profile.save_changes')}</Button>
       </div>
 
       {/* Personal Info */}
-      <Card>
+      <Card className="card-hover">
         <CardHeader>
           <CardTitle>{t('profile.personal_info')}</CardTitle>
           <CardDescription>{t('profile.personal_info_desc')}</CardDescription>
@@ -202,7 +212,7 @@ export function Profile(): React.JSX.Element {
       </Card>
 
       {/* Work Experience */}
-      <Card>
+      <Card className="card-hover">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.work_experience')}</CardTitle>
@@ -269,7 +279,7 @@ export function Profile(): React.JSX.Element {
       </Card>
 
       {/* Projects */}
-      <Card>
+      <Card className="card-hover">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.projects')}</CardTitle>

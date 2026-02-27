@@ -48,8 +48,8 @@ describe('Resumes Component', () => {
 
   it('renders loading state initially', () => {
     mockInvoke.mockReturnValue(new Promise(() => {})) // Pending promise
-    renderWithProvider(<Resumes />)
-    expect(screen.getByText('resumes.loading')).toBeInTheDocument()
+    const { container } = renderWithProvider(<Resumes />)
+    expect(container.querySelector('.animate-shimmer')).toBeInTheDocument()
   })
 
   it('renders empty state when no resumes', async () => {

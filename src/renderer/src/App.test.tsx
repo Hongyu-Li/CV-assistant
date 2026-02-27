@@ -94,16 +94,16 @@ describe('App navigation', () => {
   })
 
   describe('button styling', () => {
-    it('applies secondary variant to the active button and ghost to inactive buttons', (): void => {
+    it('applies active styling to the active button and no active styling to inactive buttons', (): void => {
       renderApp()
       const resumesBtn = screen.getByText('app.resumes')
       const profileBtn = screen.getByText('app.profile')
       const settingsBtn = screen.getByText('app.settings')
 
       // Default: Resumes is active
-      expect(resumesBtn.closest('button')).toHaveClass('bg-secondary')
-      expect(profileBtn.closest('button')).not.toHaveClass('bg-secondary')
-      expect(settingsBtn.closest('button')).not.toHaveClass('bg-secondary')
+      expect(resumesBtn.closest('button')).toHaveClass('bg-primary/10')
+      expect(profileBtn.closest('button')).not.toHaveClass('bg-primary/10')
+      expect(settingsBtn.closest('button')).not.toHaveClass('bg-primary/10')
     })
 
     it('updates button styling when switching views', (): void => {
@@ -113,8 +113,8 @@ describe('App navigation', () => {
       const resumesBtn = screen.getByText('app.resumes')
       const profileBtn = screen.getByText('app.profile')
 
-      expect(profileBtn.closest('button')).toHaveClass('bg-secondary')
-      expect(resumesBtn.closest('button')).not.toHaveClass('bg-secondary')
+      expect(profileBtn.closest('button')).toHaveClass('bg-primary/10')
+      expect(resumesBtn.closest('button')).not.toHaveClass('bg-primary/10')
     })
   })
 })

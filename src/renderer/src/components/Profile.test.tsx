@@ -68,10 +68,10 @@ describe('Profile Component', () => {
   })
 
   it('renders correctly and loads data', async () => {
-    renderWithProvider(<Profile />)
+    const { container } = renderWithProvider(<Profile />)
 
-    // Initially loading
-    expect(screen.getByText('profile.loading')).toBeInTheDocument()
+    // Initially loading — skeleton with shimmer
+    expect(container.querySelector('.animate-shimmer')).toBeInTheDocument()
 
     // Wait for load
     await waitFor(() => {

@@ -139,7 +139,7 @@ export const Settings = (): React.JSX.Element => {
   const providerConfig = PROVIDER_CONFIGS[settings.provider]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h2>
         <p className="text-muted-foreground">{t('settings.ai_provider_desc')}</p>
@@ -147,7 +147,7 @@ export const Settings = (): React.JSX.Element => {
 
       <div className="grid gap-6">
         {/* General Settings */}
-        <Card>
+        <Card className="card-hover">
           <CardHeader>
             <CardTitle>{t('settings.general')}</CardTitle>
             <CardDescription></CardDescription>
@@ -224,7 +224,7 @@ export const Settings = (): React.JSX.Element => {
         </Card>
 
         {/* AI Provider Settings */}
-        <Card>
+        <Card className="card-hover">
           <CardHeader>
             <CardTitle>{t('settings.ai_provider')}</CardTitle>
             <CardDescription>{t('settings.ai_provider_desc')}</CardDescription>
@@ -255,9 +255,9 @@ export const Settings = (): React.JSX.Element => {
                       type={showApiKey ? 'text' : 'password'}
                       placeholder={t('settings.api_key_ph')}
                       value={settings.apiKeys?.[settings.provider] || ''}
-                      onChange={(e): void =>
+                      onChange={(e): void => {
                         updateSettings({ apiKeys: { [settings.provider]: e.target.value } })
-                      }
+                      }}
                     />
                   </div>
                   <Button

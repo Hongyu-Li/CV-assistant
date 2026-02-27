@@ -86,11 +86,26 @@ export function Resumes(): React.JSX.Element {
   }
 
   if (loading) {
-    return <div className="p-6">{t('resumes.loading')}</div>
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-48 rounded-lg animate-shimmer" />
+            <div className="h-4 w-64 rounded animate-shimmer" />
+          </div>
+          <div className="h-10 w-32 rounded-lg animate-shimmer" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 rounded-xl animate-shimmer" />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t('app.resumes')}</h2>
@@ -115,11 +130,11 @@ export function Resumes(): React.JSX.Element {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-fade-in">
           {resumes.map((resume) => (
             <Card
               key={resume.id}
-              className="group relative overflow-hidden transition-all hover:border-primary/50 cursor-pointer"
+              className="group relative overflow-hidden card-hover cursor-pointer"
               onClick={(): void => {
                 handleEdit(resume)
               }}
