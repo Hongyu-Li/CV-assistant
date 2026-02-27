@@ -29,6 +29,16 @@ AI-powered resume/CV assistant desktop app — generate tailored resumes from yo
 
 <!-- screenshots here -->
 
+## macOS Installation Note
+
+The app is code-signed and notarized for macOS. If you still see a security warning, open Terminal and run:
+
+```bash
+xattr -cr /Applications/CV-Assistant.app
+```
+
+Then try opening the app again.
+
 ## Tech Stack
 
 | Layer    | Technology                                                   |
