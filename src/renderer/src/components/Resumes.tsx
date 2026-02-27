@@ -4,22 +4,17 @@ import { useSettings } from '../context/SettingsContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { toast } from 'sonner'
-import { Trash2, FileText, Calendar, Briefcase } from 'lucide-react'
-
-interface CV {
-  id: string
-  filename: string
-  jobTitle?: string
-  experienceLevel?: string
-  lastModified?: string
-  [key: string]: unknown
-}
+import { Trash2, FileText, Calendar, Briefcase, Plus, Building2 } from 'lucide-react'
+import { ResumeDialog } from './ResumeDialog'
+import type { CV } from './ResumeDialog'
 
 export function Resumes(): React.JSX.Element {
   const { settings } = useSettings()
   const { t } = useTranslation()
   const [resumes, setResumes] = useState<CV[]>([])
   const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingResume, setEditingResume] = useState<CV | null>(null)
 
   const loadResumes = React.useCallback(async (): Promise<void> => {
     try {
@@ -28,7 +23,7 @@ export function Resumes(): React.JSX.Element {
       // Ensure data is an array before calling sort
       if (Array.isArray(data)) {
         // Sort by lastModified descending
-        const sorted = data.sort((a: CV, b: CV) => {
+        const sorted = data.sort((a: CV, b: CV): number => {
           if (!a.lastModified) return 1
           if (!b.lastModified) return -1
           return new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
@@ -49,7 +44,8 @@ export function Resumes(): React.JSX.Element {
     loadResumes()
   }, [loadResumes])
 
-  const handleDelete = async (filename: string): Promise<void> => {
+  const handleDelete = async (e: React.MouseEvent, filename: string): Promise<void> => {
+    e.stopPropagation()
     try {
       const result = await window.electron.ipcRenderer.invoke('cv:delete', {
         filename,
@@ -57,7 +53,7 @@ export function Resumes(): React.JSX.Element {
       })
       if (result.success) {
         toast.success(t('resumes.delete_success'))
-        loadResumes() // Reload list
+        loadResumes()
       } else {
         toast.error(t('resumes.delete_error'))
       }
@@ -65,6 +61,28 @@ export function Resumes(): React.JSX.Element {
       console.error('Failed to delete resume:', error)
       toast.error(t('resumes.delete_error'))
     }
+  }
+
+  const handleEdit = async (resume: CV): Promise<void> => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke('cv:read', {
+        filename: resume.filename,
+        workspacePath: settings.workspacePath
+      })
+      if (result.success) {
+        setEditingResume({ ...result.data, id: resume.id, filename: resume.filename })
+        setDialogOpen(true)
+      } else {
+        toast.error(t('resumes.load_error'))
+      }
+    } catch {
+      toast.error(t('resumes.load_error'))
+    }
+  }
+
+  const handleCreate = (): void => {
+    setEditingResume(null)
+    setDialogOpen(true)
   }
 
   if (loading) {
@@ -78,6 +96,10 @@ export function Resumes(): React.JSX.Element {
           <h2 className="text-3xl font-bold tracking-tight">{t('app.resumes')}</h2>
           <p className="text-muted-foreground mt-1">{t('resumes.description')}</p>
         </div>
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-2" />
+          {t('resumes.new_resume')}
+        </Button>
       </div>
 
       {resumes.length === 0 ? (
@@ -97,13 +119,31 @@ export function Resumes(): React.JSX.Element {
           {resumes.map((resume) => (
             <Card
               key={resume.id}
-              className="group relative overflow-hidden transition-all hover:border-primary/50"
+              className="group relative overflow-hidden transition-all hover:border-primary/50 cursor-pointer"
+              onClick={(): void => {
+                handleEdit(resume)
+              }}
             >
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2 truncate">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="truncate">{resume.jobTitle || t('resumes.untitled')}</span>
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2 truncate">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="truncate">{resume.jobTitle || t('resumes.untitled')}</span>
+                  </CardTitle>
+                  {resume.status && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full ${
+                        resume.status === 'generated'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                      }`}
+                    >
+                      {resume.status === 'generated'
+                        ? t('resumes.status_generated')
+                        : t('resumes.status_draft')}
+                    </span>
+                  )}
+                </div>
                 <CardDescription className="flex items-center gap-2 text-xs">
                   <Calendar className="h-3 w-3" />
                   {resume.lastModified
@@ -113,13 +153,19 @@ export function Resumes(): React.JSX.Element {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 mb-4">
+                  {resume.companyName && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span>{resume.companyName}</span>
+                    </div>
+                  )}
                   {resume.experienceLevel && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Briefcase className="h-4 w-4" />
                       <span className="capitalize">
                         {t('resumes.experience_display', {
                           level: t(
-                            `dashboard.level_${resume.experienceLevel}`,
+                            `resumes.level_${resume.experienceLevel}`,
                             resume.experienceLevel
                           )
                         })}
@@ -132,7 +178,9 @@ export function Resumes(): React.JSX.Element {
                     variant="destructive"
                     size="sm"
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleDelete(resume.filename)}
+                    onClick={(e: React.MouseEvent): void => {
+                      handleDelete(e, resume.filename)
+                    }}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
                     {t('common.delete')}
@@ -143,6 +191,13 @@ export function Resumes(): React.JSX.Element {
           ))}
         </div>
       )}
+
+      <ResumeDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        resume={editingResume}
+        onSaved={loadResumes}
+      />
     </div>
   )
 }
