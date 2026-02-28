@@ -20,3 +20,6 @@ test-results/
 *.pem
 *.key
 *.pfx
+
+# Build artifacts
+*.tsbuildinfo
