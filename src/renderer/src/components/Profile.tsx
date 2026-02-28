@@ -126,7 +126,7 @@ export function Profile(): React.JSX.Element {
       ...prev,
       projects: [
         ...prev.projects,
-        { id: Date.now().toString(), name: '', techStack: '', description: '' }
+        { id: crypto.randomUUID(), name: '', techStack: '', description: '' }
       ]
     }))
   }

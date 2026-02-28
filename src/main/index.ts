@@ -270,8 +270,8 @@ app
       if (savedSettings.language) {
         initialLang = savedSettings.language
       }
-    } catch {
-      // Settings not found — default to English
+    } catch (e) {
+      console.debug('Settings not found, using defaults:', e)
     }
 
     // Set dock icon on macOS (ensures correct icon in dev mode)
@@ -374,8 +374,8 @@ app
         const settingsRaw2 = await readWorkspaceFile('settings.json')
         const savedSettings2 = JSON.parse(settingsRaw2)
         updater.autoDownload = savedSettings2.autoUpdate !== false
-      } catch {
-        // Settings not found — default to auto-download enabled
+      } catch (e) {
+        console.debug('Updater settings not found:', e)
         updater.autoDownload = true
       }
       updater.autoInstallOnAppQuit = true
@@ -417,8 +417,8 @@ app
       // Check for updates after window is ready (non-blocking)
       mainWindow.webContents.once('did-finish-load', () => {
         if (updater.autoDownload && app.isPackaged) {
-          updater.checkForUpdates().catch(() => {
-            // Silently ignore — update check is best-effort
+          updater.checkForUpdates().catch((e: unknown) => {
+            console.debug('Auto-update check failed:', e)
           })
         }
       })
@@ -445,8 +445,8 @@ app
             oldFiles = files
             break
           }
-        } catch {
-          // Path doesn't exist, continue
+        } catch (e) {
+          console.debug('Legacy path check failed:', e)
         }
       }
       if (oldPath) {
@@ -465,8 +465,8 @@ app
           }
         }
       }
-    } catch {
-      // Silently ignore — not critical
+    } catch (e) {
+      console.debug('First-run migration check failed:', e)
     }
 
     // Data format migration: old flat workspace → new subdirectory structure
@@ -572,8 +572,8 @@ app
             console.log('Profile migrated from userData to workspace')
           }
         }
-      } catch {
-        // Old profile doesn't exist — nothing to migrate
+      } catch (e) {
+        console.debug('Old profile not found:', e)
       }
 
       // 2. Migrate CVs from workspace root to resumes/ subdirectory

@@ -129,8 +129,8 @@ export const Settings = (): React.JSX.Element => {
       .then((version: string) => {
         setAppVersion(version)
       })
-      .catch(() => {
-        /* Version fetch is non-critical */
+      .catch((e: unknown) => {
+        console.debug('Version fetch failed:', e)
       })
   }, [])
 
@@ -235,11 +235,15 @@ export const Settings = (): React.JSX.Element => {
                 <Button
                   variant="outline"
                   onClick={async (): Promise<void> => {
-                    const pathToOpen =
-                      settings.workspacePath ||
-                      (await window.electron.ipcRenderer.invoke('app:getDefaultWorkspacePath'))
-                    if (pathToOpen) {
-                      await window.electron.ipcRenderer.invoke('shell:openPath', pathToOpen)
+                    try {
+                      const pathToOpen =
+                        settings.workspacePath ||
+                        (await window.electron.ipcRenderer.invoke('app:getDefaultWorkspacePath'))
+                      if (pathToOpen) {
+                        await window.electron.ipcRenderer.invoke('shell:openPath', pathToOpen)
+                      }
+                    } catch (e) {
+                      console.error('Failed to open folder:', e)
                     }
                   }}
                 >
@@ -412,7 +416,8 @@ export const Settings = (): React.JSX.Element => {
                   setUpdateStatus('')
                   try {
                     await window.electron.ipcRenderer.invoke('auto-update:check')
-                  } catch {
+                  } catch (e) {
+                    console.debug('Update check failed:', e)
                     setIsCheckingUpdate(false)
                   }
                 }}

@@ -491,6 +491,36 @@ function validateBaseUrl(url: string): void {
   }
 }
 
+interface AiRequestConfig {
+  provider: string
+  apiKey: string
+  model: string
+  baseUrl: string
+}
+
+function buildAiRequestBase(config: AiRequestConfig): {
+  url: string
+  headers: Record<string, string>
+} {
+  const baseUrl =
+    config.baseUrl ||
+    (config.provider === 'anthropic' ? 'https://api.anthropic.com/v1' : 'https://api.openai.com/v1')
+  validateBaseUrl(baseUrl)
+
+  const url =
+    config.provider === 'anthropic' ? `${baseUrl}/messages` : `${baseUrl}/chat/completions`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (config.provider === 'anthropic') {
+    headers['x-api-key'] = config.apiKey
+    headers['anthropic-version'] = '2023-06-01'
+  } else if (config.provider !== 'ollama') {
+    headers['Authorization'] = `Bearer ${config.apiKey}`
+  }
+
+  return { url, headers }
+}
+
 export async function handleAiChat(params: {
   provider: string
   apiKey: string
@@ -499,27 +529,7 @@ export async function handleAiChat(params: {
   baseUrl: string
 }): Promise<{ success: true; content: string } | IpcErrorResponse> {
   try {
-    const baseUrl =
-      params.baseUrl ||
-      (params.provider === 'anthropic'
-        ? 'https://api.anthropic.com/v1'
-        : 'https://api.openai.com/v1')
-    validateBaseUrl(baseUrl)
-
-    let url: string
-    if (params.provider === 'anthropic') {
-      url = `${baseUrl}/messages`
-    } else {
-      url = `${baseUrl}/chat/completions`
-    }
-
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (params.provider === 'anthropic') {
-      headers['x-api-key'] = params.apiKey
-      headers['anthropic-version'] = '2023-06-01'
-    } else if (params.provider !== 'ollama') {
-      headers['Authorization'] = `Bearer ${params.apiKey}`
-    }
+    const { url, headers } = buildAiRequestBase(params)
 
     let body: string
     if (params.provider === 'anthropic') {
@@ -580,27 +590,7 @@ export async function handleAiTest(params: {
   baseUrl: string
 }): Promise<IpcSuccessResponse | IpcErrorResponse> {
   try {
-    const baseUrl =
-      params.baseUrl ||
-      (params.provider === 'anthropic'
-        ? 'https://api.anthropic.com/v1'
-        : 'https://api.openai.com/v1')
-    validateBaseUrl(baseUrl)
-
-    let url: string
-    if (params.provider === 'anthropic') {
-      url = `${baseUrl}/messages`
-    } else {
-      url = `${baseUrl}/chat/completions`
-    }
-
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-    if (params.provider === 'anthropic') {
-      headers['x-api-key'] = params.apiKey
-      headers['anthropic-version'] = '2023-06-01'
-    } else if (params.provider !== 'ollama') {
-      headers['Authorization'] = `Bearer ${params.apiKey}`
-    }
+    const { url, headers } = buildAiRequestBase(params)
 
     let body: string
     if (params.provider === 'anthropic') {
