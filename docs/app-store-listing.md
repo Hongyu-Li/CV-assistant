@@ -100,3 +100,8 @@ https://tc9011.github.io/CV-assistant/privacy-policy.html
 
 1. **Data Collection**: Select "No, we do not collect data from this app" (unless you add analytics in the future).
 2. **Third-Party Integration**: If asked about third-party service integration, specify that the app is a tool that connects to user-provided AI services, and no data is shared with the app developer.
+
+## 10. Copyright
+
+- **English**: Copyright © 2025-2026 Cheng Tang. All rights reserved.
+- **Chinese**: 版权所有 © 2025-2026 Cheng Tang. 保留所有权利。

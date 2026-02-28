@@ -5,7 +5,8 @@
 - Name: 简历助手 (CV Assistant)
 - Desktop app: Electron + React + TypeScript
 - Purpose: AI powered resume and CV generation from personal profile using multiple AI providers.
-- All data stored locally in `~/.cv-assistant/`, no server uploads.
+- All data stored locally in Electron `app.getPath('userData')/workspace`, no server uploads.
+- Legacy path `~/.cv-assistant/` is auto-migrated on first launch.
 - Cross-platform: Windows, macOS, Linux.
 
 ## Setup
@@ -14,6 +15,9 @@
 npm install
 npm run dev          # Start dev with HMR
 npm run build        # Typecheck + production build
+npm run build:mac    # Build macOS (direct distribution)
+npm run build:mas    # Build Mac App Store version
+npm run build:mas-dev # Build MAS with development signing
 npm test             # Run unit tests (Vitest)
 npm run test:coverage # Tests with coverage report
 npm run e2e          # Playwright e2e tests
@@ -31,6 +35,15 @@ Three process Electron architecture:
 - **Renderer** (`src/renderer/src/`): React SPA. Components in `components/`, contexts in `context/`, utilities in `lib/`, i18n in `locales/`.
 
 IPC Pattern: All external API calls must go through IPC. Renderer invokes via `window.electron.ipcRenderer.invoke()`, main process handles the HTTP call. Never make HTTP requests from the renderer process.
+
+### Security (enforced since v1.0.10)
+
+- BrowserWindow: `nodeIntegration: false`, `contextIsolation: true`.
+- CSP: strict Content-Security-Policy in `src/renderer/index.html` (no localhost wildcards, explicit font-src).
+- API error sanitization: `sanitizeApiError()` in `handlers.ts` redacts API keys from error messages before sending to renderer.
+- Request timeouts: AbortController with 30s timeout on all AI API requests.
+- Rate limiting: 429 status detection with `Retry-After` header parsing.
+- Global error handlers: `unhandledRejection` and `uncaughtException` in main process.
 
 ## Code Style
 
@@ -65,12 +78,14 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 
 ## Data Storage
 
-- Default workspace: `~/.cv-assistant/`.
-- User data (settings): Electron's `app.getPath('userData')` to `settings.json`.
+- Default workspace: Electron's `app.getPath('userData')/workspace`.
+- Legacy locations `~/.cv-assistant/` and `userData/drafts` are auto-migrated on first launch.
+- User data (settings): `app.getPath('userData')/settings.json`.
 - Workspace files:
   - `profile.json` and `profile.md` for user profile data and Markdown description.
   - `resumes/` for generated resumes, each as `{id}.json` and `{id}.md`.
 - Workspace directory is configurable; changing it triggers full data migration.
+- MAS (Mac App Store) builds run inside App Sandbox; the `userData/workspace` path was chosen for sandbox compatibility.
 
 ## Key Constraints
 
@@ -85,5 +100,21 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 ## File Modification Warnings
 
 - `src/preload/index.ts` and `src/preload/index.d.ts` are paired files, modify together.
-- `src/renderer/index.html`: avoid modifying unless absolutely necessary.
+- `src/renderer/index.html`: contains CSP header, avoid modifying unless absolutely necessary. If modifying CSP, test both dev and production builds.
 - `src/renderer/src/locales/*.json`: always update both en.json and zh.json together.
+- `src/main/handlers.ts`: contains `sanitizeApiError()` — any new IPC handlers that return errors from AI APIs must use this function.
+- `electron-builder.mas.yml`: MAS-specific build config; do not merge into main `electron-builder.yml`.
+- `build/entitlements.mas.plist` and `build/entitlements.mas.inherit.plist`: MAS sandbox entitlements.
+
+## Mac App Store (MAS) Build
+
+- Config: `electron-builder.mas.yml` (separate from standard `electron-builder.yml`).
+- Scripts: `npm run build:mas` (production), `npm run build:mas-dev` (development signing).
+- Auto-updater is guarded with `process.mas` check — `electron-updater` is not available in MAS builds.
+- Provisioning profiles, certificates, and private keys (`*.provisionprofile`, `*.p12`, `*.cer`, `*.pem`, `*.key`, `*.pfx`) are gitignored.
+- App Store submission materials are in `docs/`: `app-store-listing.md` (bilingual listing text, keywords, copyright), `privacy-policy.html` (bilingual, hosted on GitHub Pages).
+- Promotional screenshots (2880×1800) are in `tests/screenshots/app-store/` with a Playwright-based generator script at `tests/screenshots/generate-promotional.mjs`.
+
+## License
+
+MIT License - Copyright © 2025-2026 Cheng Tang.

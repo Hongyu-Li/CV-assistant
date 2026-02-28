@@ -23,6 +23,8 @@ AI-powered resume/CV assistant desktop app — generate tailored resumes from yo
 - Light/Dark/System theme support
 - Configurable local workspace directory with data migration
 - 100% local data storage — no server uploads
+- Security hardened (CSP, API key redaction, request timeouts)
+- Code-signed, notarized, and available on Mac App Store
 - Cross-platform (Windows, macOS, Linux)
 
 ## Screenshots
@@ -31,7 +33,9 @@ AI-powered resume/CV assistant desktop app — generate tailored resumes from yo
 
 ## macOS Installation Note
 
-The app is code-signed and notarized for macOS. If you still see a security warning, open Terminal and run:
+The app is available on the **Mac App Store**. You can also download it directly from [GitHub Releases](https://github.com/tc9011/CV-assistant/releases).
+
+The direct download version is code-signed and notarized for macOS. If you still see a security warning, open Terminal and run:
 
 ```bash
 xattr -cr /Applications/CV-Assistant.app
@@ -66,19 +70,21 @@ npm run dev
 
 ## Available Scripts
 
-| Command               | Description                    |
-| :-------------------- | :----------------------------- |
-| npm run dev           | Start development with HMR     |
-| npm run build         | Typecheck + build              |
-| npm run build:mac     | Build for macOS                |
-| npm run build:win     | Build for Windows              |
-| npm run build:linux   | Build for Linux                |
-| npm test              | Run unit tests                 |
-| npm run test:coverage | Run tests with coverage report |
-| npm run e2e           | Run Playwright e2e tests       |
-| npm run lint          | Run ESLint                     |
-| npm run format        | Format with Prettier           |
-| npm run typecheck     | Run TypeScript type checks     |
+| Command               | Description                        |
+| :-------------------- | :--------------------------------- |
+| npm run dev           | Start development with HMR         |
+| npm run build         | Typecheck + build                  |
+| npm run build:mac     | Build for macOS                    |
+| npm run build:win     | Build for Windows                  |
+| npm run build:linux   | Build for Linux                    |
+| npm run build:mas     | Build for Mac App Store            |
+| npm run build:mas-dev | Build MAS with development signing |
+| npm test              | Run unit tests                     |
+| npm run test:coverage | Run tests with coverage report     |
+| npm run e2e           | Run Playwright e2e tests           |
+| npm run lint          | Run ESLint                         |
+| npm run format        | Format with Prettier               |
+| npm run typecheck     | Run TypeScript type checks         |
 
 ## Project Structure
 
@@ -122,4 +128,4 @@ To contribute, please fork the repository and create a new branch. Commit your c
 
 ## License
 
-MIT
+MIT License - Copyright © 2025-2026 [Cheng Tang](https://github.com/tc9011)

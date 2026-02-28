@@ -23,6 +23,8 @@
 - 亮色 / 暗色 / 跟随系统主题切换
 - 可配置的本地工作目录，支持数据迁移
 - 100% 本地存储，数据绝不上传服务器
+- 安全加固（CSP、API 密钥脱敏、请求超时保护）
+- 已代码签名、已公证，已上架 Mac App Store
 - 跨平台支持（Windows、macOS、Linux）
 
 ## 截图
@@ -31,7 +33,9 @@
 
 ## macOS 安装说明
 
-本应用已经过 macOS 代码签名和公证。如果仍然看到安全提示，请打开终端运行：
+本应用已上架 **Mac App Store**。您也可以从 [GitHub Releases](https://github.com/tc9011/CV-assistant/releases) 直接下载。
+
+直接下载的版本已经过 macOS 代码签名和公证。如果仍然看到安全提示，请打开终端运行：
 
 ```bash
 xattr -cr /Applications/CV-Assistant.app
@@ -73,6 +77,8 @@ npm run dev
 | npm run build:mac     | 构建 macOS 版本            |
 | npm run build:win     | 构建 Windows 版本          |
 | npm run build:linux   | 构建 Linux 版本            |
+| npm run build:mas     | 构建 Mac App Store 版本    |
+| npm run build:mas-dev | 构建 MAS 开发签名版本      |
 | npm test              | 运行单元测试               |
 | npm run test:coverage | 运行测试并生成覆盖率报告   |
 | npm run e2e           | 运行 Playwright 端到端测试 |
@@ -127,4 +133,4 @@ src/
 
 ## 开源协议
 
-MIT
+MIT 协议 - 版权所有 © 2025-2026 [Cheng Tang](https://github.com/tc9011)
