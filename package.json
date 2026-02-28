@@ -1,6 +1,6 @@
 {
   "name": "cv-assistant",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "AI-powered resume/CV assistant desktop app",
   "main": "./out/main/index.js",
   "author": "",
