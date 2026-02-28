@@ -12,3 +12,11 @@ coverage
 
 playwright-report/
 test-results/
+
+# macOS code signing / provisioning (sensitive)
+*.provisionprofile
+*.p12
+*.cer
+*.pem
+*.key
+*.pfx

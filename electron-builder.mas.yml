@@ -1,0 +1,39 @@
+appId: com.tc9011.cv-assistant
+productName: CV-Assistant
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: mas
+      arch:
+        - universal
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  notarize: false
+  extendInfo:
+    CFBundleDisplayName: 简历助手
+    CFBundleName: CV-Assistant
+    CFBundleIconName: AppIcon
+    NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
+    NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+mas:
+  type: distribution
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  # Place your provisioning profile in build/ after downloading from Apple Developer Portal.
+  # For distribution: build/MacAppStore.provisionprofile
+  # For dev/testing: build/AppleDevelopment.provisionprofile
+  provisioningProfile: build/CV_Assistant_Distribution.provisionprofile
+npmRebuild: false

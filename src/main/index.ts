@@ -2,7 +2,9 @@ import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage, Menu } from 'e
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { autoUpdater } from 'electron-updater'
+// electron-updater is not available in MAS builds — loaded dynamically below
+type AutoUpdaterType = typeof import('electron-updater').autoUpdater
+let autoUpdater: AutoUpdaterType | null = null
 
 // i18n translations for macOS application menu
 interface MenuTranslations {
@@ -233,6 +235,12 @@ function createWindow(): BrowserWindow {
 app
   .whenReady()
   .then(async () => {
+    // Load electron-updater dynamically — not available in MAS builds
+    if (!process.mas) {
+      const updaterModule = await import('electron-updater')
+      autoUpdater = updaterModule.autoUpdater
+    }
+
     // Set app name for macOS menu bar
     app.setName('简历助手')
 
@@ -321,14 +329,17 @@ app
       handleAiTest({ provider, apiKey, model, baseUrl })
     )
 
-    // Auto-update IPC handlers
-    ipcMain.handle('auto-update:check', () => handleAutoUpdateCheck({ autoUpdater }))
+    // Auto-update IPC handlers (disabled in MAS builds — App Store handles updates)
+    if (autoUpdater) {
+      const updater = autoUpdater
+      ipcMain.handle('auto-update:check', () => handleAutoUpdateCheck({ autoUpdater: updater }))
 
-    ipcMain.handle('auto-update:install', () => handleAutoUpdateInstall({ autoUpdater }))
+      ipcMain.handle('auto-update:install', () => handleAutoUpdateInstall({ autoUpdater: updater }))
 
-    ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) =>
-      handleAutoUpdateSetAutoDownload(enabled, { autoUpdater })
-    )
+      ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) =>
+        handleAutoUpdateSetAutoDownload(enabled, { autoUpdater: updater })
+      )
+    }
 
     ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
 
@@ -338,71 +349,89 @@ app
     })
     const mainWindow = createWindow()
 
-    // Setup auto-updater
-    try {
-      const settingsRaw = await readWorkspaceFile('settings.json')
-      const savedSettings = JSON.parse(settingsRaw)
-      autoUpdater.autoDownload = savedSettings.autoUpdate !== false
-    } catch {
-      // Settings not found — default to auto-download enabled
-      autoUpdater.autoDownload = true
+    // Setup auto-updater (disabled in MAS builds — App Store handles updates)
+    if (autoUpdater) {
+      const updater = autoUpdater
+      try {
+        const settingsRaw2 = await readWorkspaceFile('settings.json')
+        const savedSettings2 = JSON.parse(settingsRaw2)
+        updater.autoDownload = savedSettings2.autoUpdate !== false
+      } catch {
+        // Settings not found — default to auto-download enabled
+        updater.autoDownload = true
+      }
+      updater.autoInstallOnAppQuit = true
+
+      // Auto-updater events → renderer (with destroyed-window guard)
+      updater.on('checking-for-update', () => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('auto-update:checking')
+        }
+      })
+      updater.on('update-available', (info) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('auto-update:available', { version: info.version })
+        }
+      })
+      updater.on('update-not-available', () => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('auto-update:not-available')
+        }
+      })
+      updater.on('download-progress', (progress) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('auto-update:download-progress', {
+            percent: Math.round(progress.percent)
+          })
+        }
+      })
+      updater.on('update-downloaded', (info) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('auto-update:downloaded', { version: info.version })
+        }
+      })
+      updater.on('error', (err) => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('auto-update:error', { error: err.message })
+        }
+      })
+
+      // Check for updates after window is ready (non-blocking)
+      mainWindow.webContents.once('did-finish-load', () => {
+        if (updater.autoDownload && app.isPackaged) {
+          updater.checkForUpdates().catch(() => {
+            // Silently ignore — update check is best-effort
+          })
+        }
+      })
     }
-    autoUpdater.autoInstallOnAppQuit = true
-
-    // Auto-updater events → renderer (with destroyed-window guard)
-    autoUpdater.on('checking-for-update', () => {
-      if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('auto-update:checking')
-      }
-    })
-    autoUpdater.on('update-available', (info) => {
-      if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('auto-update:available', { version: info.version })
-      }
-    })
-    autoUpdater.on('update-not-available', () => {
-      if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('auto-update:not-available')
-      }
-    })
-    autoUpdater.on('download-progress', (progress) => {
-      if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('auto-update:download-progress', {
-          percent: Math.round(progress.percent)
-        })
-      }
-    })
-    autoUpdater.on('update-downloaded', (info) => {
-      if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('auto-update:downloaded', { version: info.version })
-      }
-    })
-    autoUpdater.on('error', (err) => {
-      if (!mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('auto-update:error', { error: err.message })
-      }
-    })
-
-    // Check for updates after window is ready (non-blocking)
-    mainWindow.webContents.once('did-finish-load', () => {
-      if (autoUpdater.autoDownload && app.isPackaged) {
-        autoUpdater.checkForUpdates().catch(() => {
-          // Silently ignore — update check is best-effort
-        })
-      }
-    })
 
     // Register macOS activate handler early (before async migration) to ensure it's always available
     app.on('activate', function () {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
 
-    // First-run migration check: detect files at old default location
-    const oldDefaultPath = join(app.getPath('userData'), 'drafts')
-    const newDefaultPath = join(app.getPath('home'), '.cv-assistant')
+    // First-run migration check: detect files at old default locations
+    const legacyDraftsPath = join(app.getPath('userData'), 'drafts')
+    const legacyHomePath = join(app.getPath('home'), '.cv-assistant')
+    const newDefaultPath = join(app.getPath('userData'), 'workspace')
     try {
-      const oldFiles = await listWorkspaceFiles(oldDefaultPath)
-      if (oldFiles.length > 0) {
+      // Check legacy drafts location first, then legacy home location
+      let oldPath: string | null = null
+      let oldFiles: string[] = []
+      for (const legacyPath of [legacyDraftsPath, legacyHomePath]) {
+        try {
+          const files = await listWorkspaceFiles(legacyPath)
+          if (files.length > 0) {
+            oldPath = legacyPath
+            oldFiles = files
+            break
+          }
+        } catch {
+          // Path doesn't exist, continue
+        }
+      }
+      if (oldPath) {
         // Check if new default has any files
         const newFiles = await listWorkspaceFiles(newDefaultPath)
         if (newFiles.length === 0) {
@@ -411,7 +440,7 @@ app
           if (mainWindow) {
             mainWindow.webContents.once('did-finish-load', () => {
               mainWindow.webContents.send('workspace:first-run-migration', {
-                oldPath: oldDefaultPath,
+                oldPath,
                 fileCount: oldFiles.length
               })
             })
@@ -424,7 +453,7 @@ app
 
     // Data format migration: old flat workspace → new subdirectory structure
     try {
-      const workspaceDir = join(app.getPath('home'), '.cv-assistant')
+      const workspaceDir = join(app.getPath('userData'), 'workspace')
 
       // 1. Migrate profile from userData to workspace
       try {
