@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Resumes } from './Resumes'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { SettingsProvider } from '../context/SettingsContext'
+import { toast } from 'sonner'
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -46,6 +47,15 @@ describe('Resumes Component', () => {
     mockInvoke.mockResolvedValue([])
     renderWithProvider(<Resumes />)
     await waitFor(() => {
+      expect(screen.getByText('resumes.empty_title')).toBeInTheDocument()
+    })
+  })
+
+  it('renders empty state when cv:list returns non-array data', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(null)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
       expect(screen.getByText('resumes.empty_title')).toBeInTheDocument()
     })
   })
@@ -180,6 +190,72 @@ describe('Resumes Component', () => {
         filename: 'cv1.json',
         workspacePath: ''
       })
+    })
+  })
+
+  it('shows delete error toast when cv:delete returns success false', async (): Promise<void> => {
+    const resumes = [
+      { id: '1', filename: 'cv1.json', jobTitle: 'Developer', lastModified: '2023-01-01' }
+    ]
+    mockInvoke.mockImplementation((channel: string) => {
+      if (channel === 'cv:list') return Promise.resolve(resumes)
+      if (channel === 'cv:delete') return Promise.resolve({ success: false })
+      return Promise.resolve(undefined)
+    })
+
+    renderWithProvider(<Resumes />)
+    await waitFor((): void => {
+      expect(screen.getByText('Developer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('common.delete'))
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
+    })
+  })
+
+  it('shows delete error toast when cv:delete throws', async (): Promise<void> => {
+    const resumes = [
+      { id: '1', filename: 'cv1.json', jobTitle: 'Developer', lastModified: '2023-01-01' }
+    ]
+    mockInvoke.mockImplementation((channel: string) => {
+      if (channel === 'cv:list') return Promise.resolve(resumes)
+      if (channel === 'cv:delete') return Promise.reject(new Error('delete failed'))
+      return Promise.resolve(undefined)
+    })
+
+    renderWithProvider(<Resumes />)
+    await waitFor((): void => {
+      expect(screen.getByText('Developer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('common.delete'))
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
+    })
+  })
+
+  it('shows load error toast when cv:read throws during edit', async (): Promise<void> => {
+    const resumes = [
+      { id: '1', filename: 'cv1.json', jobTitle: 'Developer', lastModified: '2023-01-01' }
+    ]
+    mockInvoke.mockImplementation((channel: string) => {
+      if (channel === 'cv:list') return Promise.resolve(resumes)
+      if (channel === 'cv:read') return Promise.reject(new Error('read failed'))
+      return Promise.resolve(undefined)
+    })
+
+    renderWithProvider(<Resumes />)
+    await waitFor((): void => {
+      expect(screen.getByText('Developer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Developer'))
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.load_error')
     })
   })
 

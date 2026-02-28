@@ -209,6 +209,24 @@ describe('ResumeDialog', () => {
     })
   })
 
+  it('shows error toast when save throws exception', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'cv:save') return Promise.reject(new Error('save failed'))
+      return Promise.resolve(undefined)
+    })
+
+    renderDialog()
+
+    const jobTitleInput = screen.getByPlaceholderText('resumes.job_title_ph')
+    fireEvent.change(jobTitleInput, { target: { value: 'Engineer' } })
+
+    fireEvent.click(screen.getByText('resumes.save'))
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.save_error')
+    })
+  })
+
   it('shows empty_jd toast when generating with empty job description', async () => {
     renderDialog()
 
@@ -251,6 +269,47 @@ describe('ResumeDialog', () => {
       )
       expect(toast.success).toHaveBeenCalledWith('resumes.generate_success')
     })
+  })
+
+  it('includes phone, work experience, and projects in profile text for generation', async (): Promise<void> => {
+    const profileData = {
+      personalInfo: { name: 'John', email: 'john@test.com', phone: '+1234567890' },
+      workExperience: [
+        {
+          role: 'Dev',
+          company: 'Co',
+          date: '2020-2024',
+          description: 'Built things'
+        }
+      ],
+      projects: [{ name: 'Proj', techStack: 'React', description: 'A cool project' }]
+    }
+    mockInvoke.mockResolvedValue(profileData)
+    vi.mocked(generateCV).mockResolvedValue('# Generated Resume')
+
+    renderDialog()
+
+    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
+    fireEvent.change(jdTextarea, { target: { value: 'Build web apps' } })
+
+    fireEvent.click(screen.getByText('resumes.generate_cv'))
+
+    await waitFor((): void => {
+      expect(generateCV).toHaveBeenCalled()
+    })
+
+    const firstCall = vi.mocked(generateCV).mock.calls[0]
+    expect(firstCall).toBeDefined()
+    const [args] = firstCall!
+
+    expect(args.profile).toContain('Phone:')
+    expect(args.profile).toContain('+1234567890')
+    expect(args.profile).toContain('Work Experience:')
+    expect(args.profile).toContain('Dev at Co')
+    expect(args.profile).toContain('Built things')
+    expect(args.profile).toContain('Projects:')
+    expect(args.profile).toContain('Proj [React]')
+    expect(args.profile).toContain('A cool project')
   })
 
   it('shows error toast when generation fails', async () => {

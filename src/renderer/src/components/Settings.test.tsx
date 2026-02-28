@@ -921,4 +921,45 @@ describe('Settings - Auto Update', () => {
       expect(screen.getByText('settings.auto_update_not_available')).toBeInTheDocument()
     })
   })
+
+  it('shows error status and re-enables check button when auto-update:error fires', async (): Promise<void> => {
+    render(<Settings />)
+
+    const errorCall = mockOn.mock.calls.find((call: unknown[]) => call[0] === 'auto-update:error')
+    expect(errorCall).toBeDefined()
+
+    const handler = errorCall![1] as (
+      event: unknown,
+      data: {
+        error: string
+      }
+    ) => void
+
+    await act(async (): Promise<void> => {
+      handler({}, { error: 'Some error' })
+    })
+
+    await waitFor((): void => {
+      expect(screen.getByText('settings.auto_update_error')).toBeInTheDocument()
+      expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
+    })
+  })
+
+  it('re-enables check button when auto-update:check IPC throws', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'auto-update:check') return Promise.reject(new Error('check failed'))
+      return Promise.resolve(undefined)
+    })
+
+    render(<Settings />)
+    const checkBtn = screen.getByText('settings.auto_update_check')
+    await act(async (): Promise<void> => {
+      fireEvent.click(checkBtn)
+    })
+
+    await waitFor((): void => {
+      expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
+    })
+  })
 })
