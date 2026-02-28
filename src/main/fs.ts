@@ -1,15 +1,14 @@
 import { app } from 'electron'
-import { join, normalize, dirname } from 'path'
+import { join, normalize, dirname, resolve, relative, isAbsolute } from 'path'
 import { promises as fs } from 'fs'
 
 function getSafeFilePath(filename: string): string {
   const userDataPath = app.getPath('userData')
-  const safePath = normalize(join(userDataPath, filename))
-
-  if (!safePath.startsWith(userDataPath)) {
+  const safePath = resolve(join(userDataPath, filename))
+  const rel = relative(userDataPath, safePath)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
     throw new Error('Invalid file path')
   }
-
   return safePath
 }
 
@@ -48,15 +47,12 @@ export async function getLastModified(filename: string): Promise<Date> {
 }
 
 function getWorkspaceFilePath(filename: string, workspaceDir?: string): string {
-  const rootPath = workspaceDir
-    ? normalize(workspaceDir)
-    : join(app.getPath('userData'), 'workspace')
-  const safePath = normalize(join(rootPath, filename))
-
-  if (!safePath.startsWith(rootPath)) {
+  const rootPath = workspaceDir ? resolve(workspaceDir) : join(app.getPath('userData'), 'workspace')
+  const safePath = resolve(join(rootPath, filename))
+  const rel = relative(rootPath, safePath)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
     throw new Error('Invalid file path')
   }
-
   return safePath
 }
 
@@ -161,10 +157,12 @@ export async function precheckWorkspaceMigration(
   }
 
   // Path containment check — reject if one is parent of the other
-  if (normalTo.startsWith(normalFrom + '/') || normalTo.startsWith(normalFrom + '\\')) {
+  const relTo = relative(normalFrom, normalTo)
+  if (!relTo.startsWith('..') && !isAbsolute(relTo)) {
     throw new Error('Target directory cannot be inside the source directory')
   }
-  if (normalFrom.startsWith(normalTo + '/') || normalFrom.startsWith(normalTo + '\\')) {
+  const relFrom = relative(normalTo, normalFrom)
+  if (!relFrom.startsWith('..') && !isAbsolute(relFrom)) {
     throw new Error('Source directory cannot be inside the target directory')
   }
 

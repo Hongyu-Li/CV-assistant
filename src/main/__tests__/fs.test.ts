@@ -114,6 +114,28 @@ describe('precheckWorkspaceMigration', () => {
     await expect(precheckWorkspaceMigration(nestedSource, targetDir)).rejects.toThrow('inside')
   })
 
+  it('blocks startsWith-bypass path traversal for userData files (../<userData>-evil)', async () => {
+    const evilRoot = '/tmp/mock-userData-evil'
+    await fsp.mkdir(evilRoot, { recursive: true })
+    await fsp.writeFile(join(evilRoot, 'secret.txt'), 'SECRET')
+
+    const { readUserDataFile } = await import('../fs')
+    await expect(readUserDataFile('../mock-userData-evil/secret.txt')).rejects.toThrow(
+      'Invalid file path'
+    )
+  })
+
+  it('blocks startsWith-bypass path traversal for workspace files (../workspace-evil)', async () => {
+    const evilWorkspaceRoot = '/tmp/mock-userData/workspace-evil'
+    await fsp.mkdir(evilWorkspaceRoot, { recursive: true })
+    await fsp.writeFile(join(evilWorkspaceRoot, 'secret.txt'), 'SECRET')
+
+    const { readWorkspaceFile } = await import('../fs')
+    await expect(readWorkspaceFile('../workspace-evil/secret.txt')).rejects.toThrow(
+      'Invalid file path'
+    )
+  })
+
   it('recursively collects files from subdirectories', async () => {
     // Create nested structure: profile/ and resumes/
     await fsp.mkdir(join(sourceDir, 'profile'), { recursive: true })

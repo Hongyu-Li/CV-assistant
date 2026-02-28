@@ -391,6 +391,23 @@ describe('main/handlers', (): void => {
         expect(result.error).not.toContain('API error')
       }
     })
+
+    it('rejects invalid baseUrl protocol (file:)', async (): Promise<void> => {
+      mockFetchOkJson({ choices: [{ message: { content: 'x' } }] })
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'file:///etc'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.toLowerCase()).toContain('protocol')
+      }
+    })
   })
 
   describe('handleAiTest', (): void => {
@@ -462,6 +479,38 @@ describe('main/handlers', (): void => {
       })
 
       expect(result).toEqual({ success: false, error: 'net' })
+    })
+
+    it('rejects invalid baseUrl protocol (file:)', async (): Promise<void> => {
+      mockFetchOkJson({})
+
+      const result = await handlers.handleAiTest({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        baseUrl: 'file:///etc'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.toLowerCase()).toContain('protocol')
+      }
+    })
+
+    it('returns timeout message when fetch aborts (AbortError)', async (): Promise<void> => {
+      mockFetch.mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' }))
+
+      const result = await handlers.handleAiTest({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: 'AI test request timed out after 30 seconds'
+      })
     })
   })
 

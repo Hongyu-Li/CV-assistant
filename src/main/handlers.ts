@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join, resolve, relative, isAbsolute } from 'path'
 import {
   deleteWorkspaceFile,
   getWorkspaceLastModified,
@@ -419,9 +419,13 @@ export async function handleShellOpenPath(
 ): Promise<string> {
   const ACCESS_DENIED_MESSAGE = 'Access denied: path is outside workspace'
   const defaultWorkspace = join(deps.app.getPath('userData'), 'workspace')
-  const resolvedPath = join(requestedPath)
-  const normalizedDefault = join(defaultWorkspace)
-  if (!resolvedPath.startsWith(normalizedDefault) && resolvedPath !== deps.app.getPath('home')) {
+  const resolvedPath = resolve(requestedPath)
+  if (resolvedPath === deps.app.getPath('home')) {
+    const result = await deps.shell.openPath(resolvedPath)
+    return result
+  }
+  const rel = relative(defaultWorkspace, resolvedPath)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
     return ACCESS_DENIED_MESSAGE
   }
   const result = await deps.shell.openPath(resolvedPath)
@@ -473,6 +477,20 @@ function sanitizeApiError(statusCode: number, rawError: string): string {
   return `API error ${statusCode}: ${sanitized}`
 }
 
+function validateBaseUrl(url: string): void {
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      throw new Error('Only http and https protocols are allowed')
+    }
+  } catch (e) {
+    if (e instanceof TypeError) {
+      throw new Error('Invalid base URL')
+    }
+    throw e
+  }
+}
+
 export async function handleAiChat(params: {
   provider: string
   apiKey: string
@@ -481,11 +499,18 @@ export async function handleAiChat(params: {
   baseUrl: string
 }): Promise<{ success: true; content: string } | IpcErrorResponse> {
   try {
+    const baseUrl =
+      params.baseUrl ||
+      (params.provider === 'anthropic'
+        ? 'https://api.anthropic.com/v1'
+        : 'https://api.openai.com/v1')
+    validateBaseUrl(baseUrl)
+
     let url: string
     if (params.provider === 'anthropic') {
-      url = `${params.baseUrl || 'https://api.anthropic.com/v1'}/messages`
+      url = `${baseUrl}/messages`
     } else {
-      url = `${params.baseUrl || 'https://api.openai.com/v1'}/chat/completions`
+      url = `${baseUrl}/chat/completions`
     }
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -555,11 +580,18 @@ export async function handleAiTest(params: {
   baseUrl: string
 }): Promise<IpcSuccessResponse | IpcErrorResponse> {
   try {
+    const baseUrl =
+      params.baseUrl ||
+      (params.provider === 'anthropic'
+        ? 'https://api.anthropic.com/v1'
+        : 'https://api.openai.com/v1')
+    validateBaseUrl(baseUrl)
+
     let url: string
     if (params.provider === 'anthropic') {
-      url = `${params.baseUrl || 'https://api.anthropic.com/v1'}/messages`
+      url = `${baseUrl}/messages`
     } else {
-      url = `${params.baseUrl || 'https://api.openai.com/v1'}/chat/completions`
+      url = `${baseUrl}/chat/completions`
     }
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -585,13 +617,27 @@ export async function handleAiTest(params: {
       })
     }
 
-    const response = await fetch(url, { method: 'POST', headers, body })
-    if (!response.ok) {
-      const errorText = await response.text()
-      return { success: false, error: sanitizeApiError(response.status, errorText) }
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30_000)
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body,
+        signal: controller.signal
+      })
+      if (!response.ok) {
+        const errorText = await response.text()
+        return { success: false, error: sanitizeApiError(response.status, errorText) }
+      }
+      return { success: true }
+    } finally {
+      clearTimeout(timeoutId)
     }
-    return { success: true }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { success: false, error: 'AI test request timed out after 30 seconds' }
+    }
     return { success: false, error: (error as Error).message }
   }
 }
