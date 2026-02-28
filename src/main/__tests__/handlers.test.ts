@@ -354,12 +354,12 @@ describe('main/handlers', (): void => {
     it('allows path within default workspace and calls shell.openPath', async (): Promise<void> => {
       const deps = createShellOpenPathDeps({ home: '/Users/test', openPathResult: '' })
       const result = await handlers.handleShellOpenPath(
-        '/Users/test/.cv-assistant/resumes/a.md',
+        '/mock-userData/workspace/resumes/a.md',
         deps
       )
       expect(result).toBe('')
       expect(vi.mocked(deps.shell.openPath)).toHaveBeenCalledWith(
-        '/Users/test/.cv-assistant/resumes/a.md'
+        '/mock-userData/workspace/resumes/a.md'
       )
     })
 
@@ -698,10 +698,10 @@ describe('main/handlers', (): void => {
   })
 
   describe('handleGetDefaultWorkspacePath', (): void => {
-    it("returns join(homePath, '.cv-assistant')", async (): Promise<void> => {
+    it("returns join(userDataPath, 'workspace')", async (): Promise<void> => {
       const deps = createAppDeps({ home: '/Users/test' })
       const result = await handlers.handleGetDefaultWorkspacePath(deps)
-      expect(result).toBe('/Users/test/.cv-assistant')
+      expect(result).toBe('/mock-userData/workspace')
     })
   })
 

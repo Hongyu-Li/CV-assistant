@@ -9,3 +9,6 @@ coverage
 !.env.example
 .vscode/
 .idea/
+
+playwright-report/
+test-results/

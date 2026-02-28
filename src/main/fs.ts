@@ -50,7 +50,7 @@ export async function getLastModified(filename: string): Promise<Date> {
 function getWorkspaceFilePath(filename: string, workspaceDir?: string): string {
   const rootPath = workspaceDir
     ? normalize(workspaceDir)
-    : join(app.getPath('home'), '.cv-assistant')
+    : join(app.getPath('userData'), 'workspace')
   const safePath = normalize(join(rootPath, filename))
 
   if (!safePath.startsWith(rootPath)) {

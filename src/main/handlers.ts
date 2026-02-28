@@ -418,7 +418,7 @@ export async function handleShellOpenPath(
   deps: ShellOpenPathDeps
 ): Promise<string> {
   const ACCESS_DENIED_MESSAGE = 'Access denied: path is outside workspace'
-  const defaultWorkspace = join(deps.app.getPath('home'), '.cv-assistant')
+  const defaultWorkspace = join(deps.app.getPath('userData'), 'workspace')
   const resolvedPath = join(requestedPath)
   const normalizedDefault = join(defaultWorkspace)
   if (!resolvedPath.startsWith(normalizedDefault) && resolvedPath !== deps.app.getPath('home')) {
@@ -429,7 +429,7 @@ export async function handleShellOpenPath(
 }
 
 export async function handleGetDefaultWorkspacePath(deps: AppDeps): Promise<string> {
-  return join(deps.app.getPath('home'), '.cv-assistant')
+  return join(deps.app.getPath('userData'), 'workspace')
 }
 
 export async function handleWorkspacePrecheck(params: {
