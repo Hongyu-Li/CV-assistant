@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy — CV Assistant / 简历助手</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+          'Noto Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        line-height: 1.7;
+        color: #1a1a1a;
+        background: #ffffff;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+      }
+
+      .lang-nav {
+        position: sticky;
+        top: 0;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e5e5;
+        padding: 12px 0;
+        margin-bottom: 40px;
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+      }
+
+      .lang-nav a {
+        color: #555;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 6px 16px;
+        border-radius: 6px;
+        transition:
+          background 0.2s,
+          color 0.2s;
+      }
+
+      .lang-nav a:hover {
+        background: #f5f5f5;
+        color: #111;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.3px;
+      }
+
+      .subtitle {
+        font-size: 15px;
+        color: #666;
+        margin-bottom: 36px;
+      }
+
+      h2 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-top: 36px;
+        margin-bottom: 12px;
+        color: #111;
+      }
+
+      p {
+        margin-bottom: 14px;
+        color: #333;
+      }
+
+      ul {
+        margin: 8px 0 14px 24px;
+        color: #333;
+      }
+
+      li {
+        margin-bottom: 6px;
+      }
+
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .divider {
+        border: none;
+        border-top: 1px solid #e0e0e0;
+        margin: 56px 0;
+      }
+
+      .provider-list {
+        columns: 2;
+        column-gap: 24px;
+      }
+
+      @media (max-width: 480px) {
+        .provider-list {
+          columns: 1;
+        }
+
+        .container {
+          padding: 32px 16px 60px;
+        }
+
+        h1 {
+          font-size: 24px;
+        }
+
+        h2 {
+          font-size: 18px;
+        }
+      }
+
+      .back-to-top {
+        display: inline-block;
+        margin-top: 32px;
+        font-size: 14px;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="lang-nav">
+      <a href="#en">English</a>
+      <a href="#zh">中文</a>
+    </div>
+
+    <div class="container">
+      <!-- ==================== ENGLISH ==================== -->
+      <section id="en">
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">CV Assistant (简历助手) &mdash; Effective Date: March 1, 2026</p>
+
+        <p>
+          CV Assistant is a desktop application developed by Cheng Tang for AI-powered resume and CV
+          generation. This privacy policy explains how the application handles your data. We are
+          committed to protecting your privacy — the app is designed so that your data stays on your
+          device.
+        </p>
+
+        <h2>1. Information Collection</h2>
+        <p>
+          CV Assistant does <strong>not</strong> collect, transmit, or store any personal data on
+          external servers controlled by the developer. The app does not use cookies, analytics,
+          tracking pixels, or any form of user tracking.
+        </p>
+        <p>The only information you provide is entered voluntarily within the app:</p>
+        <ul>
+          <li>
+            Your personal profile information (name, work experience, education, skills, etc.) used
+            to generate resumes.
+          </li>
+          <li>Job descriptions you paste into the app for tailored resume generation.</li>
+          <li>API keys for third-party AI providers that you choose to configure.</li>
+          <li>App settings and preferences.</li>
+        </ul>
+
+        <h2>2. Data Storage</h2>
+        <p>
+          All data is stored <strong>locally on your device</strong>. By default, data is saved in
+          the <code>~/.cv-assistant/</code> directory (or a workspace directory you configure). This
+          includes:
+        </p>
+        <ul>
+          <li>Your profile data (<code>profile.json</code>, <code>profile.md</code>)</li>
+          <li>Generated resumes (stored in the <code>resumes/</code> subdirectory)</li>
+          <li>Application settings, including any API keys you configure</li>
+        </ul>
+        <p>
+          No data is uploaded to any server owned or operated by the developer. You have full
+          control over your data and can delete it at any time by removing the workspace directory.
+        </p>
+
+        <h2>3. Third-Party Services</h2>
+        <p>
+          When you generate a resume, CV Assistant sends your profile data and the job description
+          to the third-party AI provider you have selected.
+          <strong>This is the only network communication initiated by the app</strong> (aside from
+          update checks described below).
+        </p>
+        <p>The app supports the following third-party AI providers:</p>
+        <ul class="provider-list">
+          <li>OpenAI</li>
+          <li>Anthropic</li>
+          <li>Google Gemini</li>
+          <li>DeepSeek</li>
+          <li>Ollama (local)</li>
+          <li>OpenRouter</li>
+          <li>Groq</li>
+          <li>Mistral</li>
+          <li>Qwen (Alibaba)</li>
+          <li>Zhipu (GLM)</li>
+          <li>Kimi (Moonshot)</li>
+          <li>Custom endpoints</li>
+        </ul>
+        <p>
+          Each provider has its own privacy policy and terms of service. You are responsible for
+          reviewing the privacy practices of any provider you choose to use. The developer of CV
+          Assistant has no control over how third-party providers handle data sent to their APIs.
+        </p>
+        <p>
+          API keys are stored locally on your device and are never transmitted to the developer.
+          They are sent only to the respective AI provider's API endpoint when you initiate a resume
+          generation request.
+        </p>
+        <p>
+          Additionally, CV Assistant checks for application updates via
+          <a href="https://github.com/tc9011/CV-assistant/releases">GitHub Releases</a>. This check
+          contacts GitHub's servers but does not transmit any personal data.
+        </p>
+
+        <h2>4. Data Security</h2>
+        <p>
+          Because all data is stored locally on your device, its security depends on your device's
+          own security measures (disk encryption, login password, etc.). We recommend:
+        </p>
+        <ul>
+          <li>Keeping your operating system and the application up to date.</li>
+          <li>Using your operating system's built-in disk encryption.</li>
+          <li>Being cautious about which third-party AI providers you share your data with.</li>
+        </ul>
+
+        <h2>5. Children's Privacy</h2>
+        <p>
+          CV Assistant is not directed at children under the age of 13. We do not knowingly collect
+          personal information from children. Since all data remains on your local device and is
+          never transmitted to us, there is no mechanism through which we could collect such data.
+        </p>
+
+        <h2>6. Changes to This Policy</h2>
+        <p>
+          We may update this privacy policy from time to time. Changes will be posted on this page
+          with an updated effective date. We encourage you to review this policy periodically.
+          Continued use of the application after changes constitutes acceptance of the updated
+          policy.
+        </p>
+
+        <h2>7. Contact</h2>
+        <p>
+          If you have any questions or concerns about this privacy policy, please open an issue on
+          our GitHub repository:
+        </p>
+        <p>
+          <a href="https://github.com/tc9011/CV-assistant"
+            >https://github.com/tc9011/CV-assistant</a
+          >
+        </p>
+      </section>
+
+      <hr class="divider" />
+
+      <!-- ==================== 中文 ==================== -->
+      <section id="zh">
+        <h1>隐私政策</h1>
+        <p class="subtitle">简历助手 (CV Assistant) &mdash; 生效日期：2026 年 3 月 1 日</p>
+
+        <p>
+          简历助手是由 Cheng Tang 开发的桌面应用程序，用于借助 AI
+          生成简历。本隐私政策说明了本应用如何处理您的数据。我们致力于保护您的隐私——本应用的设计确保您的数据始终留在您的设备上。
+        </p>
+
+        <h2>一、信息收集</h2>
+        <p>
+          简历助手<strong>不会</strong>收集、传输或将任何个人数据存储到开发者控制的外部服务器上。本应用不使用
+          Cookie、分析工具、追踪像素或任何形式的用户追踪。
+        </p>
+        <p>您提供的信息均为在应用内自愿输入：</p>
+        <ul>
+          <li>您的个人档案信息（姓名、工作经历、教育背景、技能等），用于生成简历。</li>
+          <li>您粘贴到应用中的职位描述，用于生成定制简历。</li>
+          <li>您选择配置的第三方 AI 服务商的 API 密钥。</li>
+          <li>应用设置和偏好。</li>
+        </ul>
+
+        <h2>二、数据存储</h2>
+        <p>
+          所有数据均<strong>存储在您的本地设备上</strong>。默认情况下，数据保存在
+          <code>~/.cv-assistant/</code> 目录中（或您配置的工作区目录）。包括：
+        </p>
+        <ul>
+          <li>您的个人档案数据（<code>profile.json</code>、<code>profile.md</code>）</li>
+          <li>生成的简历（存储在 <code>resumes/</code> 子目录中）</li>
+          <li>应用设置，包括您配置的任何 API 密钥</li>
+        </ul>
+        <p>
+          不会有任何数据被上传到开发者拥有或运营的服务器。您对自己的数据拥有完全控制权，随时可以通过删除工作区目录来删除所有数据。
+        </p>
+
+        <h2>三、第三方服务</h2>
+        <p>
+          当您生成简历时，简历助手会将您的个人档案数据和职位描述发送到您所选择的第三方 AI
+          服务商。<strong>这是本应用发起的唯一网络通信</strong>（除下文描述的更新检查外）。
+        </p>
+        <p>本应用支持以下第三方 AI 服务商：</p>
+        <ul class="provider-list">
+          <li>OpenAI</li>
+          <li>Anthropic</li>
+          <li>Google Gemini</li>
+          <li>DeepSeek</li>
+          <li>Ollama（本地）</li>
+          <li>OpenRouter</li>
+          <li>Groq</li>
+          <li>Mistral</li>
+          <li>通义千问（阿里巴巴）</li>
+          <li>智谱（GLM）</li>
+          <li>Kimi（月之暗面）</li>
+          <li>自定义端点</li>
+        </ul>
+        <p>
+          各服务商有各自的隐私政策和服务条款。您有责任审查所选服务商的隐私惯例。简历助手的开发者无法控制第三方服务商如何处理发送至其
+          API 的数据。
+        </p>
+        <p>
+          API 密钥存储在您的本地设备上，绝不会传输给开发者。密钥仅在您发起简历生成请求时发送到相应
+          AI 服务商的 API 端点。
+        </p>
+        <p>
+          此外，简历助手会通过
+          <a href="https://github.com/tc9011/CV-assistant/releases">GitHub Releases</a>
+          检查应用更新。此检查会连接 GitHub 的服务器，但不会传输任何个人数据。
+        </p>
+
+        <h2>四、数据安全</h2>
+        <p>
+          由于所有数据均存储在您的本地设备上，其安全性取决于您设备自身的安全措施（磁盘加密、登录密码等）。我们建议：
+        </p>
+        <ul>
+          <li>保持操作系统和本应用的更新。</li>
+          <li>使用操作系统内置的磁盘加密功能。</li>
+          <li>谨慎选择与您共享数据的第三方 AI 服务商。</li>
+        </ul>
+
+        <h2>五、儿童隐私</h2>
+        <p>
+          简历助手不面向 13
+          岁以下的儿童。我们不会故意收集儿童的个人信息。由于所有数据均保留在您的本地设备上且从未传输给我们，因此不存在我们收集此类数据的途径。
+        </p>
+
+        <h2>六、政策变更</h2>
+        <p>
+          我们可能会不时更新本隐私政策。变更将发布在本页面并更新生效日期。我们建议您定期查阅本政策。在变更后继续使用本应用即表示您接受更新后的政策。
+        </p>
+
+        <h2>七、联系方式</h2>
+        <p>如果您对本隐私政策有任何疑问或顾虑，请在我们的 GitHub 仓库中提交 Issue：</p>
+        <p>
+          <a href="https://github.com/tc9011/CV-assistant"
+            >https://github.com/tc9011/CV-assistant</a
+          >
+        </p>
+
+        <a href="#en" class="back-to-top">&uarr; Back to English / 返回英文版</a>
+      </section>
+    </div>
+  </body>
+</html>
