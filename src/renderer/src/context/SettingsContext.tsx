@@ -84,7 +84,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       i18n.changeLanguage(settings.language)
     })
     // Notify main process to rebuild macOS menu and About panel
-    window.electron.ipcRenderer.invoke('app:setLanguage', settings.language)
+    window.electron.ipcRenderer.invoke('app:setLanguage', settings.language).catch(() => {
+      /* Language sync is non-critical */
+    })
   }, [settings.language])
 
   const updateSettings = async (newSettings: Partial<AppSettings>): Promise<void> => {

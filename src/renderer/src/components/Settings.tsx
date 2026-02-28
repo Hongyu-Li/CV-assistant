@@ -124,9 +124,14 @@ export const Settings = (): React.JSX.Element => {
   }, [])
 
   React.useEffect(() => {
-    window.electron.ipcRenderer.invoke('app:getVersion').then((version: string) => {
-      setAppVersion(version)
-    })
+    window.electron.ipcRenderer
+      .invoke('app:getVersion')
+      .then((version: string) => {
+        setAppVersion(version)
+      })
+      .catch(() => {
+        /* Version fetch is non-critical */
+      })
   }, [])
 
   React.useEffect(() => {
