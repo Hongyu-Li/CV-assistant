@@ -1,8 +1,169 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage, Menu } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { autoUpdater } from 'electron-updater'
+
+// i18n translations for macOS application menu
+interface MenuTranslations {
+  about: string
+  services: string
+  hide: string
+  hideOthers: string
+  showAll: string
+  quit: string
+  file: string
+  close: string
+  edit: string
+  undo: string
+  redo: string
+  cut: string
+  copy: string
+  paste: string
+  selectAll: string
+  view: string
+  reload: string
+  toggleDevTools: string
+  resetZoom: string
+  zoomIn: string
+  zoomOut: string
+  fullscreen: string
+  window: string
+  minimize: string
+  zoom: string
+  front: string
+}
+
+const menuI18n: Record<string, MenuTranslations> = {
+  en: {
+    about: 'About CV Assistant',
+    services: 'Services',
+    hide: 'Hide CV Assistant',
+    hideOthers: 'Hide Others',
+    showAll: 'Show All',
+    quit: 'Quit CV Assistant',
+    file: 'File',
+    close: 'Close Window',
+    edit: 'Edit',
+    undo: 'Undo',
+    redo: 'Redo',
+    cut: 'Cut',
+    copy: 'Copy',
+    paste: 'Paste',
+    selectAll: 'Select All',
+    view: 'View',
+    reload: 'Reload',
+    toggleDevTools: 'Toggle Developer Tools',
+    resetZoom: 'Actual Size',
+    zoomIn: 'Zoom In',
+    zoomOut: 'Zoom Out',
+    fullscreen: 'Toggle Full Screen',
+    window: 'Window',
+    minimize: 'Minimize',
+    zoom: 'Zoom',
+    front: 'Bring All to Front'
+  },
+  zh: {
+    about: '关于简历助手',
+    services: '服务',
+    hide: '隐藏简历助手',
+    hideOthers: '隐藏其他',
+    showAll: '显示全部',
+    quit: '退出简历助手',
+    file: '文件',
+    close: '关闭窗口',
+    edit: '编辑',
+    undo: '撤销',
+    redo: '重做',
+    cut: '剪切',
+    copy: '复制',
+    paste: '粘贴',
+    selectAll: '全选',
+    view: '视图',
+    reload: '重新加载',
+    toggleDevTools: '切换开发者工具',
+    resetZoom: '实际大小',
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    fullscreen: '切换全屏',
+    window: '窗口',
+    minimize: '最小化',
+    zoom: '缩放',
+    front: '全部置于最前'
+  }
+}
+
+function buildAppMenu(lang: string): void {
+  if (process.platform !== 'darwin') return
+
+  const t = menuI18n[lang] || menuI18n['en']
+  const appName = lang === 'zh' ? '简历助手' : 'CV Assistant'
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: appName,
+      submenu: [
+        { role: 'about', label: t.about },
+        { type: 'separator' },
+        { role: 'services', label: t.services },
+        { type: 'separator' },
+        { role: 'hide', label: t.hide },
+        { role: 'hideOthers', label: t.hideOthers },
+        { role: 'unhide', label: t.showAll },
+        { type: 'separator' },
+        { role: 'quit', label: t.quit }
+      ]
+    },
+    {
+      label: t.file,
+      submenu: [{ role: 'close', label: t.close }]
+    },
+    {
+      label: t.edit,
+      submenu: [
+        { role: 'undo', label: t.undo },
+        { role: 'redo', label: t.redo },
+        { type: 'separator' },
+        { role: 'cut', label: t.cut },
+        { role: 'copy', label: t.copy },
+        { role: 'paste', label: t.paste },
+        { role: 'selectAll', label: t.selectAll }
+      ]
+    },
+    {
+      label: t.view,
+      submenu: [
+        { role: 'reload', label: t.reload },
+        { role: 'toggleDevTools', label: t.toggleDevTools },
+        { type: 'separator' },
+        { role: 'resetZoom', label: t.resetZoom },
+        { role: 'zoomIn', label: t.zoomIn },
+        { role: 'zoomOut', label: t.zoomOut },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: t.fullscreen }
+      ]
+    },
+    {
+      label: t.window,
+      submenu: [
+        { role: 'minimize', label: t.minimize },
+        { role: 'zoom', label: t.zoom },
+        { type: 'separator' },
+        { role: 'front', label: t.front }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+
+  // Update About panel
+  app.setAboutPanelOptions({
+    applicationName: lang === 'zh' ? '简历助手' : 'CV Assistant',
+    applicationVersion: app.getVersion(),
+    iconPath: icon
+  })
+}
 import {
   handleAiChat,
   handleAiTest,
@@ -75,18 +236,26 @@ app
     // Set app name for macOS menu bar
     app.setName('简历助手')
 
-    // Set About panel options (icon, app name, version)
-    const appIcon = nativeImage.createFromPath(icon)
-    app.setAboutPanelOptions({
-      applicationName: '简历助手 - CV Assistant',
-      applicationVersion: app.getVersion(),
-      iconPath: icon
-    })
+    // Build initial macOS menu — read language from saved settings
+    let initialLang = 'en'
+    try {
+      const settingsRaw = await readWorkspaceFile('settings.json')
+      const savedSettings = JSON.parse(settingsRaw)
+      if (savedSettings.language) {
+        initialLang = savedSettings.language
+      }
+    } catch {
+      // Settings not found — default to English
+    }
 
     // Set dock icon on macOS (ensures correct icon in dev mode)
+    const appIcon = nativeImage.createFromPath(icon)
     if (process.platform === 'darwin') {
       app.dock?.setIcon(appIcon)
     }
+
+    // Build i18n-aware macOS menu and About panel
+    buildAppMenu(initialLang)
 
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.cv-assistant')
@@ -162,6 +331,11 @@ app
     )
 
     ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
+
+    // Language change IPC — rebuild macOS menu and About panel
+    ipcMain.handle('app:setLanguage', (_, lang: string) => {
+      buildAppMenu(lang)
+    })
     const mainWindow = createWindow()
 
     // Setup auto-updater

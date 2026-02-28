@@ -266,6 +266,29 @@ describe('SettingsContext', () => {
         expect(mockChangeLanguage).toHaveBeenCalledWith('zh')
       })
     })
+    it('should notify main process via app:setLanguage IPC when language changes', async () => {
+      mockInvoke.mockResolvedValue(undefined)
+
+      renderWithProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading').textContent).toBe('false')
+      })
+
+      // Initial render sends current language to main process
+      await waitFor(() => {
+        expect(mockInvoke).toHaveBeenCalledWith('app:setLanguage', 'en')
+      })
+
+      // Update language to 'zh'
+      await act(async () => {
+        screen.getByTestId('update-language-btn').click()
+      })
+
+      await waitFor(() => {
+        expect(mockInvoke).toHaveBeenCalledWith('app:setLanguage', 'zh')
+      })
+    })
   })
 
   describe('updateSettings', () => {
