@@ -12,6 +12,15 @@ describe('App', () => {
     )
     expect(screen.getByText('app.title')).toBeInTheDocument()
   })
+
+  it('sets document.title from i18n app.title', () => {
+    render(
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
+    )
+    expect(document.title).toBe('app.title')
+  })
 })
 
 // Mock child components to avoid deep rendering

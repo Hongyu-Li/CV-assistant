@@ -2,7 +2,7 @@ import { Toaster } from './components/ui/sonner'
 import { Button } from './components/ui/button'
 
 import { FileText, User, Settings as SettingsIcon, Sparkles } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Profile } from './components/Profile'
 import { Settings } from './components/Settings'
 import { Resumes } from './components/Resumes'
@@ -11,6 +11,10 @@ import { useTranslation } from 'react-i18next'
 function App(): React.JSX.Element {
   const { t } = useTranslation()
   const [currentView, setCurrentView] = useState<'profile' | 'settings' | 'resumes'>('resumes')
+
+  useEffect(() => {
+    document.title = t('app.title')
+  }, [t])
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
