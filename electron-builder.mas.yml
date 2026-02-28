@@ -9,6 +9,9 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - '!**/node_modules/@tailwindcss/oxide*/**'
+  - '!**/node_modules/tailwindcss/**'
+  - '!**/node_modules/tailwindcss-animate/**'
 asarUnpack:
   - resources/**
 mac:
@@ -32,6 +35,7 @@ mas:
   entitlementsInherit: build/entitlements.mas.inherit.plist
   hardenedRuntime: false
   gatekeeperAssess: false
+  x64ArchFiles: '*'
   # Place your provisioning profile in build/ after downloading from Apple Developer Portal.
   # For distribution: build/MacAppStore.provisionprofile
   # For dev/testing: build/AppleDevelopment.provisionprofile
