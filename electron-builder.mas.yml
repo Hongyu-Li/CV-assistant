@@ -23,6 +23,9 @@ mac:
   hardenedRuntime: false
   gatekeeperAssess: false
   notarize: false
+  extraResources:
+    - from: build/Assets.car
+      to: Assets.car
   # WORKAROUND for electron-builder bug #9507 (v26.0.13–26.8.1):
   # signApp() ignores mas config and uses mac config for the first signing pass,
   # picking "Developer ID Application" cert instead of "Apple Distribution".
@@ -48,4 +51,6 @@ mas:
   gatekeeperAssess: false
   x64ArchFiles: '*'
   provisioningProfile: build/CV_Assistant_Distribution.provisionprofile
+  signIgnore:
+    - '\.pak$'
 npmRebuild: false
