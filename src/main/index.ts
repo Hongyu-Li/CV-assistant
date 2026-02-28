@@ -2,8 +2,9 @@ import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage, Menu } from 'e
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-// electron-updater is not available in MAS builds — loaded dynamically below
-type AutoUpdaterType = typeof import('electron-updater').autoUpdater
+// electron-updater is not available in MAS builds — guarded at runtime
+import { autoUpdater as electronAutoUpdater } from 'electron-updater'
+type AutoUpdaterType = typeof electronAutoUpdater
 let autoUpdater: AutoUpdaterType | null = null
 
 // i18n translations for macOS application menu
@@ -253,14 +254,9 @@ function createWindow(): BrowserWindow {
 app
   .whenReady()
   .then(async () => {
-    // Load electron-updater dynamically — not available in MAS builds
+    // electron-updater is not available in MAS builds
     if (!process.mas) {
-      try {
-        const updaterModule = await import('electron-updater')
-        autoUpdater = updaterModule.autoUpdater
-      } catch (e) {
-        console.warn('Failed to load electron-updater:', e)
-      }
+      autoUpdater = electronAutoUpdater
     }
 
     // Set app name for macOS menu bar
