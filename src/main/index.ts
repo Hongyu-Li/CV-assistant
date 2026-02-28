@@ -255,8 +255,12 @@ app
   .then(async () => {
     // Load electron-updater dynamically — not available in MAS builds
     if (!process.mas) {
-      const updaterModule = await import('electron-updater')
-      autoUpdater = updaterModule.autoUpdater
+      try {
+        const updaterModule = await import('electron-updater')
+        autoUpdater = updaterModule.autoUpdater
+      } catch (e) {
+        console.warn('Failed to load electron-updater:', e)
+      }
     }
 
     // Set app name for macOS menu bar
@@ -347,17 +351,23 @@ app
       handleAiTest({ provider, apiKey, model, baseUrl })
     )
 
-    // Auto-update IPC handlers (disabled in MAS builds — App Store handles updates)
-    if (autoUpdater) {
-      const updater = autoUpdater
-      ipcMain.handle('auto-update:check', () => handleAutoUpdateCheck({ autoUpdater: updater }))
+    // Auto-update IPC handlers — always registered so renderer gets meaningful errors
+    ipcMain.handle('auto-update:check', () => {
+      if (!autoUpdater) {
+        return { success: false, error: 'Auto-updater is not available' }
+      }
+      return handleAutoUpdateCheck({ autoUpdater })
+    })
 
-      ipcMain.handle('auto-update:install', () => handleAutoUpdateInstall({ autoUpdater: updater }))
+    ipcMain.handle('auto-update:install', () => {
+      if (!autoUpdater) return
+      return handleAutoUpdateInstall({ autoUpdater })
+    })
 
-      ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) =>
-        handleAutoUpdateSetAutoDownload(enabled, { autoUpdater: updater })
-      )
-    }
+    ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) => {
+      if (!autoUpdater) return
+      return handleAutoUpdateSetAutoDownload(enabled, { autoUpdater })
+    })
 
     ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
 

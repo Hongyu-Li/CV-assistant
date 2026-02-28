@@ -415,9 +415,16 @@ export const Settings = (): React.JSX.Element => {
                   setIsCheckingUpdate(true)
                   setUpdateStatus('')
                   try {
-                    await window.electron.ipcRenderer.invoke('auto-update:check')
+                    const result = (await window.electron.ipcRenderer.invoke(
+                      'auto-update:check'
+                    )) as { success: boolean; error?: string } | undefined
+                    if (result && !result.success) {
+                      setUpdateStatus(`error:${result.error ?? 'Unknown error'}`)
+                      setIsCheckingUpdate(false)
+                    }
                   } catch (e) {
-                    console.debug('Update check failed:', e)
+                    const message = e instanceof Error ? e.message : 'Update check failed'
+                    setUpdateStatus(`error:${message}`)
                     setIsCheckingUpdate(false)
                   }
                 }}
