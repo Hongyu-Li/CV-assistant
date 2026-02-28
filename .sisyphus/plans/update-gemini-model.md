@@ -31,7 +31,7 @@ Update Google Gemini's default model ID from `gemini-2.5-flash` to `gemini-3-fla
 
 ## TODOs
 
-- [ ] 1. Update Gemini default model to `gemini-3-flash-preview`
+- [x] 1. Update Gemini default model to `gemini-3-flash-preview`
 
   **What to do**:
   - In `src/renderer/src/lib/provider.ts`, line 38: change `defaultModel: 'gemini-2.5-flash'` → `defaultModel: 'gemini-3-flash-preview'`

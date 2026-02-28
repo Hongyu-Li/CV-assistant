@@ -1,0 +1,23 @@
+File: tests/screenshots/app-store/zh/01-profile.png
+  pixelWidth: 2880
+  pixelHeight: 1800
+  hasAlpha: no
+-rw-r--r--@ 1 theon  staff   1.0M Feb 28 23:38 tests/screenshots/app-store/zh/01-profile.png
+
+File: tests/screenshots/app-store/zh/02-resumes.png
+  pixelWidth: 2880
+  pixelHeight: 1800
+  hasAlpha: no
+-rw-r--r--@ 1 theon  staff   945K Feb 28 23:38 tests/screenshots/app-store/zh/02-resumes.png
+
+File: tests/screenshots/app-store/en/01-profile.png
+  pixelWidth: 2880
+  pixelHeight: 1800
+  hasAlpha: no
+-rw-r--r--@ 1 theon  staff   1.0M Feb 28 23:39 tests/screenshots/app-store/en/01-profile.png
+
+File: tests/screenshots/app-store/en/02-resumes.png
+  pixelWidth: 2880
+  pixelHeight: 1800
+  hasAlpha: no
+-rw-r--r--@ 1 theon  staff   961K Feb 28 23:39 tests/screenshots/app-store/en/02-resumes.png
