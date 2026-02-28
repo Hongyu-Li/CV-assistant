@@ -23,6 +23,13 @@ mac:
   hardenedRuntime: false
   gatekeeperAssess: false
   notarize: false
+  # WORKAROUND for electron-builder bug #9507 (v26.0.13–26.8.1):
+  # signApp() ignores mas config and uses mac config for the first signing pass,
+  # picking "Developer ID Application" cert instead of "Apple Distribution".
+  # Setting identity to null here skips this broken pass.
+  # The correct MAS signing pass uses mas.identity (set below) which overrides
+  # this null via deepAssign() — deepAssign skips undefined but applies explicit values.
+  identity: null
   extendInfo:
     CFBundleDisplayName: 简历助手
     CFBundleName: CV-Assistant
@@ -31,13 +38,14 @@ mac:
     NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
 mas:
   type: distribution
+  # Empty string identity overrides mac.identity=null via deepAssign (skips undefined,
+  # applies empty string). In sign(), empty string is NOT null so signing proceeds.
+  # findIdentity() treats empty string as falsy → auto-discovers correct MAS certs.
+  identity: ''
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
   hardenedRuntime: false
   gatekeeperAssess: false
   x64ArchFiles: '*'
-  # Place your provisioning profile in build/ after downloading from Apple Developer Portal.
-  # For distribution: build/MacAppStore.provisionprofile
-  # For dev/testing: build/AppleDevelopment.provisionprofile
   provisioningProfile: build/CV_Assistant_Distribution.provisionprofile
 npmRebuild: false
