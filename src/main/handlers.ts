@@ -462,6 +462,17 @@ export async function handleWorkspaceMigrate(params: {
   }
 }
 
+function sanitizeApiError(statusCode: number, rawError: string): string {
+  // Limit error length to prevent huge error payloads
+  const truncated = rawError.length > 500 ? rawError.substring(0, 500) + '...' : rawError
+  // Remove potential auth tokens/keys from error text
+  const sanitized = truncated.replace(
+    /(?:Bearer |sk-|key-|api[_-]?key[=:]\s*)[^\s"',}]*/gi,
+    '[REDACTED]'
+  )
+  return `API error ${statusCode}: ${sanitized}`
+}
+
 export async function handleAiChat(params: {
   provider: string
   apiKey: string
@@ -499,21 +510,40 @@ export async function handleAiChat(params: {
       body = JSON.stringify({ model: params.model, messages: params.messages })
     }
 
-    const response = await fetch(url, { method: 'POST', headers, body })
-    if (!response.ok) {
-      const errorText = await response.text()
-      return { success: false, error: `API error ${response.status}: ${errorText}` }
-    }
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30_000)
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body,
+        signal: controller.signal
+      })
+      if (!response.ok) {
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After')
+          const retryMsg = retryAfter ? ` Retry after ${retryAfter} seconds.` : ''
+          return { success: false, error: `Rate limited by AI provider.${retryMsg}` }
+        }
+        const errorText = await response.text()
+        return { success: false, error: sanitizeApiError(response.status, errorText) }
+      }
 
-    const data = (await response.json()) as Record<string, unknown>
+      const data = (await response.json()) as Record<string, unknown>
 
-    if (params.provider === 'anthropic') {
-      const content = (data['content'] as Array<{ text?: string }> | undefined)?.[0]?.text || ''
-      return { success: true, content }
+      if (params.provider === 'anthropic') {
+        const content = (data['content'] as Array<{ text?: string }> | undefined)?.[0]?.text || ''
+        return { success: true, content }
+      }
+      const choices = data['choices'] as Array<{ message?: { content?: string } }> | undefined
+      return { success: true, content: choices?.[0]?.message?.content || '' }
+    } finally {
+      clearTimeout(timeoutId)
     }
-    const choices = data['choices'] as Array<{ message?: { content?: string } }> | undefined
-    return { success: true, content: choices?.[0]?.message?.content || '' }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { success: false, error: 'AI request timed out after 30 seconds' }
+    }
     return { success: false, error: `AI chat failed: ${(error as Error).message}` }
   }
 }
@@ -558,7 +588,7 @@ export async function handleAiTest(params: {
     const response = await fetch(url, { method: 'POST', headers, body })
     if (!response.ok) {
       const errorText = await response.text()
-      return { success: false, error: `HTTP ${response.status}: ${errorText}` }
+      return { success: false, error: sanitizeApiError(response.status, errorText) }
     }
     return { success: true }
   } catch (error) {

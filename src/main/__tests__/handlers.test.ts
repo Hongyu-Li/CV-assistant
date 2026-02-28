@@ -276,6 +276,121 @@ describe('main/handlers', (): void => {
       const { url } = getFetchCall()
       expect(url).toBe('http://localhost:1234/v1/chat/completions')
     })
+
+    it('returns timeout error when fetch takes longer than 30 seconds', async (): Promise<void> => {
+      vi.useFakeTimers()
+      try {
+        // Mock fetch that respects AbortSignal
+        mockFetch.mockImplementation(
+          (_url: string, init?: { signal?: AbortSignal }) =>
+            new Promise<never>((_resolve, reject) => {
+              if (init?.signal) {
+                init.signal.addEventListener('abort', () => {
+                  const err = new Error('The operation was aborted')
+                  err.name = 'AbortError'
+                  reject(err)
+                })
+              }
+            })
+        )
+
+        const resultPromise = handlers.handleAiChat({
+          provider: 'openai',
+          apiKey: 'k',
+          model: 'm',
+          messages: [{ role: 'user', content: 'x' }],
+          baseUrl: 'https://api.openai.com/v1'
+        })
+
+        // Advance past the 30s timeout
+        await vi.advanceTimersByTimeAsync(30_000)
+
+        const result = await resultPromise
+        expect(result).toEqual({
+          success: false,
+          error: 'AI request timed out after 30 seconds'
+        })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('returns rate-limit error with Retry-After on 429 response', async (): Promise<void> => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: { get: (name: string): string | null => (name === 'Retry-After' ? '30' : null) },
+        json: async (): Promise<unknown> => ({}),
+        text: async (): Promise<string> => 'rate limited'
+      })
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Rate limited by AI provider. Retry after 30 seconds.'
+      })
+    })
+
+    it('returns rate-limit error without Retry-After when header is absent', async (): Promise<void> => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: { get: (): null => null },
+        json: async (): Promise<unknown> => ({}),
+        text: async (): Promise<string> => 'rate limited'
+      })
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Rate limited by AI provider.'
+      })
+    })
+
+    it('429 handler returns its own message, not the sanitized raw error', async (): Promise<void> => {
+      // The 429 response body contains a Bearer token that sanitizeApiError would redact.
+      // If 429 is handled BEFORE sanitizeApiError, the token won't appear in the result.
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: { get: (): null => null },
+        json: async (): Promise<unknown> => ({}),
+        text: async (): Promise<string> => 'Bearer sk-secret-token rate limit exceeded'
+      })
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Rate limited by AI provider.'
+      })
+      // Should NOT contain sanitized error text — 429 short-circuits before reading body
+      if (!result.success) {
+        expect(result.error).not.toContain('sk-secret-token')
+        expect(result.error).not.toContain('[REDACTED]')
+        expect(result.error).not.toContain('API error')
+      }
+    })
   })
 
   describe('handleAiTest', (): void => {
@@ -333,7 +448,7 @@ describe('main/handlers', (): void => {
         baseUrl: 'https://api.openai.com/v1'
       })
 
-      expect(result).toEqual({ success: false, error: 'HTTP 400: bad' })
+      expect(result).toEqual({ success: false, error: 'API error 400: bad' })
     })
 
     it('returns error message when fetch throws', async (): Promise<void> => {
@@ -800,6 +915,115 @@ describe('main/handlers', (): void => {
       const deps = createAppDeps({ home: '/Users/test', version: '9.9.9' })
       const result = await handlers.handleGetVersion(deps)
       expect(result).toBe('9.9.9')
+    })
+  })
+
+  describe('sanitizeApiError', (): void => {
+    it('truncates errors longer than 500 characters', async (): Promise<void> => {
+      const longError = 'x'.repeat(600)
+      mockFetchNotOk(500, longError)
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.length).toBeLessThan(600)
+        expect(result.error).toContain('...')
+      }
+    })
+
+    it('redacts Bearer tokens', async (): Promise<void> => {
+      mockFetchNotOk(401, 'Invalid token: Bearer sk-abc123xyz')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('sk-abc123xyz')
+        expect(result.error).toContain('[REDACTED]')
+      }
+    })
+
+    it('redacts sk- prefixed keys', async (): Promise<void> => {
+      mockFetchNotOk(401, 'Bad key: sk-proj-abc123def456')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('sk-proj-abc123def456')
+        expect(result.error).toContain('[REDACTED]')
+      }
+    })
+
+    it('redacts api_key= patterns', async (): Promise<void> => {
+      mockFetchNotOk(400, 'Error with api_key=supersecret123 in request')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('supersecret123')
+        expect(result.error).toContain('[REDACTED]')
+      }
+    })
+
+    it('leaves clean error messages unchanged', async (): Promise<void> => {
+      mockFetchNotOk(500, 'Internal server error')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toBe('API error 500: Internal server error')
+      }
+    })
+
+    it('sanitizes errors in handleAiTest too', async (): Promise<void> => {
+      mockFetchNotOk(401, 'Bearer sk-secret-token was invalid')
+
+      const result = await handlers.handleAiTest({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('sk-secret-token')
+        expect(result.error).toContain('[REDACTED]')
+      }
     })
   })
 })

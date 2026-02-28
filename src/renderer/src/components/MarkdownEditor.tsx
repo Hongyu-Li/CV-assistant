@@ -27,6 +27,8 @@ export function MarkdownEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      // Security: raw HTML in markdown is inherently sanitized by Tiptap's ProseMirror schema —
+      // only nodes/marks registered via extensions (StarterKit) can be created in the document.
       Markdown,
       ...(placeholder ? [Placeholder.configure({ placeholder })] : [])
     ],

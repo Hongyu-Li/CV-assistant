@@ -195,6 +195,15 @@ import {
   readUserDataFile
 } from './fs'
 
+// Global error handlers for the main process
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('Unhandled rejection in main process:', reason)
+})
+
+process.on('uncaughtException', (error: Error) => {
+  console.error('Uncaught exception in main process:', error)
+})
+
 function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -206,7 +215,9 @@ function createWindow(): BrowserWindow {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      nodeIntegration: false,
+      contextIsolation: true
     }
   })
 
@@ -592,15 +603,22 @@ app
               await deleteWorkspaceFile(file, workspaceDir)
               console.log(`CV migrated: ${file} → resumes/${file}`)
             }
-          } catch {
+          } catch (err) {
             // Skip files that fail to parse
+            console.warn('Skipping file during migration:', err)
           }
         }
-      } catch {
-        // No files to migrate
+      } catch (err) {
+        // No files to migrate — ENOENT is expected, log anything else
+        if (err instanceof Error && (err as NodeJS.ErrnoException).code !== 'ENOENT') {
+          console.error('Unexpected error listing files for migration:', err)
+        }
       }
-    } catch {
-      // Migration is best-effort, don't block app startup
+    } catch (err) {
+      // Migration is best-effort — ENOENT is expected, log anything else
+      if (err instanceof Error && (err as NodeJS.ErrnoException).code !== 'ENOENT') {
+        console.error('Unexpected error during migration:', err)
+      }
     }
 
     // (activate handler registered above, before async migration code)
