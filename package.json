@@ -22,6 +22,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "e2e": "playwright test",
+    "e2e:coverage": "playwright test",
     "prepare": "husky",
     "build:mas-dev": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml -c.mas.type=development -c.mas.provisioningProfile=build/CV_Assistant_Dev.provisionprofile",
     "build:mas": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml"
@@ -73,6 +74,7 @@
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
     "lint-staged": "^16.3.0",
+    "monocart-coverage-reports": "^2.12.9",
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "react": "^19.2.4",
