@@ -1,120 +1,193 @@
 /**
- * Mac App Store Screenshot Suite
+ * Mac App Store Screenshot Suite (v2)
  *
- * Captures professional screenshots of the CV Assistant Electron app suitable
- * for submission to the Mac App Store.
+ * Captures professional screenshots of the CV Assistant Electron app for both
+ * English and Chinese locales, suitable for Mac App Store submission.
  *
  * Target viewport: 1440×900 (standard MacBook resolution).
- * Output directory: tests/screenshots/app-store/
+ * Device scale factor: 2 → 2880×1800 physical pixels (Apple Retina).
  *
- * Apple-required sizes (the screenshots are taken at 1440×900 and can be
- * scaled up to 2880×1800 Retina by the submission tool, or captured with a
- * deviceScaleFactor of 2 which doubles the physical pixel dimensions):
- *   - 1280 × 800
- *   - 1440 × 900  ← primary capture size used here
- *   - 2560 × 1600 (Retina)
- *   - 2880 × 1800 (Retina) ← achieved via deviceScaleFactor: 2
- *
- * Screenshots captured:
- *   01-resumes.png       — My Resumes list (default landing view)
- *   02-profile.png       — Profile page with markdown editor
- *   03-editor.png        — Resume editor dialog (create/edit resume)
- *   04-settings-ai.png   — Settings page – AI provider configuration
- *   05-settings-theme.png — Settings page – scrolled to show theme/language
+ * Output structure:
+ *   screenshots/raw/en-US/
+ *     01_hero_resumes.png
+ *     02_profile.png
+ *     03_editor.png
+ *     04_settings_ai.png
+ *     05_settings_theme.png
+ *   screenshots/raw/zh-CN/
+ *     (same 5 frames)
  */
 
 import { test, _electron as electron, ElectronApplication, Page } from '@playwright/test'
 import path from 'path'
+import fs from 'fs'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Output directory for App Store screenshots. */
-const SCREENSHOT_DIR = path.join('tests', 'screenshots', 'app-store')
-
-/** Viewport dimensions matching Apple's 1440×900 requirement. */
+const RAW_DIR = path.join('tests', 'screenshots', 'raw')
 const VIEWPORT = { width: 1440, height: 900 }
-
-/**
- * Device scale factor applied to the Electron browser context.
- * A value of 2 causes screenshots to be rendered at physical pixel
- * dimensions of 2880×1800 – matching Apple's Retina requirement.
- */
 const DEVICE_SCALE_FACTOR = 2
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Waits for the Electron window to finish loading and for the React app to
- * mount.  The sidebar navigation (3 buttons) is used as the "ready" signal
- * because it is always visible after hydration regardless of which route is
- * active.
- */
 async function waitForAppReady(window: Page): Promise<void> {
   await window.waitForLoadState('domcontentloaded')
-  // Wait until at least one nav button is visible – signals React has mounted.
   await window.waitForSelector('nav button', { state: 'visible', timeout: 15000 })
-  // Extra breathing room for animations / data fetches to settle.
   await window.waitForTimeout(600)
 }
 
 /**
- * Clicks the sidebar button at the given zero-based index and waits for the
- * view to animate in before returning.
- *
  * Sidebar order (matches App.tsx):
- *   0 – Profile (个人资料)
- *   1 – Resumes (我的简历)
- *   2 – Settings (设置)
+ *   0 – Profile
+ *   1 – Resumes
+ *   2 – Settings
  */
 async function navigateTo(window: Page, buttonIndex: number): Promise<void> {
   const navButtons = window.locator('nav button')
   await navButtons.nth(buttonIndex).click()
-  // Allow the page-enter animation to complete.
   await window.waitForTimeout(500)
 }
 
-/**
- * Takes a full-page screenshot and saves it to the App Store output folder.
- *
- * @param window   - The Playwright page object for the Electron window.
- * @param filename - File name (e.g. "01-resumes.png").
- */
-async function capture(window: Page, filename: string): Promise<void> {
+async function capture(window: Page, locale: string, filename: string): Promise<void> {
+  const dir = path.join(RAW_DIR, locale)
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
   await window.screenshot({
-    path: path.join(SCREENSHOT_DIR, filename),
-    fullPage: false // App Store screenshots must match the exact viewport.
+    path: path.join(dir, filename),
+    fullPage: false
   })
+}
+
+/**
+ * Switch app language via the Settings page language Select.
+ *
+ * The select always shows two options: "English" and "中文".
+ * We click the trigger, then click the desired option.
+ */
+async function switchLanguage(window: Page, targetLang: 'en' | 'zh'): Promise<void> {
+  // Navigate to Settings
+  await navigateTo(window, 2)
+  await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
+
+  // Scroll to top to ensure General Settings card is visible
+  await window.evaluate((): void => {
+    const mainEl = document.querySelector('main')
+    if (mainEl) mainEl.scrollTop = 0
+  })
+  await window.waitForTimeout(300)
+
+  // The language select is the last combobox in the General Settings card.
+  // There are multiple comboboxes: workspace, theme, language.
+  // Language is typically the last one in the General card.
+  const comboboxes = window.locator('button[role="combobox"]')
+  const count = await comboboxes.count()
+
+  // Find the combobox that currently shows either "English" or "中文"
+  let langCombobox: ReturnType<typeof comboboxes.nth> | null = null
+  for (let i = 0; i < count; i++) {
+    const text = await comboboxes.nth(i).textContent()
+    if (text && (/English/i.test(text) || /中文/.test(text))) {
+      langCombobox = comboboxes.nth(i)
+      break
+    }
+  }
+
+  if (!langCombobox) {
+    throw new Error('Could not find language combobox')
+  }
+
+  await langCombobox.click()
+  await window.waitForTimeout(300)
+
+  // Click the target option
+  const targetText = targetLang === 'zh' ? '中文' : 'English'
+  const option = window.locator('[role="option"]').filter({ hasText: targetText }).first()
+  await option.click()
+  await window.waitForTimeout(1000) // Wait for i18n to fully re-render
+}
+
+// ---------------------------------------------------------------------------
+// Capture all 5 frames for a given locale
+// ---------------------------------------------------------------------------
+
+async function captureAllFrames(window: Page, locale: string): Promise<void> {
+  // 01 – Resumes (hero)
+  await navigateTo(window, 1)
+  await window.waitForSelector('[class*="grid"] [class*="card"], [class*="border-dashed"]', {
+    timeout: 8000
+  })
+  await capture(window, locale, '01_hero_resumes.png')
+
+  // 02 – Profile
+  await navigateTo(window, 0)
+  await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
+  await capture(window, locale, '02_profile.png')
+
+  // 03 – Resume editor dialog
+  await navigateTo(window, 1)
+  const newResumeButton = window
+    .locator('button')
+    .filter({ hasText: /new resume|新建简历/i })
+    .first()
+  await newResumeButton.waitFor({ state: 'visible', timeout: 8000 })
+  await newResumeButton.click()
+  await window.waitForSelector('[role="dialog"]', { state: 'visible', timeout: 6000 })
+  await window.waitForTimeout(400)
+  await capture(window, locale, '03_editor.png')
+
+  // Close dialog
+  const cancelButton = window
+    .locator('[role="dialog"] button')
+    .filter({ hasText: /cancel|取消/i })
+    .first()
+  await cancelButton.click()
+  await window.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 })
+
+  // 04 – Settings: AI provider
+  await navigateTo(window, 2)
+  await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
+  await window.evaluate((): void => {
+    const mainEl = document.querySelector('main')
+    if (mainEl) mainEl.scrollTop = 0
+  })
+  await window.waitForTimeout(300)
+  await capture(window, locale, '04_settings_ai.png')
+
+  // 05 – Settings: Theme & language
+  await navigateTo(window, 2)
+  await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
+  await window.evaluate((): void => {
+    const mainEl = document.querySelector('main')
+    if (mainEl) {
+      mainEl.scrollTop = 80
+    }
+  })
+  await window.waitForTimeout(300)
+  await capture(window, locale, '05_settings_theme.png')
 }
 
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
 
-test.describe('App Store Screenshots', () => {
+test.describe('App Store Screenshots (Bilingual)', () => {
   let electronApp: ElectronApplication
   let window: Page
 
   test.beforeAll(async () => {
-    // Launch the Electron app with a high DPI scale factor so that
-    // screenshots are captured at Retina resolution (2880×1800 physical pixels).
     electronApp = await electron.launch({
       args: ['.', `--force-device-scale-factor=${DEVICE_SCALE_FACTOR}`]
     })
-
     window = await electronApp.firstWindow()
-
-    // Set the CSS viewport to 1440×900. Combined with deviceScaleFactor=2
-    // the resulting screenshot images will be 2880×1800 physical pixels.
     await window.setViewportSize({
       width: VIEWPORT.width,
       height: VIEWPORT.height
     })
-
-    // Wait for the app to be fully ready before taking any screenshots.
     await waitForAppReady(window)
   })
 
@@ -124,132 +197,14 @@ test.describe('App Store Screenshots', () => {
     }
   })
 
-  // -------------------------------------------------------------------------
-  // Screenshot 01 – My Resumes list
-  // -------------------------------------------------------------------------
-  test('01 – My Resumes (resume list view)', async () => {
-    // The resumes view is the default landing page (index 1 in the sidebar).
-    await navigateTo(window, 1)
-
-    // Wait for either the resume cards grid or the empty-state card to appear.
-    await window.waitForSelector('[class*="grid"] [class*="card"], [class*="border-dashed"]', {
-      timeout: 8000
-    })
-
-    /**
-     * Screenshot: My Resumes page.
-     * Shows the resume list grid with cards (or the empty state prompt) and
-     * the "New Resume" action button in the top-right corner.
-     */
-    await capture(window, '01-resumes.png')
+  test('Capture English screenshots', async () => {
+    // Ensure English is active first
+    await switchLanguage(window, 'en')
+    await captureAllFrames(window, 'en-US')
   })
 
-  // -------------------------------------------------------------------------
-  // Screenshot 02 – Profile page
-  // -------------------------------------------------------------------------
-  test('02 – Profile (profile editor with markdown fields)', async () => {
-    // Profile tab is index 0 in the sidebar.
-    await navigateTo(window, 0)
-
-    // Wait for the personal info card to render.
-    await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
-
-    /**
-     * Screenshot: Profile page.
-     * Displays the personal information form (name, email, phone), the
-     * markdown-powered summary editor, work experience, and projects sections.
-     */
-    await capture(window, '02-profile.png')
-  })
-
-  // -------------------------------------------------------------------------
-  // Screenshot 03 – Resume editor dialog
-  // -------------------------------------------------------------------------
-  test('03 – Resume editor (create resume dialog)', async () => {
-    // Navigate to the Resumes view first.
-    await navigateTo(window, 1)
-
-    // Wait for the "New Resume" button to be visible.
-    const newResumeButton = window
-      .locator('button')
-      .filter({ hasText: /new resume|新建简历/i })
-      .first()
-    await newResumeButton.waitFor({ state: 'visible', timeout: 8000 })
-    await newResumeButton.click()
-
-    // Wait for the dialog to open and the job title input to be present.
-    await window.waitForSelector('[role="dialog"]', { state: 'visible', timeout: 6000 })
-    await window.waitForTimeout(400)
-
-    /**
-     * Screenshot: Resume editor dialog.
-     * Shows the full-featured editor with job title, experience level,
-     * company name, target salary, CV language selector, job description
-     * textarea, and the "Generate CV" action button.
-     */
-    await capture(window, '03-editor.png')
-
-    // Close the dialog so subsequent tests start from a clean state.
-    const cancelButton = window
-      .locator('[role="dialog"] button')
-      .filter({ hasText: /cancel|取消/i })
-      .first()
-    await cancelButton.click()
-    await window.waitForSelector('[role="dialog"]', { state: 'detached', timeout: 5000 })
-  })
-
-  // -------------------------------------------------------------------------
-  // Screenshot 04 – Settings: AI provider configuration
-  // -------------------------------------------------------------------------
-  test('04 – Settings (AI provider configuration)', async () => {
-    // Settings tab is index 2 in the sidebar.
-    await navigateTo(window, 2)
-
-    // Wait for the settings heading to be visible.
-    await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
-
-    // Scroll to the top of the main content area to show the AI provider card.
-    await window.evaluate((): void => {
-      const mainEl = document.querySelector('main')
-      if (mainEl) mainEl.scrollTop = 0
-    })
-    await window.waitForTimeout(300)
-
-    /**
-     * Screenshot: Settings – AI provider section.
-     * Highlights the AI provider dropdown, API key field, model name input,
-     * base URL, and the "Test Connection" button.
-     */
-    await capture(window, '04-settings-ai.png')
-  })
-
-  // -------------------------------------------------------------------------
-  // Screenshot 05 – Settings: Theme & language preferences
-  // -------------------------------------------------------------------------
-  test('05 – Settings (theme and language preferences)', async () => {
-    // Already on the Settings view from the previous test; navigate again to
-    // ensure a clean scroll position.
-    await navigateTo(window, 2)
-
-    // Wait for the settings heading.
-    await window.waitForSelector('main h2', { state: 'visible', timeout: 8000 })
-
-    // Scroll down slightly so the General Settings card (theme + language) is
-    // prominently visible in the viewport.
-    await window.evaluate((): void => {
-      const mainEl = document.querySelector('main')
-      if (mainEl) {
-        // Scroll down past the page header to bring the General card into focus.
-        mainEl.scrollTop = 80
-      }
-    })
-    await window.waitForTimeout(300)
-
-    /**
-     * Screenshot: Settings – General section (theme & language).
-     * Shows the workspace directory picker, the theme selector
-     * (Light / Dark / System), and the language selector (English / 中文).
-     */
-    await capture(window, '05-settings-theme.png')
+  test('Capture Chinese screenshots', async () => {
+    await switchLanguage(window, 'zh')
+    await captureAllFrames(window, 'zh-CN')
   })
 })

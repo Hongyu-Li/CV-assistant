@@ -6,49 +6,207 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const BASE_DIR = path.join(__dirname, 'app-store', 'base')
-const OUT_DIR = path.join(__dirname, 'app-store')
+const RAW_DIR = path.join(__dirname, 'raw')
+const DRAFT_DIR = path.join(__dirname, 'drafts')
+const FINAL_DIR = path.join(__dirname, 'final')
 
-// Configuration for all screenshots
+// ---------------------------------------------------------------------------
+// Configuration: all 5 frames × 2 locales = 10 composites
+// ---------------------------------------------------------------------------
+
 const CONFIGS = [
-  // Chinese
+  // ---- English ----
   {
-    locale: 'zh',
-    name: '01-profile',
-    source: 'zh-profile-raw.png',
-    headline: '智能个人档案管理',
-    subline: '完善个人资料，为 AI 简历生成提供基础',
-    badge: '支持 Markdown 编辑'
+    locale: 'en-US',
+    name: '01_hero_editor',
+    source: 'en-US/03_editor.png',
+    headline: 'One-Click CV Creation',
+    subline: 'Fill in job details and let AI craft your perfect resume',
+    badge: 'Smart Generation'
   },
   {
-    locale: 'zh',
-    name: '02-resumes',
-    source: 'zh-resumes-raw.png',
-    headline: 'AI 赋能简历生成',
-    subline: '基于个人档案 + 职位描述，一键生成定制简历',
-    badge: '支持 12 家 AI 服务商'
-  },
-  // English
-  {
-    locale: 'en',
-    name: '01-profile',
-    source: 'en-profile-raw.png',
+    locale: 'en-US',
+    name: '02_profile',
+    source: 'en-US/02_profile.png',
     headline: 'Smart Profile Management',
     subline: 'Build your professional profile as the foundation for AI-generated resumes',
     badge: 'Markdown Editor'
   },
   {
-    locale: 'en',
-    name: '02-resumes',
-    source: 'en-resumes-raw.png',
+    locale: 'en-US',
+    name: '03_resumes',
+    source: 'en-US/01_hero_resumes.png',
     headline: 'AI-Powered Resume Generation',
     subline: 'Generate tailored CVs from your profile + job descriptions in one click',
     badge: '12 AI Providers'
+  },
+  {
+    locale: 'en-US',
+    name: '04_settings_ai',
+    source: 'en-US/04_settings_ai.png',
+    headline: '12 AI Providers Built In',
+    subline: 'Use OpenAI, Anthropic, Gemini, DeepSeek, Ollama, and more',
+    badge: 'Flexible Choice'
+  },
+  {
+    locale: 'en-US',
+    name: '05_settings_theme',
+    source: 'en-US/05_settings_theme.png',
+    headline: 'Your Workspace, Your Way',
+    subline: 'Light, Dark, or System theme with bilingual interface',
+    badge: 'Personalized'
+  },
+  // ---- Chinese ----
+  {
+    locale: 'zh-CN',
+    name: '01_hero_editor',
+    source: 'zh-CN/03_editor.png',
+    headline: '一键生成简历',
+    subline: '填写职位信息，AI 为你打造完美简历',
+    badge: '智能生成'
+  },
+  {
+    locale: 'zh-CN',
+    name: '02_profile',
+    source: 'zh-CN/02_profile.png',
+    headline: '智能个人档案管理',
+    subline: '完善个人资料，为 AI 简历生成提供基础',
+    badge: '支持 Markdown 编辑'
+  },
+  {
+    locale: 'zh-CN',
+    name: '03_resumes',
+    source: 'zh-CN/01_hero_resumes.png',
+    headline: 'AI 赋能简历生成',
+    subline: '基于个人档案 + 职位描述，一键生成定制简历',
+    badge: '支持 12 家 AI 服务商'
+  },
+  {
+    locale: 'zh-CN',
+    name: '04_settings_ai',
+    source: 'zh-CN/04_settings_ai.png',
+    headline: '内置 12 家 AI 服务商',
+    subline: '支持 OpenAI、Anthropic、Gemini、DeepSeek、Ollama 等',
+    badge: '灵活选择'
+  },
+  {
+    locale: 'zh-CN',
+    name: '05_settings_theme',
+    source: 'zh-CN/05_settings_theme.png',
+    headline: '你的空间，随心定制',
+    subline: '浅色、深色或系统主题，中英双语界面',
+    badge: '个性化定制'
   }
 ]
 
-// HTML Template Generator
+// ---------------------------------------------------------------------------
+// Theme Definitions
+// ---------------------------------------------------------------------------
+
+function getTheme(name) {
+  if (name.includes('01_hero')) {
+    return {
+      id: 'theme-01',
+      base: '#070B14',
+      glow: 'rgba(20, 184, 166, 0.4)', // Teal glow
+      orbs: `
+        <div class="orb" style="width: 1200px; height: 1200px; top: -300px; left: -200px; background: radial-gradient(circle, rgba(20, 184, 166, 0.25) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 900px; height: 900px; bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 600px; height: 600px; top: 40%; left: 30%; background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);"></div>
+      `,
+      bgStyle: `
+        background-color: #070B14;
+        background-image: 
+          radial-gradient(1200px 900px at 15% 20%, rgba(20, 184, 166, 0.18), transparent 55%),
+          radial-gradient(900px 700px at 85% 30%, rgba(6, 182, 212, 0.14), transparent 60%),
+          radial-gradient(1000px 900px at 60% 90%, rgba(13, 148, 136, 0.10), transparent 60%);
+      `
+    }
+  }
+  if (name.includes('02_profile')) {
+    return {
+      id: 'theme-02',
+      base: '#0A0B1A',
+      glow: 'rgba(59, 130, 246, 0.4)', // Blue glow
+      orbs: `
+        <div class="orb" style="width: 1100px; height: 1100px; top: -200px; right: -100px; background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 800px; height: 800px; bottom: 0; left: -100px; background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 700px; height: 700px; top: 20%; left: 20%; background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);"></div>
+      `,
+      bgStyle: `
+        background-color: #0A0B1A;
+        background-image: 
+          radial-gradient(1200px 900px at 80% 20%, rgba(59, 130, 246, 0.18), transparent 55%),
+          radial-gradient(900px 700px at 20% 80%, rgba(99, 102, 241, 0.14), transparent 60%),
+          radial-gradient(1000px 900px at 50% 50%, rgba(37, 99, 235, 0.10), transparent 60%);
+      `
+    }
+  }
+  if (name.includes('03_resumes')) {
+    return {
+      id: 'theme-03',
+      base: '#0D0915',
+      glow: 'rgba(139, 92, 246, 0.4)', // Purple glow
+      orbs: `
+        <div class="orb" style="width: 1300px; height: 1300px; top: -400px; left: 10%; background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 800px; height: 800px; bottom: 10%; right: 0; background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 500px; height: 500px; top: 40%; right: 30%; background: radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%);"></div>
+      `,
+      bgStyle: `
+        background-color: #0D0915;
+        background-image: 
+          radial-gradient(1300px 1000px at 30% 20%, rgba(139, 92, 246, 0.16), transparent 55%),
+          radial-gradient(900px 800px at 90% 60%, rgba(168, 85, 247, 0.12), transparent 60%),
+          radial-gradient(800px 800px at 10% 90%, rgba(124, 58, 237, 0.10), transparent 60%);
+      `
+    }
+  }
+  if (name.includes('04_settings_ai')) {
+    return {
+      id: 'theme-04',
+      base: '#050E0A',
+      glow: 'rgba(16, 185, 129, 0.4)', // Emerald glow
+      orbs: `
+        <div class="orb" style="width: 1000px; height: 1000px; top: -100px; right: 10%; background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 900px; height: 900px; bottom: -200px; left: 0; background: radial-gradient(circle, rgba(20, 184, 166, 0.2) 0%, transparent 70%);"></div>
+        <div class="orb" style="width: 600px; height: 600px; top: 30%; left: 40%; background: radial-gradient(circle, rgba(132, 204, 22, 0.12) 0%, transparent 70%);"></div>
+      `,
+      bgStyle: `
+        background-color: #050E0A;
+        background-image: 
+          radial-gradient(1100px 900px at 70% 30%, rgba(16, 185, 129, 0.18), transparent 55%),
+          radial-gradient(1000px 800px at 20% 80%, rgba(20, 184, 166, 0.14), transparent 60%),
+          radial-gradient(800px 600px at 50% 10%, rgba(5, 150, 105, 0.10), transparent 60%);
+      `
+    }
+  }
+  // 05_settings_theme and fallback
+  return {
+    id: 'theme-05',
+    base: '#0F0A05',
+    glow: 'rgba(245, 158, 11, 0.4)', // Amber glow
+    orbs: `
+      <div class="orb" style="width: 1200px; height: 1200px; top: -300px; left: -100px; background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, transparent 70%);"></div>
+      <div class="orb" style="width: 1000px; height: 1000px; bottom: -200px; right: -100px; background: radial-gradient(circle, rgba(249, 115, 22, 0.18) 0%, transparent 70%);"></div>
+      <div class="orb" style="width: 700px; height: 700px; top: 40%; right: 40%; background: radial-gradient(circle, rgba(251, 113, 133, 0.12) 0%, transparent 70%);"></div>
+    `,
+    bgStyle: `
+      background-color: #0F0A05;
+      background-image: 
+        radial-gradient(1300px 1000px at 20% 30%, rgba(245, 158, 11, 0.15), transparent 55%),
+        radial-gradient(900px 800px at 80% 80%, rgba(249, 115, 22, 0.12), transparent 60%),
+        radial-gradient(800px 800px at 50% 0%, rgba(217, 119, 6, 0.10), transparent 60%);
+    `
+  }
+}
+
+// ---------------------------------------------------------------------------
+// HTML Template
+// ---------------------------------------------------------------------------
+
 function generateHTML(config, base64Image) {
+  const theme = getTheme(config.name)
+
   return `
 <!DOCTYPE html>
 <html>
@@ -62,42 +220,58 @@ function generateHTML(config, base64Image) {
       padding: 0;
       width: 2880px;
       height: 1800px;
-      background: #1a3a4a; /* Fallback */
-      background: linear-gradient(145deg, #1a3a4a 0%, #1e4d5c 20%, #1a6b6a 50%, #2d8a7e 75%, #3aaa96 100%);
       font-family: 'Inter', 'Noto Sans SC', sans-serif;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
       position: relative;
+      ${theme.bgStyle}
+    }
+
+    /* Noise Texture Overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 1;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Subtle Grid Overlay */
+    body::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+      background-size: 80px 80px;
     }
 
     /* Decorative Orbs */
     .orb {
       position: absolute;
       border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.15;
+      filter: blur(100px);
       z-index: 0;
-    }
-    .orb-1 {
-      width: 1200px;
-      height: 1200px;
-      top: -400px;
-      left: -200px;
-      background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
-    }
-    .orb-2 {
-      width: 1000px;
-      height: 1000px;
-      bottom: -200px;
-      right: -200px;
-      background: radial-gradient(circle, rgba(64,224,208,0.8) 0%, rgba(64,224,208,0) 70%);
     }
 
     /* Content Area */
     .content {
-      z-index: 1;
+      z-index: 2;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -116,22 +290,24 @@ function generateHTML(config, base64Image) {
     }
 
     .badge {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 100px;
       padding: 10px 28px;
       font-size: 26px;
       font-weight: 600;
       color: white;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      letter-spacing: 0.5px;
     }
 
     .headline {
       font-size: 72px;
       font-weight: 800;
       color: white;
-      text-shadow: 0 2px 20px rgba(0,0,0,0.15);
-      letter-spacing: -1px;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      letter-spacing: -1.5px;
       margin: 0;
       line-height: 1.1;
     }
@@ -139,10 +315,11 @@ function generateHTML(config, base64Image) {
     .subline {
       font-size: 30px;
       font-weight: 400;
-      color: rgba(255,255,255,0.8);
+      color: rgba(255,255,255,0.85);
       max-width: 1600px;
-      line-height: 1.4;
+      line-height: 1.5;
       margin: 0;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
 
     /* Screenshot Area */
@@ -154,22 +331,30 @@ function generateHTML(config, base64Image) {
       align-items: center;
       justify-content: flex-end;
       padding-bottom: 0;
+      perspective: 2000px;
     }
 
     .screenshot {
       width: 2400px;
       border-radius: 16px 16px 0 0;
-      box-shadow: 0 -10px 60px rgba(0,0,0,0.3), 0 -2px 20px rgba(0,0,0,0.15);
+      /* Enhanced shadow/glow matching the theme */
+      box-shadow: 
+        0 -20px 80px rgba(0,0,0,0.4), 
+        0 -5px 20px rgba(0,0,0,0.2),
+        0 0 100px ${theme.glow};
       object-fit: cover;
       object-position: top center;
-      /* Ensure it touches the bottom edge */
       display: block;
+      transform: translateY(0);
+      /* Subtle border to pop against dark bg */
+      border: 1px solid rgba(255,255,255,0.08);
+      border-bottom: none;
+      background: #1e1e1e; /* Fallback for transparency */
     }
   </style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
+  ${theme.orbs}
   
   <div class="content">
     <div class="text-area">
@@ -187,8 +372,19 @@ function generateHTML(config, base64Image) {
   `
 }
 
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
 async function main() {
+  // Determine output mode from CLI args
+  const isDraft = process.argv.includes('--draft')
+  const outDir = isDraft ? DRAFT_DIR : FINAL_DIR
+
+  console.log(`Mode: ${isDraft ? 'DRAFT' : 'FINAL'}`)
+  console.log(`Output: ${outDir}`)
   console.log('Launching browser...')
+
   const browser = await chromium.launch()
   const context = await browser.newContext({
     viewport: { width: 2880, height: 1800 },
@@ -196,13 +392,17 @@ async function main() {
   })
   const page = await context.newPage()
 
+  let processed = 0
+  let skipped = 0
+
   for (const config of CONFIGS) {
     console.log(`Processing ${config.locale}/${config.name}...`)
 
-    // Read source image
-    const sourcePath = path.join(BASE_DIR, config.source)
+    // Read source image from raw/
+    const sourcePath = path.join(RAW_DIR, config.source)
     if (!fs.existsSync(sourcePath)) {
-      console.error(`Source image not found: ${sourcePath}`)
+      console.error(`  ⚠ Source image not found: ${sourcePath} — skipping`)
+      skipped++
       continue
     }
 
@@ -212,29 +412,27 @@ async function main() {
     // Generate HTML
     const html = generateHTML(config, base64Image)
 
-    // Set content and wait
+    // Render
     await page.setContent(html)
     await page.waitForLoadState('networkidle')
-    // Extra wait for fonts to fully render
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(2000) // Wait for fonts
 
     // Ensure output directory exists
-    const outDir = path.join(OUT_DIR, config.locale)
-    if (!fs.existsSync(outDir)) {
-      fs.mkdirSync(outDir, { recursive: true })
+    const localeDir = path.join(outDir, config.locale)
+    if (!fs.existsSync(localeDir)) {
+      fs.mkdirSync(localeDir, { recursive: true })
     }
 
     // Take screenshot
-    const outputPath = path.join(outDir, `${config.name}.png`)
-    await page.screenshot({ path: outputPath, type: 'png', omitBackground: true }) // omitBackground: true might help if body has transparency, but we set explicit bg.
-    // Actually, omitBackground: false is default (opaque white), but we want our CSS background.
-    // Playwright screenshot respects CSS.
+    const outputPath = path.join(localeDir, `${config.name}.png`)
+    await page.screenshot({ path: outputPath, type: 'png' })
 
-    console.log(`Saved to ${outputPath}`)
+    console.log(`  ✓ Saved to ${outputPath}`)
+    processed++
   }
 
   await browser.close()
-  console.log('Done.')
+  console.log(`\nDone. ${processed} generated, ${skipped} skipped.`)
 }
 
 main().catch((error) => {
