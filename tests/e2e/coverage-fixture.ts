@@ -14,7 +14,7 @@ export const test = baseTest.extend<{
 }>({
   // eslint-disable-next-line no-empty-pattern
   electronApp: async ({}, use): Promise<void> => {
-    const app = await electron.launch({ args: ['.'] })
+    const app = await electron.launch({ args: ['.'], env: { ...process.env, E2E_HEADLESS: '1' } })
     // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(app)
     await app.close()
