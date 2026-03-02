@@ -10,7 +10,7 @@ test.describe('Settings View', () => {
   test('should display all settings sections', async ({ window }) => {
     await expect(window.locator('text=General').first()).toBeVisible()
     await expect(window.locator('text=AI Provider').first()).toBeVisible()
-    await expect(window.locator('text=Updates').first()).toBeVisible()
+    await expect(window.locator('text=Version').first()).toBeVisible()
   })
 
   test('should display workspace directory with buttons', async ({ window }) => {
@@ -228,36 +228,8 @@ test.describe('Settings View', () => {
     await expect(window.locator('button', { hasText: 'Test Connection' })).toBeVisible()
   })
 
-  test('should display auto-update section', async ({ window }) => {
-    await expect(window.locator('text=Updates').first()).toBeVisible()
-    await expect(window.locator('text=Enable automatic updates')).toBeVisible()
-
-    // Switch should be visible
-    const updateSwitch = window.locator('button[role="switch"]')
-    await expect(updateSwitch).toBeVisible()
-  })
-
-  test('should toggle auto-update switch', async ({ window }) => {
-    const updateSwitch = window.locator('button[role="switch"]')
-    const initialState = await updateSwitch.getAttribute('data-state')
-
-    await updateSwitch.click()
-    await window.waitForTimeout(300)
-
-    const newState = await updateSwitch.getAttribute('data-state')
-    expect(newState).not.toEqual(initialState)
-
-    // Toggle back
-    await updateSwitch.click()
-    await window.waitForTimeout(300)
-  })
-
-  test('should display version info', async ({ window }) => {
-    // Version text like "Current Version: x.x.x"
+  test('should display version section', async ({ window }) => {
+    await expect(window.locator('text=Version').first()).toBeVisible()
     await expect(window.locator('text=Current Version')).toBeVisible()
-  })
-
-  test('should display Check for Updates button', async ({ window }) => {
-    await expect(window.locator('button', { hasText: 'Check for Updates' })).toBeVisible()
   })
 })
