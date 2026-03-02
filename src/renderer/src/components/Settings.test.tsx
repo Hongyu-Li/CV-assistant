@@ -90,26 +90,6 @@ vi.mock('./ui/select', async () => {
   }
 })
 
-// Mock Switch component
-vi.mock('./ui/switch', async () => {
-  const React = await import('react')
-  return {
-    Switch: ({
-      checked,
-      onCheckedChange
-    }: {
-      checked?: boolean
-      onCheckedChange?: (checked: boolean) => void
-    }): React.ReactElement =>
-      React.createElement('button', {
-        role: 'switch',
-        'aria-checked': String(checked),
-        'data-testid': 'auto-update-switch',
-        onClick: (): void => onCheckedChange?.(!checked)
-      })
-  }
-})
-
 describe('Settings Component', () => {
   const mockUpdateSettings = vi.fn()
   const defaultSettings = {
@@ -119,8 +99,7 @@ describe('Settings Component', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '',
-    autoUpdate: true
+    workspacePath: ''
   }
 
   beforeEach(() => {
@@ -245,8 +224,7 @@ describe('Settings - Provider/Theme/Language Changes', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '',
-    autoUpdate: true
+    workspacePath: ''
   }
 
   beforeEach((): void => {
@@ -321,8 +299,7 @@ describe('Settings - Test Connection', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '',
-    autoUpdate: true
+    workspacePath: ''
   }
 
   beforeEach((): void => {
@@ -402,8 +379,7 @@ describe('Settings - Workspace Directory', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '/test/workspace',
-    autoUpdate: true
+    workspacePath: '/test/workspace'
   }
 
   beforeEach((): void => {
@@ -475,8 +451,7 @@ describe('Settings - Migration Flow', () => {
     baseUrl: '',
     theme: 'system',
     language: 'en',
-    workspacePath: '/old/workspace',
-    autoUpdate: true
+    workspacePath: '/old/workspace'
   }
 
   beforeEach((): void => {
@@ -712,8 +687,7 @@ describe('Settings - API Key Visibility by Provider', () => {
         baseUrl: 'http://localhost:11434/v1',
         theme: 'system',
         language: 'en',
-        workspacePath: '',
-        autoUpdate: true
+        workspacePath: ''
       },
       updateSettings: mockUpdateSettings,
       isLoading: false,
@@ -760,8 +734,7 @@ describe('Settings - First-Run Migration Listener', () => {
         baseUrl: '',
         theme: 'system',
         language: 'en',
-        workspacePath: '',
-        autoUpdate: true
+        workspacePath: ''
       },
       updateSettings: mockUpdateSettings,
       isLoading: false,
@@ -809,26 +782,22 @@ describe('Settings - First-Run Migration Listener', () => {
   })
 })
 
-describe('Settings - Auto Update', () => {
+describe('Settings - Version Display', () => {
   const mockUpdateSettings = vi.fn()
   const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
-  const mockOn = window.electron.ipcRenderer.on as ReturnType<typeof vi.fn>
-  const mockRemoveListener = window.electron.ipcRenderer.removeListener as ReturnType<typeof vi.fn>
-  const defaultSettings = {
-    provider: 'openai',
-    apiKeys: {},
-    model: 'gpt-5.2',
-    baseUrl: '',
-    theme: 'system',
-    language: 'en',
-    workspacePath: '',
-    autoUpdate: true
-  }
 
   beforeEach((): void => {
     vi.clearAllMocks()
     ;(useSettings as Mock).mockReturnValue({
-      settings: defaultSettings,
+      settings: {
+        provider: 'openai',
+        apiKeys: {},
+        model: 'gpt-5.2',
+        baseUrl: '',
+        theme: 'system',
+        language: 'en',
+        workspacePath: ''
+      },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
@@ -839,14 +808,9 @@ describe('Settings - Auto Update', () => {
     })
   })
 
-  it('renders auto-update section with title', (): void => {
+  it('renders version section with title', (): void => {
     render(<Settings />)
-    expect(screen.getByText('settings.auto_update')).toBeInTheDocument()
-  })
-
-  it('renders auto-update toggle switch', (): void => {
-    render(<Settings />)
-    expect(screen.getByTestId('auto-update-switch')).toBeInTheDocument()
+    expect(screen.getByText('settings.version')).toBeInTheDocument()
   })
 
   it('displays app version from IPC', async (): Promise<void> => {
@@ -856,149 +820,9 @@ describe('Settings - Auto Update', () => {
     })
   })
 
-  it('renders check for updates button', (): void => {
+  it('does not render auto-update controls', (): void => {
     render(<Settings />)
-    expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
-  })
-
-  it('calls auto-update:check IPC when check button is clicked', async (): Promise<void> => {
-    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
-      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
-      return Promise.resolve(undefined)
-    })
-    render(<Settings />)
-    const checkBtn = screen.getByText('settings.auto_update_check')
-    await act(async (): Promise<void> => {
-      fireEvent.click(checkBtn)
-    })
-    expect(mockInvoke).toHaveBeenCalledWith('auto-update:check')
-  })
-
-  it('toggles auto-update setting when switch is clicked', async (): Promise<void> => {
-    render(<Settings />)
-    const switchEl = screen.getByTestId('auto-update-switch')
-    await act(async (): Promise<void> => {
-      fireEvent.click(switchEl)
-    })
-    expect(mockUpdateSettings).toHaveBeenCalledWith({ autoUpdate: false })
-    expect(mockInvoke).toHaveBeenCalledWith('auto-update:set-auto-download', false)
-  })
-
-  it('registers and removes auto-update IPC listeners on mount/unmount', (): void => {
-    const { unmount } = render(<Settings />)
-    // Check that all 6 auto-update channels are registered
-    const channels = mockOn.mock.calls.map((call: unknown[]) => call[0])
-    expect(channels).toContain('auto-update:checking')
-    expect(channels).toContain('auto-update:available')
-    expect(channels).toContain('auto-update:not-available')
-    expect(channels).toContain('auto-update:download-progress')
-    expect(channels).toContain('auto-update:downloaded')
-    expect(channels).toContain('auto-update:error')
-    // Unmount and verify listeners are removed
-    unmount()
-    const removeListenerCalls = mockRemoveListener.mock.calls.map((call: unknown[]) => call[0])
-    expect(removeListenerCalls).toContain('auto-update:checking')
-    expect(removeListenerCalls).toContain('auto-update:available')
-    expect(removeListenerCalls).toContain('auto-update:not-available')
-    expect(removeListenerCalls).toContain('auto-update:download-progress')
-    expect(removeListenerCalls).toContain('auto-update:downloaded')
-    expect(removeListenerCalls).toContain('auto-update:error')
-  })
-
-  it('shows update status when auto-update:not-available event fires', async (): Promise<void> => {
-    render(<Settings />)
-    // Get the onNotAvailable handler from the registered listeners
-    const notAvailableCall = mockOn.mock.calls.find(
-      (call: unknown[]) => call[0] === 'auto-update:not-available'
-    )
-    expect(notAvailableCall).toBeDefined()
-    const handler = notAvailableCall![1] as () => void
-    // Fire the handler
-    await act(async (): Promise<void> => {
-      handler()
-    })
-    await waitFor((): void => {
-      expect(screen.getByText('settings.auto_update_not_available')).toBeInTheDocument()
-    })
-  })
-
-  it('shows error status and re-enables check button when auto-update:error fires', async (): Promise<void> => {
-    render(<Settings />)
-
-    const errorCall = mockOn.mock.calls.find((call: unknown[]) => call[0] === 'auto-update:error')
-    expect(errorCall).toBeDefined()
-
-    const handler = errorCall![1] as (
-      event: unknown,
-      data: {
-        error: string
-      }
-    ) => void
-
-    await act(async (): Promise<void> => {
-      handler({}, { error: 'Some error' })
-    })
-
-    await waitFor((): void => {
-      expect(screen.getByText('settings.auto_update_error')).toBeInTheDocument()
-      expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
-    })
-  })
-
-  it('re-enables check button when auto-update:check IPC throws', async (): Promise<void> => {
-    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
-      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
-      if (channel === 'auto-update:check') return Promise.reject(new Error('check failed'))
-      return Promise.resolve(undefined)
-    })
-
-    render(<Settings />)
-    const checkBtn = screen.getByText('settings.auto_update_check')
-    await act(async (): Promise<void> => {
-      fireEvent.click(checkBtn)
-    })
-
-    await waitFor((): void => {
-      expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
-    })
-  })
-
-  it('shows error and re-enables button when auto-update:check returns failure result', async (): Promise<void> => {
-    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
-      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
-      if (channel === 'auto-update:check')
-        return Promise.resolve({ success: false, error: 'Auto-updater is not available' })
-      return Promise.resolve(undefined)
-    })
-
-    render(<Settings />)
-    const checkBtn = screen.getByText('settings.auto_update_check')
-    await act(async (): Promise<void> => {
-      fireEvent.click(checkBtn)
-    })
-
-    await waitFor((): void => {
-      expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
-      expect(screen.getByText('settings.auto_update_error')).toBeInTheDocument()
-    })
-  })
-
-  it('shows generic error when auto-update:check returns failure without message', async (): Promise<void> => {
-    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
-      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
-      if (channel === 'auto-update:check') return Promise.resolve({ success: false })
-      return Promise.resolve(undefined)
-    })
-
-    render(<Settings />)
-    const checkBtn = screen.getByText('settings.auto_update_check')
-    await act(async (): Promise<void> => {
-      fireEvent.click(checkBtn)
-    })
-
-    await waitFor((): void => {
-      expect(screen.getByText('settings.auto_update_check')).toBeInTheDocument()
-      expect(screen.getByText('settings.auto_update_error')).toBeInTheDocument()
-    })
+    expect(screen.queryByText('settings.auto_update_check')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('auto-update-switch')).not.toBeInTheDocument()
   })
 })
