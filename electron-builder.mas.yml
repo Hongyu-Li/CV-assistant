@@ -12,26 +12,6 @@ files:
   - '!**/node_modules/@tailwindcss/oxide*/**'
   - '!**/node_modules/tailwindcss/**'
   - '!**/node_modules/tailwindcss-animate/**'
-  - '!**/node_modules/electron-updater/**'
-  - '!**/node_modules/builder-util-runtime/**'
-  # Exclude dev/build artifacts and docs from asar
-  - '!scripts/**'
-  - '!docs/**'
-  - '!coverage/**'
-  - '!coverage-e2e/**'
-  - '!tests/**'
-  - '!playwright-report/**'
-  - '!test-results/**'
-  - '!.ruff_cache/**'
-  - '!.venv/**'
-  - '!.husky/**'
-  - '!{AGENTS.md,README.zh-CN.md,LICENSE,components.json}'
-  - '!{playwright.config.ts,vitest.config.ts}'
-  - '!electron-builder.{yml,mas.yml}'
-  - '!{.gitignore,.editorconfig}'
-  - '!*.sh'
-  - '!*.tsbuildinfo'
-  - '!package.json.bak'
 asarUnpack:
   - resources/**
 mac:

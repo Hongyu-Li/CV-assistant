@@ -19,7 +19,6 @@ export const Settings = (): React.JSX.Element => {
   const [updateStatus, setUpdateStatus] = React.useState<string>('')
   const [appVersion, setAppVersion] = React.useState<string>('')
   const [isCheckingUpdate, setIsCheckingUpdate] = React.useState(false)
-  const [isMAS, setIsMAS] = React.useState(false)
 
   const handleMigration = async (currentPath: string, newDir: string): Promise<void> => {
     // Determine actual source path
@@ -132,14 +131,6 @@ export const Settings = (): React.JSX.Element => {
       })
       .catch((e: unknown) => {
         console.debug('Version fetch failed:', e)
-      })
-    window.electron.ipcRenderer
-      .invoke('app:isMAS')
-      .then((mas: boolean) => {
-        setIsMAS(mas)
-      })
-      .catch((e: unknown) => {
-        console.debug('MAS check failed:', e)
       })
   }, [])
 
@@ -392,89 +383,87 @@ export const Settings = (): React.JSX.Element => {
           </CardContent>
         </Card>
 
-        {/* Updates — hidden in Mac App Store builds */}
-        {!isMAS && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('settings.auto_update')}</CardTitle>
-              <CardDescription>{t('settings.auto_update_desc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium leading-none">
-                  {t('settings.auto_update_enabled')}
-                </label>
-                <Switch
-                  checked={settings.autoUpdate !== false}
-                  onCheckedChange={(checked): void => {
-                    updateSettings({ autoUpdate: checked })
-                    window.electron.ipcRenderer.invoke('auto-update:set-auto-download', checked)
-                  }}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {t('settings.auto_update_version')}: {appVersion || '...'}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  disabled={isCheckingUpdate}
-                  onClick={async (): Promise<void> => {
-                    setIsCheckingUpdate(true)
-                    setUpdateStatus('')
-                    try {
-                      const result = (await window.electron.ipcRenderer.invoke(
-                        'auto-update:check'
-                      )) as { success: boolean; error?: string } | undefined
-                      if (result && !result.success) {
-                        setUpdateStatus(`error:${result.error ?? 'Unknown error'}`)
-                        setIsCheckingUpdate(false)
-                      }
-                    } catch (e) {
-                      const message = e instanceof Error ? e.message : 'Update check failed'
-                      setUpdateStatus(`error:${message}`)
+        {/* Updates */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.auto_update')}</CardTitle>
+            <CardDescription>{t('settings.auto_update_desc')}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium leading-none">
+                {t('settings.auto_update_enabled')}
+              </label>
+              <Switch
+                checked={settings.autoUpdate !== false}
+                onCheckedChange={(checked): void => {
+                  updateSettings({ autoUpdate: checked })
+                  window.electron.ipcRenderer.invoke('auto-update:set-auto-download', checked)
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {t('settings.auto_update_version')}: {appVersion || '...'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                disabled={isCheckingUpdate}
+                onClick={async (): Promise<void> => {
+                  setIsCheckingUpdate(true)
+                  setUpdateStatus('')
+                  try {
+                    const result = (await window.electron.ipcRenderer.invoke(
+                      'auto-update:check'
+                    )) as { success: boolean; error?: string } | undefined
+                    if (result && !result.success) {
+                      setUpdateStatus(`error:${result.error ?? 'Unknown error'}`)
                       setIsCheckingUpdate(false)
                     }
+                  } catch (e) {
+                    const message = e instanceof Error ? e.message : 'Update check failed'
+                    setUpdateStatus(`error:${message}`)
+                    setIsCheckingUpdate(false)
+                  }
+                }}
+              >
+                {isCheckingUpdate
+                  ? t('settings.auto_update_checking')
+                  : t('settings.auto_update_check')}
+              </Button>
+              {updateStatus.startsWith('downloaded:') && (
+                <Button
+                  onClick={(): void => {
+                    window.electron.ipcRenderer.invoke('auto-update:install')
                   }}
                 >
-                  {isCheckingUpdate
-                    ? t('settings.auto_update_checking')
-                    : t('settings.auto_update_check')}
+                  {t('settings.auto_update_restart')}
                 </Button>
-                {updateStatus.startsWith('downloaded:') && (
-                  <Button
-                    onClick={(): void => {
-                      window.electron.ipcRenderer.invoke('auto-update:install')
-                    }}
-                  >
-                    {t('settings.auto_update_restart')}
-                  </Button>
-                )}
-              </div>
-              {updateStatus && (
-                <p className="text-sm text-muted-foreground">
-                  {updateStatus === 'checking' && t('settings.auto_update_checking')}
-                  {updateStatus.startsWith('available:') &&
-                    t('settings.auto_update_available', {
-                      version: updateStatus.split(':')[1]
-                    })}
-                  {updateStatus === 'not-available' && t('settings.auto_update_not_available')}
-                  {updateStatus.startsWith('downloading:') &&
-                    t('settings.auto_update_downloading', {
-                      percent: updateStatus.split(':')[1]
-                    })}
-                  {updateStatus.startsWith('downloaded:') && t('settings.auto_update_downloaded')}
-                  {updateStatus.startsWith('error:') &&
-                    t('settings.auto_update_error', {
-                      error: updateStatus.split(':').slice(1).join(':')
-                    })}
-                </p>
               )}
-            </CardContent>
-          </Card>
-        )}
+            </div>
+            {updateStatus && (
+              <p className="text-sm text-muted-foreground">
+                {updateStatus === 'checking' && t('settings.auto_update_checking')}
+                {updateStatus.startsWith('available:') &&
+                  t('settings.auto_update_available', {
+                    version: updateStatus.split(':')[1]
+                  })}
+                {updateStatus === 'not-available' && t('settings.auto_update_not_available')}
+                {updateStatus.startsWith('downloading:') &&
+                  t('settings.auto_update_downloading', {
+                    percent: updateStatus.split(':')[1]
+                  })}
+                {updateStatus.startsWith('downloaded:') && t('settings.auto_update_downloaded')}
+                {updateStatus.startsWith('error:') &&
+                  t('settings.auto_update_error', {
+                    error: updateStatus.split(':').slice(1).join(':')
+                  })}
+              </p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
