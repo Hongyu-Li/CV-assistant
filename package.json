@@ -24,8 +24,8 @@
     "e2e": "playwright test",
     "e2e:coverage": "playwright test",
     "prepare": "husky",
-    "build:mas-dev": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml -c.mas.type=development -c.mas.provisioningProfile=build/CV_Assistant_Dev.provisionprofile",
-    "build:mas": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml"
+    "build:mas-dev": "bash scripts/build-mas.sh -c.mas.type=development -c.mas.provisioningProfile=build/CV_Assistant_Dev.provisionprofile",
+    "build:mas": "bash scripts/build-mas.sh"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

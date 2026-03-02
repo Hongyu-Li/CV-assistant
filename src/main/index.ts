@@ -2,9 +2,8 @@ import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage, Menu } from 'e
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-// electron-updater is not available in MAS builds — guarded at runtime
-import { autoUpdater as electronAutoUpdater } from 'electron-updater'
-type AutoUpdaterType = typeof electronAutoUpdater
+// electron-updater is excluded from MAS builds — dynamically imported at runtime
+type AutoUpdaterType = typeof import('electron-updater').autoUpdater
 let autoUpdater: AutoUpdaterType | null = null
 
 // i18n translations for macOS application menu
@@ -254,9 +253,16 @@ function createWindow(): BrowserWindow {
 app
   .whenReady()
   .then(async () => {
-    // electron-updater is not available in MAS builds
-    if (!process.mas) {
-      autoUpdater = electronAutoUpdater
+    // In MAS builds, __MAS_BUILD__ is true at compile time so Vite eliminates this
+    // entire block (including the 'electron-updater' import string) from the bundle.
+    // At runtime, process.mas provides a secondary guard for non-MAS-specific builds.
+    if (!__MAS_BUILD__ && !process.mas) {
+      try {
+        const { autoUpdater: eu } = await import('electron-updater')
+        autoUpdater = eu
+      } catch (e) {
+        console.warn('electron-updater not available:', e)
+      }
     }
 
     // Set app name for macOS menu bar
@@ -366,6 +372,8 @@ app
     })
 
     ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
+
+    ipcMain.handle('app:isMAS', () => !!process.mas)
 
     // Language change IPC — rebuild macOS menu and About panel
     ipcMain.handle('app:setLanguage', (_, lang: string) => {

@@ -4,7 +4,13 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  main: {},
+  main: {
+    define: {
+      // Build-time constant: set MAS_BUILD=1 env var during MAS builds to
+      // completely eliminate electron-updater code (including import strings)
+      __MAS_BUILD__: JSON.stringify(!!process.env.MAS_BUILD)
+    }
+  },
   preload: {},
   renderer: {
     resolve: {
