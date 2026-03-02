@@ -12,6 +12,7 @@ files:
   - '!**/node_modules/@tailwindcss/oxide*/**'
   - '!**/node_modules/tailwindcss/**'
   - '!**/node_modules/tailwindcss-animate/**'
+  - '!**/node_modules/electron-updater/**'
 asarUnpack:
   - resources/**
 mac:

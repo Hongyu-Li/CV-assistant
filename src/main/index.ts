@@ -2,10 +2,6 @@ import { app, shell, BrowserWindow, ipcMain, dialog, nativeImage, Menu } from 'e
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-// electron-updater is not available in MAS builds — guarded at runtime
-import { autoUpdater as electronAutoUpdater } from 'electron-updater'
-type AutoUpdaterType = typeof electronAutoUpdater
-let autoUpdater: AutoUpdaterType | null = null
 
 // i18n translations for macOS application menu
 interface MenuTranslations {
@@ -170,9 +166,6 @@ function buildAppMenu(lang: string): void {
 import {
   handleAiChat,
   handleAiTest,
-  handleAutoUpdateCheck,
-  handleAutoUpdateInstall,
-  handleAutoUpdateSetAutoDownload,
   handleCvDelete,
   handleCvList,
   handleCvRead,
@@ -254,11 +247,6 @@ function createWindow(): BrowserWindow {
 app
   .whenReady()
   .then(async () => {
-    // electron-updater is not available in MAS builds
-    if (!process.mas) {
-      autoUpdater = electronAutoUpdater
-    }
-
     // Set app name for macOS menu bar
     app.setName('简历助手')
 
@@ -347,88 +335,13 @@ app
       handleAiTest({ provider, apiKey, model, baseUrl })
     )
 
-    // Auto-update IPC handlers — always registered so renderer gets meaningful errors
-    ipcMain.handle('auto-update:check', () => {
-      if (!autoUpdater) {
-        return { success: false, error: 'Auto-updater is not available' }
-      }
-      return handleAutoUpdateCheck({ autoUpdater })
-    })
-
-    ipcMain.handle('auto-update:install', () => {
-      if (!autoUpdater) return
-      return handleAutoUpdateInstall({ autoUpdater })
-    })
-
-    ipcMain.handle('auto-update:set-auto-download', (_, enabled: boolean) => {
-      if (!autoUpdater) return
-      return handleAutoUpdateSetAutoDownload(enabled, { autoUpdater })
-    })
-
     ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
 
     // Language change IPC — rebuild macOS menu and About panel
     ipcMain.handle('app:setLanguage', (_, lang: string) => {
       buildAppMenu(lang)
     })
-    const mainWindow = createWindow()
-
-    // Setup auto-updater (disabled in MAS builds — App Store handles updates)
-    if (autoUpdater) {
-      const updater = autoUpdater
-      try {
-        const settingsRaw2 = await readWorkspaceFile('settings.json')
-        const savedSettings2 = JSON.parse(settingsRaw2)
-        updater.autoDownload = savedSettings2.autoUpdate !== false
-      } catch (e) {
-        console.debug('Updater settings not found:', e)
-        updater.autoDownload = true
-      }
-      updater.autoInstallOnAppQuit = true
-
-      // Auto-updater events → renderer (with destroyed-window guard)
-      updater.on('checking-for-update', () => {
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('auto-update:checking')
-        }
-      })
-      updater.on('update-available', (info) => {
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('auto-update:available', { version: info.version })
-        }
-      })
-      updater.on('update-not-available', () => {
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('auto-update:not-available')
-        }
-      })
-      updater.on('download-progress', (progress) => {
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('auto-update:download-progress', {
-            percent: Math.round(progress.percent)
-          })
-        }
-      })
-      updater.on('update-downloaded', (info) => {
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('auto-update:downloaded', { version: info.version })
-        }
-      })
-      updater.on('error', (err) => {
-        if (!mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('auto-update:error', { error: err.message })
-        }
-      })
-
-      // Check for updates after window is ready (non-blocking)
-      mainWindow.webContents.once('did-finish-load', () => {
-        if (updater.autoDownload && app.isPackaged) {
-          updater.checkForUpdates().catch((e: unknown) => {
-            console.debug('Auto-update check failed:', e)
-          })
-        }
-      })
-    }
+    createWindow()
 
     // Register macOS activate handler early (before async migration) to ensure it's always available
     app.on('activate', function () {

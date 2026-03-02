@@ -14,7 +14,6 @@ vi.mock('../fs', () => ({
 
 import type {
   AppDeps,
-  AutoUpdaterDeps,
   DialogDeps,
   ShellOpenPathDeps,
   ProfileSaveData,
@@ -69,16 +68,6 @@ function createDialogDeps(params: { canceled: boolean; filePaths: string[] }): D
   return {
     dialog: { showOpenDialog } as unknown as DialogDeps['dialog']
   }
-}
-
-function createAutoUpdaterDeps(params?: { checkForUpdatesResult?: unknown }): AutoUpdaterDeps {
-  const autoUpdater = {
-    autoDownload: false,
-    checkForUpdates: vi.fn(async (): Promise<unknown> => params?.checkForUpdatesResult),
-    quitAndInstall: vi.fn((): void => {})
-  }
-
-  return { autoUpdater: autoUpdater as unknown as AutoUpdaterDeps['autoUpdater'] }
 }
 
 function mockFetchOkJson(data: unknown): void {
@@ -921,86 +910,6 @@ describe('main/handlers', (): void => {
         skipped: [],
         errors: [{ file: '', error: 'migrate failed' }]
       })
-    })
-  })
-
-  describe('handleAutoUpdateCheck', (): void => {
-    it('returns {success:true, version}', async (): Promise<void> => {
-      const deps = createAutoUpdaterDeps({
-        checkForUpdatesResult: { updateInfo: { version: '1.2.3' } }
-      })
-      const result = await handlers.handleAutoUpdateCheck(deps)
-      expect(result).toEqual({ success: true, version: '1.2.3' })
-    })
-
-    it('returns {success:false} on error', async (): Promise<void> => {
-      const deps = createAutoUpdaterDeps()
-      vi.mocked(deps.autoUpdater.checkForUpdates).mockRejectedValue(new Error('bad'))
-      const result = await handlers.handleAutoUpdateCheck(deps)
-      expect(result).toEqual({ success: false, error: 'bad' })
-    })
-  })
-
-  describe('handleAutoUpdateInstall', (): void => {
-    it('calls quitAndInstall', async (): Promise<void> => {
-      const deps = createAutoUpdaterDeps()
-      await handlers.handleAutoUpdateInstall(deps)
-      expect(vi.mocked(deps.autoUpdater.quitAndInstall)).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe('handleAutoUpdateSetAutoDownload', (): void => {
-    it('sets autoUpdater.autoDownload property', async (): Promise<void> => {
-      const deps = createAutoUpdaterDeps()
-      await handlers.handleAutoUpdateSetAutoDownload(true, deps)
-      expect(deps.autoUpdater.autoDownload).toBe(true)
-      await handlers.handleAutoUpdateSetAutoDownload(false, deps)
-      expect(deps.autoUpdater.autoDownload).toBe(false)
-    })
-  })
-
-  describe('auto-update IPC null guards (static import integration)', (): void => {
-    // These tests verify the contract enforced by IPC handler lambdas in index.ts:
-    // when autoUpdater is null (MAS builds), handlers return meaningful errors
-    // rather than crashing. This was broken when electron-updater was dynamically
-    // imported (import()) because ESM resolution failed in .asar archives.
-    // The fix uses a static import so electron-updater is always available.
-
-    it('auto-update:check returns failure result when autoUpdater is null', (): void => {
-      // Simulates the IPC lambda: if (!autoUpdater) return { success: false, error: '...' }
-      const autoUpdater: AutoUpdaterDeps['autoUpdater'] | null = null
-      const result = autoUpdater
-        ? handlers.handleAutoUpdateCheck({ autoUpdater })
-        : { success: false, error: 'Auto-updater is not available' }
-      expect(result).toEqual({ success: false, error: 'Auto-updater is not available' })
-    })
-
-    it('auto-update:install returns undefined when autoUpdater is null', (): void => {
-      // Simulates the IPC lambda: if (!autoUpdater) return
-      const autoUpdater: AutoUpdaterDeps['autoUpdater'] | null = null
-      const result = autoUpdater ? handlers.handleAutoUpdateInstall({ autoUpdater }) : undefined
-      expect(result).toBeUndefined()
-    })
-
-    it('auto-update:set-auto-download returns undefined when autoUpdater is null', (): void => {
-      // Simulates the IPC lambda: if (!autoUpdater) return
-      const autoUpdater: AutoUpdaterDeps['autoUpdater'] | null = null
-      const result = autoUpdater
-        ? handlers.handleAutoUpdateSetAutoDownload(true, { autoUpdater })
-        : undefined
-      expect(result).toBeUndefined()
-    })
-
-    it('auto-update:check delegates to handler when autoUpdater is available', async (): Promise<void> => {
-      const deps = createAutoUpdaterDeps({
-        checkForUpdatesResult: { updateInfo: { version: '2.0.0' } }
-      })
-      // Simulates the IPC lambda: return handleAutoUpdateCheck({ autoUpdater })
-      const autoUpdater: AutoUpdaterDeps['autoUpdater'] | null = deps.autoUpdater
-      const result = autoUpdater
-        ? await handlers.handleAutoUpdateCheck({ autoUpdater })
-        : { success: false, error: 'Auto-updater is not available' }
-      expect(result).toEqual({ success: true, version: '2.0.0' })
     })
   })
 

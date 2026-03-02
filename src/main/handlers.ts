@@ -101,10 +101,6 @@ export interface AppDeps {
   app: typeof import('electron').app
 }
 
-export interface AutoUpdaterDeps {
-  autoUpdater: typeof import('electron-updater').autoUpdater
-}
-
 function isNotNull<T>(value: T | null): value is T {
   return value !== null
 }
@@ -630,32 +626,6 @@ export async function handleAiTest(params: {
     }
     return { success: false, error: (error as Error).message }
   }
-}
-
-export async function handleAutoUpdateCheck(deps: AutoUpdaterDeps): Promise<
-  | { success: true; version: string | undefined }
-  | {
-      success: false
-      error: string
-    }
-> {
-  try {
-    const result = await deps.autoUpdater.checkForUpdates()
-    return { success: true, version: result?.updateInfo?.version }
-  } catch (error) {
-    return { success: false, error: (error as Error).message }
-  }
-}
-
-export async function handleAutoUpdateInstall(deps: AutoUpdaterDeps): Promise<void> {
-  deps.autoUpdater.quitAndInstall()
-}
-
-export async function handleAutoUpdateSetAutoDownload(
-  enabled: boolean,
-  deps: AutoUpdaterDeps
-): Promise<void> {
-  deps.autoUpdater.autoDownload = enabled
 }
 
 export async function handleGetVersion(deps: AppDeps): Promise<string> {
