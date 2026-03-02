@@ -70,7 +70,6 @@ mas:
   hardenedRuntime: false
   gatekeeperAssess: false
   x64ArchFiles: '*'
-  singleArchFiles: '*'
   provisioningProfile: build/CV_Assistant_Distribution.provisionprofile
   signIgnore:
     - '\.pak$'
