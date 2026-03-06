@@ -31,6 +31,7 @@ interface MenuTranslations {
   minimize: string
   zoom: string
   front: string
+  showMainWindow: string
 }
 
 const menuI18n: Record<string, MenuTranslations> = {
@@ -60,7 +61,8 @@ const menuI18n: Record<string, MenuTranslations> = {
     window: 'Window',
     minimize: 'Minimize',
     zoom: 'Zoom',
-    front: 'Bring All to Front'
+    front: 'Bring All to Front',
+    showMainWindow: 'Show Main Window'
   },
   zh: {
     about: '关于简历助手',
@@ -88,7 +90,8 @@ const menuI18n: Record<string, MenuTranslations> = {
     window: '窗口',
     minimize: '最小化',
     zoom: '缩放',
-    front: '全部置于最前'
+    front: '全部置于最前',
+    showMainWindow: '显示主窗口'
   }
 }
 
@@ -147,6 +150,19 @@ function buildAppMenu(lang: string): void {
       submenu: [
         { role: 'minimize', label: t.minimize },
         { role: 'zoom', label: t.zoom },
+        { type: 'separator' },
+        {
+          label: t.showMainWindow,
+          click: (): void => {
+            const windows = BrowserWindow.getAllWindows()
+            if (windows.length > 0) {
+              windows[0].show()
+              windows[0].focus()
+            } else {
+              createWindow()
+            }
+          }
+        },
         { type: 'separator' },
         { role: 'front', label: t.front }
       ]
