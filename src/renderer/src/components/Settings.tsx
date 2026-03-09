@@ -161,7 +161,6 @@ export const Settings = (): React.JSX.Element => {
         <Card>
           <CardHeader>
             <CardTitle>{t('settings.general')}</CardTitle>
-            <CardDescription></CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

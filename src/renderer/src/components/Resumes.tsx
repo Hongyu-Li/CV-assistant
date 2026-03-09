@@ -149,8 +149,8 @@ export function Resumes(): React.JSX.Element {
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
                         resume.status === 'generated'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                          : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'
+                          ? 'bg-success/10 text-success'
+                          : 'bg-warning/10 text-warning'
                       }`}
                     >
                       {resume.status === 'generated'

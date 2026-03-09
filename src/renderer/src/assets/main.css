@@ -30,6 +30,12 @@
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
 
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -90,6 +96,10 @@
     --chart-4: 174 40% 55%;
     --chart-5: 180 35% 55%;
     --radius: 0.5rem;
+    --success: 152 60% 36%;
+    --success-foreground: 152 60% 18%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 80% 20%;
   }
   .dark {
     --background: 166 50% 4%;
@@ -116,6 +126,10 @@
     --chart-3: 166 5% 65%;
     --chart-4: 174 40% 55%;
     --chart-5: 180 35% 60%;
+    --success: 152 55% 45%;
+    --success-foreground: 152 60% 90%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 38 80% 90%;
   }
 }
 
@@ -221,8 +235,8 @@
   .card-hover:hover {
     transform: translateY(-2px);
     box-shadow:
-      0 8px 25px -5px rgb(0 0 0 / 0.1),
-      0 4px 10px -6px rgb(0 0 0 / 0.1);
+      0 8px 25px -5px hsl(var(--foreground) / 0.1),
+      0 4px 10px -6px hsl(var(--foreground) / 0.1);
     border-color: hsl(var(--primary) / 0.3);
   }
 

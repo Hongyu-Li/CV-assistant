@@ -161,12 +161,12 @@ test.describe('Resumes View', () => {
 
   test('should show Draft badge for saved resume without generation', async ({ window }) => {
     // Check if the test resume from previous test exists, or create one
-    const testResumeCard = window.locator('text=E2E Test Resume')
+    const testResumeCard = window.locator('[class*="card"]').filter({ hasText: 'E2E Test Resume' })
     const exists = await testResumeCard.isVisible().catch(() => false)
 
     if (exists) {
-      // Draft badge should be visible
-      await expect(window.getByText('Draft', { exact: true })).toBeVisible()
+      // Draft badge should be visible within the test resume's card
+      await expect(testResumeCard.getByText('Draft', { exact: true })).toBeVisible()
     }
   })
 
