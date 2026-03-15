@@ -104,7 +104,11 @@
     "no_projects": "尚未添加项目。",
     "load_error": "加载个人资料失败",
     "save_error": "保存个人资料失败：",
-    "save_success": "个人资料保存成功"
+    "save_success": "个人资料保存成功",
+    "import_resume": "导入简历",
+    "importing": "导入中...",
+    "import_error": "导入简历失败：",
+    "import_parse_error": "解析文件失败，请检查文件格式。"
   },
   "common": {
     "delete": "删除",

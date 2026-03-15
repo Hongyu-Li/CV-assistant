@@ -266,7 +266,7 @@ describe('main/handlers', (): void => {
       expect(url).toBe('http://localhost:1234/v1/chat/completions')
     })
 
-    it('returns timeout error when fetch takes longer than 30 seconds', async (): Promise<void> => {
+    it('returns timeout error when fetch takes longer than 60 seconds', async (): Promise<void> => {
       vi.useFakeTimers()
       try {
         // Mock fetch that respects AbortSignal
@@ -291,13 +291,13 @@ describe('main/handlers', (): void => {
           baseUrl: 'https://api.openai.com/v1'
         })
 
-        // Advance past the 30s timeout
-        await vi.advanceTimersByTimeAsync(30_000)
+        // Advance past the 60s timeout
+        await vi.advanceTimersByTimeAsync(60_000)
 
         const result = await resultPromise
         expect(result).toEqual({
           success: false,
-          error: 'AI request timed out after 30 seconds'
+          error: 'AI request timed out after 60 seconds'
         })
       } finally {
         vi.useRealTimers()
@@ -498,7 +498,7 @@ describe('main/handlers', (): void => {
 
       expect(result).toEqual({
         success: false,
-        error: 'AI test request timed out after 30 seconds'
+        error: 'AI test request timed out after 60 seconds'
       })
     })
   })

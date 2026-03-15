@@ -1,4 +1,5 @@
-import { join, resolve, relative, isAbsolute } from 'path'
+import { join, resolve, relative, isAbsolute, extname } from 'path'
+import { readFile } from 'fs/promises'
 import {
   deleteWorkspaceFile,
   getWorkspaceLastModified,
@@ -9,6 +10,8 @@ import {
   writeWorkspaceFile
 } from './fs'
 import type { MigrationPrecheck, MigrationResult } from './fs'
+import { PDFParse } from 'pdf-parse'
+import mammoth from 'mammoth'
 
 export interface ProfilePersonalInfoSaveData {
   name?: string
@@ -409,6 +412,17 @@ export async function handleDialogOpenDirectory(deps: DialogDeps): Promise<strin
   return filePaths[0]
 }
 
+export async function handleDialogOpenFile(
+  deps: DialogDeps,
+  options?: { filters?: Array<{ name: string; extensions: string[] }> }
+): Promise<{ canceled: boolean; filePaths: string[] }> {
+  const result = await deps.dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: options?.filters || [{ name: 'All Files', extensions: ['*'] }]
+  })
+  return result
+}
+
 export async function handleShellOpenPath(
   requestedPath: string,
   deps: ShellOpenPathDeps
@@ -542,7 +556,7 @@ export async function handleAiChat(params: {
     }
 
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30_000)
+    const timeoutId = setTimeout(() => controller.abort(), 60_000)
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -573,7 +587,7 @@ export async function handleAiChat(params: {
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: 'AI request timed out after 30 seconds' }
+      return { success: false, error: 'AI request timed out after 60 seconds' }
     }
     return { success: false, error: `AI chat failed: ${(error as Error).message}` }
   }
@@ -622,7 +636,7 @@ export async function handleAiTest(params: {
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: 'AI test request timed out after 30 seconds' }
+      return { success: false, error: 'AI test request timed out after 60 seconds' }
     }
     return { success: false, error: (error as Error).message }
   }
@@ -630,4 +644,59 @@ export async function handleAiTest(params: {
 
 export async function handleGetVersion(deps: AppDeps): Promise<string> {
   return deps.app.getVersion()
+}
+
+export interface ProfileParseResult {
+  success: true
+  text: string
+}
+
+export async function handleProfileParseFile(filePath: string): Promise<ProfileParseResult | IpcErrorResponse> {
+  try {
+    console.log('Parsing file:', filePath)
+    const ext = extname(filePath).toLowerCase()
+    console.log('File extension:', ext)
+
+    let buffer: Buffer
+    try {
+      buffer = await readFile(filePath)
+      console.log('File read successfully, size:', buffer.length)
+    } catch (readError) {
+      console.error('Failed to read file:', readError)
+      return { success: false, error: `Failed to read file: ${(readError as Error).message}` }
+    }
+
+    let text = ''
+
+    if (ext === '.pdf') {
+      try {
+        const parser = new PDFParse({ data: buffer })
+        const pdfData = await parser.getText()
+        text = pdfData.text || ''
+        console.log('PDF parsed successfully, text length:', text.length)
+      } catch (pdfError) {
+        console.error('PDF parse error:', pdfError)
+        return { success: false, error: `PDF parsing failed: ${(pdfError as Error).message}` }
+      }
+    } else if (ext === '.docx') {
+      try {
+        const result = await mammoth.extractRawText({ buffer })
+        text = result.value
+        console.log('DOCX parsed successfully, text length:', text.length)
+      } catch (docxError) {
+        console.error('DOCX parse error:', docxError)
+        return { success: false, error: `DOCX parsing failed: ${(docxError as Error).message}` }
+      }
+    } else if (ext === '.md' || ext === '.txt') {
+      text = buffer.toString('utf-8')
+      console.log('Text file read successfully, length:', text.length)
+    } else {
+      return { success: false, error: `Unsupported file type: ${ext}` }
+    }
+
+    return { success: true, text }
+  } catch (error) {
+    console.error('Failed to parse file:', error)
+    return { success: false, error: (error as Error).message }
+  }
 }

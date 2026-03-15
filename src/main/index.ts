@@ -187,9 +187,11 @@ import {
   handleCvRead,
   handleCvSave,
   handleDialogOpenDirectory,
+  handleDialogOpenFile,
   handleGetDefaultWorkspacePath,
   handleGetVersion,
   handleProfileLoad,
+  handleProfileParseFile,
   handleProfileSave,
   handleSettingsLoad,
   handleSettingsSave,
@@ -306,6 +308,8 @@ app
       handleProfileSave(data, workspacePath)
     )
 
+    ipcMain.handle('profile:parseFile', (_, filePath: string) => handleProfileParseFile(filePath))
+
     // Settings Management IPC
     ipcMain.handle('settings:load', () => handleSettingsLoad())
 
@@ -328,6 +332,8 @@ app
 
     // Directory Picker IPC
     ipcMain.handle('dialog:openDirectory', () => handleDialogOpenDirectory({ dialog }))
+
+    ipcMain.handle('dialog:openFile', (_, options) => handleDialogOpenFile({ dialog }, options))
 
     // Open folder in OS file manager
     ipcMain.handle('shell:openPath', (_, requestedPath: string) =>

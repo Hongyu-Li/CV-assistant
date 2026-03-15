@@ -104,7 +104,11 @@
     "no_projects": "No projects added yet.",
     "load_error": "Failed to load profile",
     "save_error": "Failed to save profile: ",
-    "save_success": "Profile saved successfully"
+    "save_success": "Profile saved successfully",
+    "import_resume": "Import Resume",
+    "importing": "Importing...",
+    "import_error": "Failed to import resume: ",
+    "import_parse_error": "Failed to parse file. Please check the file format."
   },
   "common": {
     "delete": "Delete",
