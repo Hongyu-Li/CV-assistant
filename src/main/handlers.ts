@@ -580,6 +580,7 @@ export async function handleAiChat(params: {
   model: string
   messages: AiChatMessage[]
   baseUrl: string
+  responseFormat?: { type: string }
 }): Promise<{ success: true; content: string } | IpcErrorResponse> {
   try {
     const { url, headers } = buildAiRequestBase(params)
@@ -595,7 +596,12 @@ export async function handleAiChat(params: {
         messages: nonSystemMsgs
       })
     } else {
-      body = JSON.stringify({ model: params.model, messages: params.messages, max_tokens: 4096 })
+      body = JSON.stringify({
+        model: params.model,
+        messages: params.messages,
+        max_tokens: 4096,
+        ...(params.responseFormat ? { response_format: params.responseFormat } : {})
+      })
     }
 
     const controller = new AbortController()
