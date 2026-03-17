@@ -595,7 +595,7 @@ export async function handleAiChat(params: {
         messages: nonSystemMsgs
       })
     } else {
-      body = JSON.stringify({ model: params.model, messages: params.messages })
+      body = JSON.stringify({ model: params.model, messages: params.messages, max_tokens: 4096 })
     }
 
     const controller = new AbortController()

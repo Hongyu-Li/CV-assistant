@@ -191,7 +191,8 @@ describe('main/handlers', (): void => {
         messages: [
           { role: 'system', content: 'sys' },
           { role: 'user', content: 'hello' }
-        ]
+        ],
+        max_tokens: 4096
       })
     })
 
@@ -209,6 +210,20 @@ describe('main/handlers', (): void => {
       const { init } = getFetchCall()
       expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
       expect(init.headers && 'Authorization' in init.headers).toBe(false)
+    })
+
+    it('non-Anthropic: includes max_tokens in request body', async (): Promise<void> => {
+      mockFetchOkJson({ choices: [{ message: { content: 'ok' } }] })
+      await handlers.handleAiChat({
+        provider: 'deepseek',
+        apiKey: 'k-ds',
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: 'hi' }],
+        baseUrl: 'https://api.deepseek.com/v1'
+      })
+      const { init } = getFetchCall()
+      const body = JSON.parse(init.body ?? '{}') as Record<string, unknown>
+      expect(body).toHaveProperty('max_tokens', 4096)
     })
 
     it('parses anthropic response content[0].text', async (): Promise<void> => {
