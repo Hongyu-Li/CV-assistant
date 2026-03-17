@@ -12,13 +12,29 @@ vi.mock('../fs', () => ({
   readUserDataFile: vi.fn()
 }))
 
+vi.mock('fs/promises', () => ({
+  readFile: vi.fn()
+}))
+
+vi.mock('pdf-parse', () => {
+  const mockGetText = vi.fn()
+  const mockDestroy = vi.fn().mockResolvedValue(undefined)
+  return {
+    PDFParse: vi.fn().mockImplementation(function () {
+      return { getText: mockGetText, destroy: mockDestroy }
+    })
+  }
+})
+
 import type {
   AppDeps,
   DialogDeps,
   ShellOpenPathDeps,
   ProfileSaveData,
   CvSaveData,
-  AiChatMessage
+  AiChatMessage,
+  PdfExtractResult,
+  PdfExtractError
 } from '../handlers'
 
 type FsMocks = typeof import('../fs')
@@ -1027,6 +1043,109 @@ describe('main/handlers', (): void => {
         expect(result.error).not.toContain('sk-secret-token')
         expect(result.error).toContain('[REDACTED]')
       }
+    })
+  })
+
+  describe('handleProfileExtractPdfText', (): void => {
+    it('returns null when dialog is canceled', async (): Promise<void> => {
+      const deps = createDialogDeps({ canceled: true, filePaths: [] })
+      const result = await handlers.handleProfileExtractPdfText(deps)
+      expect(result).toBeNull()
+    })
+
+    it('returns null when filePaths is empty', async (): Promise<void> => {
+      const deps = createDialogDeps({ canceled: false, filePaths: [] })
+      const result = await handlers.handleProfileExtractPdfText(deps)
+      expect(result).toBeNull()
+    })
+
+    it('returns success with extracted text and filename on valid PDF', async (): Promise<void> => {
+      const deps = createDialogDeps({ canceled: false, filePaths: ['/some/path/resume.pdf'] })
+      const { readFile } = await import('fs/promises')
+      const { PDFParse } = await import('pdf-parse')
+      ;(readFile as ReturnType<typeof vi.fn>).mockResolvedValue(Buffer.from('fake pdf content'))
+      ;(PDFParse as unknown as ReturnType<typeof vi.fn>).mockImplementation(function () {
+        return {
+          getText: vi.fn().mockResolvedValue({ text: 'extracted text' }),
+          destroy: vi.fn().mockResolvedValue(undefined)
+        }
+      })
+
+      const result: PdfExtractResult | PdfExtractError | null =
+        await handlers.handleProfileExtractPdfText(deps)
+
+      expect(result).toEqual({ success: true, text: 'extracted text', filename: 'resume.pdf' })
+    })
+
+    it('returns error when readFile fails', async (): Promise<void> => {
+      const deps = createDialogDeps({ canceled: false, filePaths: ['/some/path/resume.pdf'] })
+      const { readFile } = await import('fs/promises')
+      ;(readFile as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('read error'))
+
+      const result: PdfExtractResult | PdfExtractError | null =
+        await handlers.handleProfileExtractPdfText(deps)
+
+      expect(result).toEqual({ success: false, error: 'read error' })
+    })
+
+    it('returns error when pdf-parse fails', async (): Promise<void> => {
+      const deps = createDialogDeps({ canceled: false, filePaths: ['/some/path/resume.pdf'] })
+      const { readFile } = await import('fs/promises')
+      const { PDFParse } = await import('pdf-parse')
+      ;(readFile as ReturnType<typeof vi.fn>).mockResolvedValue(Buffer.from('fake pdf content'))
+      ;(PDFParse as unknown as ReturnType<typeof vi.fn>).mockImplementation(function () {
+        return {
+          getText: vi.fn().mockRejectedValue(new Error('parse error')),
+          destroy: vi.fn().mockResolvedValue(undefined)
+        }
+      })
+
+      const result: PdfExtractResult | PdfExtractError | null =
+        await handlers.handleProfileExtractPdfText(deps)
+
+      expect(result).toEqual({ success: false, error: 'parse error' })
+    })
+
+    it('correctly extracts filename from path with forward slashes', async (): Promise<void> => {
+      const deps = createDialogDeps({
+        canceled: false,
+        filePaths: ['/Users/test/documents/my-cv.pdf']
+      })
+      const { readFile } = await import('fs/promises')
+      const { PDFParse } = await import('pdf-parse')
+      ;(readFile as ReturnType<typeof vi.fn>).mockResolvedValue(Buffer.from('fake'))
+      ;(PDFParse as unknown as ReturnType<typeof vi.fn>).mockImplementation(function () {
+        return {
+          getText: vi.fn().mockResolvedValue({ text: 'content' }),
+          destroy: vi.fn().mockResolvedValue(undefined)
+        }
+      })
+
+      const result: PdfExtractResult | PdfExtractError | null =
+        await handlers.handleProfileExtractPdfText(deps)
+
+      expect(result).toEqual({ success: true, text: 'content', filename: 'my-cv.pdf' })
+    })
+
+    it('correctly extracts filename from path with backslashes', async (): Promise<void> => {
+      const deps = createDialogDeps({
+        canceled: false,
+        filePaths: ['C:\\Users\\test\\Documents\\my-cv.pdf']
+      })
+      const { readFile } = await import('fs/promises')
+      const { PDFParse } = await import('pdf-parse')
+      ;(readFile as ReturnType<typeof vi.fn>).mockResolvedValue(Buffer.from('fake'))
+      ;(PDFParse as unknown as ReturnType<typeof vi.fn>).mockImplementation(function () {
+        return {
+          getText: vi.fn().mockResolvedValue({ text: 'content' }),
+          destroy: vi.fn().mockResolvedValue(undefined)
+        }
+      })
+
+      const result: PdfExtractResult | PdfExtractError | null =
+        await handlers.handleProfileExtractPdfText(deps)
+
+      expect(result).toEqual({ success: true, text: 'content', filename: 'my-cv.pdf' })
     })
   })
 })

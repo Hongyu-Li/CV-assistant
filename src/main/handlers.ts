@@ -399,6 +399,45 @@ export async function handleCvRead(params: {
   }
 }
 
+export interface PdfExtractResult {
+  success: true
+  text: string
+  filename: string
+}
+
+export interface PdfExtractError {
+  success: false
+  error: string
+}
+
+export async function handleProfileExtractPdfText(
+  deps: DialogDeps
+): Promise<PdfExtractResult | PdfExtractError | null> {
+  const { canceled, filePaths } = await deps.dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'PDF Files', extensions: ['pdf'] }]
+  })
+  if (canceled || filePaths.length === 0) {
+    return null
+  }
+
+  const filePath = filePaths[0]
+  const filename = filePath.split(/[/\\]/).pop() ?? 'unknown.pdf'
+
+  try {
+    const { readFile } = await import('fs/promises')
+    const { PDFParse } = await import('pdf-parse')
+    const dataBuffer = await readFile(filePath)
+    const parser = new PDFParse({ data: new Uint8Array(dataBuffer) })
+    const result = await parser.getText()
+    await parser.destroy()
+    return { success: true, text: result.text, filename }
+  } catch (error) {
+    console.error('Failed to parse PDF:', error)
+    return { success: false, error: (error as Error).message }
+  }
+}
+
 export async function handleDialogOpenDirectory(deps: DialogDeps): Promise<string | null> {
   const { canceled, filePaths } = await deps.dialog.showOpenDialog({
     properties: ['openDirectory', 'createDirectory']

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Profile } from './Profile'
 import { SettingsProvider } from '../context/SettingsContext'
 import { toast } from 'sonner'
+import { extractProfileFromPdf } from '../lib/provider'
 
 // Mock MarkdownEditor since Tiptap does not render text in jsdom
 vi.mock('./MarkdownEditor', () => ({
@@ -28,6 +29,14 @@ vi.mock('sonner', () => ({
     error: vi.fn()
   }
 }))
+
+vi.mock('../lib/provider', async () => {
+  const actual = await vi.importActual('../lib/provider')
+  return {
+    ...actual,
+    extractProfileFromPdf: vi.fn()
+  }
+})
 
 const renderWithProvider = (ui: React.ReactElement): ReturnType<typeof render> => {
   return render(<SettingsProvider>{ui}</SettingsProvider>)
@@ -649,6 +658,211 @@ describe('Profile - Edge Cases', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('profile.no_projects')).not.toBeInTheDocument()
+    })
+  })
+})
+
+describe('Profile - PDF Import', () => {
+  beforeEach((): void => {
+    vi.mocked(extractProfileFromPdf).mockReset()
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
+          }
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return {
+            provider: 'openai',
+            apiKeys: { openai: 'sk-test-key' },
+            model: 'gpt-5.2',
+            baseUrl: '',
+            workspacePath: ''
+          }
+        }
+        if (channel === 'profile:extractPdfText') {
+          return { success: true, text: 'John Doe resume text', filename: 'resume.pdf' }
+        }
+        return undefined
+      }
+    )
+  })
+
+  it('shows Import PDF button', async (): Promise<void> => {
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('profile.import_pdf')).toBeInTheDocument()
+  })
+
+  it('shows error when no AI provider configured', async (): Promise<void> => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
+          }
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { provider: 'openai', apiKeys: {}, model: '', baseUrl: '', workspacePath: '' }
+        }
+        return undefined
+      }
+    )
+
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.import_pdf'))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('profile.import_no_ai')
+    })
+
+    expect(window.electron.ipcRenderer.invoke).not.toHaveBeenCalledWith('profile:extractPdfText')
+  })
+
+  it('does nothing when dialog is canceled', async (): Promise<void> => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
+          }
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return {
+            provider: 'openai',
+            apiKeys: { openai: 'sk-test-key' },
+            model: 'gpt-5.2',
+            baseUrl: '',
+            workspacePath: ''
+          }
+        }
+        if (channel === 'profile:extractPdfText') {
+          return null
+        }
+        return undefined
+      }
+    )
+
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.import_pdf'))
+
+    await waitFor(() => {
+      expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith('profile:extractPdfText')
+    })
+
+    expect(toast.success).not.toHaveBeenCalledWith('profile.import_success')
+    expect(toast.error).not.toHaveBeenCalledWith('profile.import_error')
+  })
+
+  it('shows error when PDF extraction fails', async (): Promise<void> => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: []
+          }
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return {
+            provider: 'openai',
+            apiKeys: { openai: 'sk-test-key' },
+            model: 'gpt-5.2',
+            baseUrl: '',
+            workspacePath: ''
+          }
+        }
+        if (channel === 'profile:extractPdfText') {
+          return { success: false, error: 'corrupt file' }
+        }
+        return undefined
+      }
+    )
+
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.import_pdf'))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('profile.import_error'))
+    })
+  })
+
+  it('successfully imports PDF and populates fields', async (): Promise<void> => {
+    vi.mocked(extractProfileFromPdf).mockResolvedValue({
+      personalInfo: {
+        name: 'Jane Smith',
+        email: 'jane@test.com',
+        phone: '555-1234',
+        summary: 'Senior dev'
+      },
+      workExperience: [
+        { company: 'Acme Corp', role: 'Engineer', date: '2020-2024', description: 'Built stuff' }
+      ],
+      projects: [{ name: 'Cool Project', techStack: 'React, Node', description: 'A cool project' }]
+    })
+
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.import_pdf'))
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Jane Smith')).toBeInTheDocument()
+    })
+
+    expect(screen.getByDisplayValue('jane@test.com')).toBeInTheDocument()
+    expect(toast.success).toHaveBeenCalledWith('profile.import_success')
+  })
+
+  it('shows error when extractProfileFromPdf throws', async (): Promise<void> => {
+    vi.mocked(extractProfileFromPdf).mockRejectedValue(new Error('AI parsing failed'))
+
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.import_pdf'))
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('profile.import_error'))
     })
   })
 })

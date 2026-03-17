@@ -189,6 +189,7 @@ import {
   handleDialogOpenDirectory,
   handleGetDefaultWorkspacePath,
   handleGetVersion,
+  handleProfileExtractPdfText,
   handleProfileLoad,
   handleProfileSave,
   handleSettingsLoad,
@@ -305,6 +306,8 @@ app
     ipcMain.handle('profile:save', (_, data, workspacePath?: string) =>
       handleProfileSave(data, workspacePath)
     )
+
+    ipcMain.handle('profile:extractPdfText', () => handleProfileExtractPdfText({ dialog }))
 
     // Settings Management IPC
     ipcMain.handle('settings:load', () => handleSettingsLoad())

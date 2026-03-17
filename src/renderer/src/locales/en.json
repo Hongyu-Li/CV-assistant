@@ -104,7 +104,12 @@
     "no_projects": "No projects added yet.",
     "load_error": "Failed to load profile",
     "save_error": "Failed to save profile: ",
-    "save_success": "Profile saved successfully"
+    "save_success": "Profile saved successfully",
+    "import_pdf": "Import PDF",
+    "importing": "Importing...",
+    "import_success": "Profile imported from PDF successfully",
+    "import_error": "Failed to import PDF: ",
+    "import_no_ai": "Please configure an AI provider in Settings before importing a PDF"
   },
   "common": {
     "delete": "Delete",

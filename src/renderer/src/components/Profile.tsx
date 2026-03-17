@@ -6,6 +6,8 @@ import { MarkdownEditor } from './MarkdownEditor'
 import { Button } from './ui/button'
 import { toast } from 'sonner'
 import { useSettings } from '../context/SettingsContext'
+import { extractProfileFromPdf } from '../lib/provider'
+import { PROVIDER_CONFIGS } from '../lib/provider'
 
 interface WorkExperience {
   id: string
@@ -47,6 +49,7 @@ const initialProfile: ProfileData = {
 export function Profile(): React.JSX.Element {
   const [profile, setProfile] = useState<ProfileData>(initialProfile)
   const [loading, setLoading] = useState(true)
+  const [importing, setImporting] = useState(false)
   const { t } = useTranslation()
   const { settings } = useSettings()
 
@@ -145,6 +148,52 @@ export function Profile(): React.JSX.Element {
     }))
   }
 
+  const handleImportPdf = async (): Promise<void> => {
+    const apiKey = settings.apiKeys?.[settings.provider] || ''
+    if (!settings.provider || !apiKey) {
+      toast.error(t('profile.import_no_ai'))
+      return
+    }
+
+    setImporting(true)
+    try {
+      const pdfResult = await window.electron.ipcRenderer.invoke('profile:extractPdfText')
+      if (pdfResult === null) return
+      if (!pdfResult.success) {
+        toast.error(t('profile.import_error') + pdfResult.error)
+        return
+      }
+
+      const config = PROVIDER_CONFIGS[settings.provider]
+      const extracted = await extractProfileFromPdf({
+        pdfText: pdfResult.text,
+        provider: settings.provider,
+        apiKey,
+        model: settings.model || config.defaultModel,
+        baseUrl: settings.baseUrl || ''
+      })
+
+      setProfile({
+        personalInfo: extracted.personalInfo,
+        workExperience: extracted.workExperience.map((exp) => ({
+          ...exp,
+          id: crypto.randomUUID()
+        })),
+        projects: extracted.projects.map((proj) => ({
+          ...proj,
+          id: crypto.randomUUID()
+        }))
+      })
+
+      toast.success(t('profile.import_success'))
+    } catch (error) {
+      console.error('Failed to import PDF:', error)
+      toast.error(t('profile.import_error') + (error as Error).message)
+    } finally {
+      setImporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
@@ -163,7 +212,12 @@ export function Profile(): React.JSX.Element {
     <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h2>
-        <Button onClick={handleSave}>{t('profile.save_changes')}</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleImportPdf} disabled={importing}>
+            {importing ? t('profile.importing') : t('profile.import_pdf')}
+          </Button>
+          <Button onClick={handleSave}>{t('profile.save_changes')}</Button>
+        </div>
       </div>
 
       {/* Personal Info */}

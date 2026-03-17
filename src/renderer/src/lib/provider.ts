@@ -158,3 +158,140 @@ Generate the CV now.${options.language ? ` Write the CV entirely in ${languageNa
 
   return result.content as string
 }
+
+export interface ExtractProfileFromPdfOptions {
+  pdfText: string
+  provider: AIProvider
+  apiKey: string
+  model: string
+  baseUrl: string
+}
+
+export interface ExtractedProfileData {
+  personalInfo: {
+    name: string
+    email: string
+    phone: string
+    summary: string
+  }
+  workExperience: Array<{
+    company: string
+    role: string
+    date: string
+    description: string
+  }>
+  projects: Array<{
+    name: string
+    techStack: string
+    description: string
+  }>
+}
+
+function parseJsonFromAiResponse(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    // AI responses often wrap JSON in markdown code blocks — extract the inner JSON
+    const codeBlockMatch = /```(?:json)?\s*\n?([\s\S]*?)\n?```/.exec(text)
+    if (codeBlockMatch?.[1]) {
+      return JSON.parse(codeBlockMatch[1].trim())
+    }
+    const jsonMatch = /\{[\s\S]*\}/.exec(text)
+    if (jsonMatch?.[0]) {
+      return JSON.parse(jsonMatch[0])
+    }
+    throw new Error('No valid JSON found in AI response')
+  }
+}
+
+export async function extractProfileFromPdf(
+  options: ExtractProfileFromPdfOptions
+): Promise<ExtractedProfileData> {
+  const config = PROVIDER_CONFIGS[options.provider]
+  const baseUrl = options.baseUrl || config.defaultBaseUrl
+  const model = options.model || config.defaultModel
+
+  const systemPrompt = `You are a professional resume parser. Extract structured data from resume text.
+Return ONLY a valid JSON object with no markdown formatting, no code blocks, no extra text.
+The JSON must have this exact structure:
+{
+  "personalInfo": {
+    "name": "",
+    "email": "",
+    "phone": "",
+    "summary": ""
+  },
+  "workExperience": [
+    {
+      "company": "",
+      "role": "",
+      "date": "",
+      "description": ""
+    }
+  ],
+  "projects": [
+    {
+      "name": "",
+      "techStack": "",
+      "description": ""
+    }
+  ]
+}
+Rules:
+- Use empty strings for missing fields, empty arrays for missing sections.
+- "description" fields should be in Markdown format with bullet points for key achievements.
+- "date" should be formatted as a human-readable range like "Jan 2020 - Present".
+- "summary" should be a concise professional summary derived from the resume content.
+- "techStack" should be a comma-separated list of technologies.
+- Do NOT generate any "id" fields.
+- Preserve the original language of the resume content.`
+
+  const userPrompt = `Extract structured profile data from this resume text:\n\n${options.pdfText}`
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ]
+
+  const result = await window.electron.ipcRenderer.invoke('ai:chat', {
+    provider: options.provider,
+    apiKey: options.apiKey,
+    model,
+    messages,
+    baseUrl
+  })
+
+  if (!result.success) {
+    throw new Error(result.error)
+  }
+
+  const parsed = parseJsonFromAiResponse(result.content as string) as ExtractedProfileData
+
+  if (!parsed.personalInfo || typeof parsed.personalInfo !== 'object') {
+    throw new Error('Invalid response: missing personalInfo')
+  }
+
+  return {
+    personalInfo: {
+      name: parsed.personalInfo.name ?? '',
+      email: parsed.personalInfo.email ?? '',
+      phone: parsed.personalInfo.phone ?? '',
+      summary: parsed.personalInfo.summary ?? ''
+    },
+    workExperience: Array.isArray(parsed.workExperience)
+      ? parsed.workExperience.map((exp) => ({
+          company: exp.company ?? '',
+          role: exp.role ?? '',
+          date: exp.date ?? '',
+          description: exp.description ?? ''
+        }))
+      : [],
+    projects: Array.isArray(parsed.projects)
+      ? parsed.projects.map((proj) => ({
+          name: proj.name ?? '',
+          techStack: proj.techStack ?? '',
+          description: proj.description ?? ''
+        }))
+      : []
+  }
+}

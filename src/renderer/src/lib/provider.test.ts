@@ -1,5 +1,12 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import { PROVIDER_CONFIGS, generateCV, type AIProvider, type GenerateCVOptions } from './provider'
+import {
+  PROVIDER_CONFIGS,
+  generateCV,
+  extractProfileFromPdf,
+  type AIProvider,
+  type GenerateCVOptions,
+  type ExtractProfileFromPdfOptions
+} from './provider'
 
 // Mock window.electron for IPC calls
 const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
@@ -261,6 +268,193 @@ describe('generateCV', () => {
         model: 'llama3.2',
         baseUrl: 'http://localhost:11434/v1'
       })
+    )
+  })
+})
+
+describe('extractProfileFromPdf', () => {
+  const validProfileResponse = {
+    personalInfo: {
+      name: 'John Doe',
+      email: 'john@example.com',
+      phone: '+1234567890',
+      summary: 'Experienced senior engineer'
+    },
+    workExperience: [
+      {
+        company: 'Acme Corp',
+        role: 'Senior Engineer',
+        date: 'Jan 2020 - Present',
+        description: '- Led platform migration\n- Mentored junior engineers'
+      }
+    ],
+    projects: [
+      {
+        name: 'My Project',
+        techStack: 'TypeScript, React',
+        description: '- Built core features'
+      }
+    ]
+  }
+
+  const baseOptions: ExtractProfileFromPdfOptions = {
+    pdfText: 'John Doe\njohn@example.com\n+1234567890\nSenior Engineer...',
+    provider: 'openai' as AIProvider,
+    apiKey: 'sk-test-123',
+    model: 'gpt-5.2',
+    baseUrl: 'https://api.openai.com/v1'
+  }
+
+  beforeEach((): void => {
+    mockInvoke.mockReset()
+    mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(validProfileResponse) })
+  })
+
+  it('calls IPC with correct arguments', async (): Promise<void> => {
+    await extractProfileFromPdf(baseOptions)
+
+    expect(mockInvoke).toHaveBeenCalledTimes(1)
+    expect(mockInvoke).toHaveBeenCalledWith('ai:chat', {
+      provider: 'openai',
+      apiKey: 'sk-test-123',
+      model: 'gpt-5.2',
+      messages: expect.arrayContaining([
+        expect.objectContaining({ role: 'system' }),
+        expect.objectContaining({ role: 'user' })
+      ]),
+      baseUrl: 'https://api.openai.com/v1'
+    })
+  })
+
+  it('successfully parses plain JSON response', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(validProfileResponse) })
+
+    const result = await extractProfileFromPdf(baseOptions)
+
+    expect(result.personalInfo.name).toBe('John Doe')
+    expect(result.personalInfo.email).toBe('john@example.com')
+    expect(result.workExperience).toHaveLength(1)
+    expect(result.workExperience[0].company).toBe('Acme Corp')
+    expect(result.projects).toHaveLength(1)
+    expect(result.projects[0].name).toBe('My Project')
+  })
+
+  it('successfully parses JSON wrapped in markdown code block', async (): Promise<void> => {
+    const wrapped = '```json\n' + JSON.stringify(validProfileResponse) + '\n```'
+    mockInvoke.mockResolvedValue({ success: true, content: wrapped })
+
+    const result = await extractProfileFromPdf(baseOptions)
+
+    expect(result.personalInfo.name).toBe('John Doe')
+    expect(result.personalInfo.email).toBe('john@example.com')
+  })
+
+  it('successfully parses JSON embedded in extra text', async (): Promise<void> => {
+    const withExtraText =
+      'Here is the extracted data:\n' + JSON.stringify(validProfileResponse) + '\nEnd of data.'
+    mockInvoke.mockResolvedValue({ success: true, content: withExtraText })
+
+    const result = await extractProfileFromPdf(baseOptions)
+
+    expect(result.personalInfo.name).toBe('John Doe')
+  })
+
+  it('uses fallback baseUrl from config when not provided', async (): Promise<void> => {
+    const options: ExtractProfileFromPdfOptions = {
+      ...baseOptions,
+      baseUrl: ''
+    }
+
+    await extractProfileFromPdf(options)
+
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'ai:chat',
+      expect.objectContaining({
+        baseUrl: 'https://api.openai.com/v1'
+      })
+    )
+  })
+
+  it('uses fallback model from config when not provided', async (): Promise<void> => {
+    const options: ExtractProfileFromPdfOptions = {
+      ...baseOptions,
+      model: ''
+    }
+
+    await extractProfileFromPdf(options)
+
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'ai:chat',
+      expect.objectContaining({
+        model: 'gpt-5.2'
+      })
+    )
+  })
+
+  it('normalizes missing fields to empty strings', async (): Promise<void> => {
+    const sparseResponse = {
+      personalInfo: {},
+      workExperience: [{ company: 'Corp' }],
+      projects: [{ name: 'Proj' }]
+    }
+    mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(sparseResponse) })
+
+    const result = await extractProfileFromPdf(baseOptions)
+
+    expect(result.personalInfo.name).toBe('')
+    expect(result.personalInfo.email).toBe('')
+    expect(result.personalInfo.phone).toBe('')
+    expect(result.personalInfo.summary).toBe('')
+    expect(result.workExperience[0].role).toBe('')
+    expect(result.workExperience[0].date).toBe('')
+    expect(result.workExperience[0].description).toBe('')
+    expect(result.projects[0].techStack).toBe('')
+    expect(result.projects[0].description).toBe('')
+  })
+
+  it('returns empty arrays when workExperience and projects are missing from response', async (): Promise<void> => {
+    const minimalResponse = {
+      personalInfo: {
+        name: 'Jane',
+        email: 'jane@example.com',
+        phone: '',
+        summary: ''
+      }
+    }
+    mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(minimalResponse) })
+
+    const result = await extractProfileFromPdf(baseOptions)
+
+    expect(result.workExperience).toEqual([])
+    expect(result.projects).toEqual([])
+  })
+
+  it('throws when IPC returns { success: false, error }', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: false, error: 'API key invalid' })
+
+    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow('API key invalid')
+  })
+
+  it('throws when IPC rejects with a network error', async (): Promise<void> => {
+    mockInvoke.mockRejectedValue(new Error('Network connection refused'))
+
+    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow('Network connection refused')
+  })
+
+  it('throws when response is not valid JSON at all', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: true, content: 'hello world' })
+
+    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow(
+      'No valid JSON found in AI response'
+    )
+  })
+
+  it('throws when response JSON is missing personalInfo', async (): Promise<void> => {
+    const noPersonalInfo = { workExperience: [], projects: [] }
+    mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(noPersonalInfo) })
+
+    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow(
+      'Invalid response: missing personalInfo'
     )
   })
 })
