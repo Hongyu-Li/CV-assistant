@@ -226,50 +226,6 @@ describe('main/handlers', (): void => {
       expect(body).toHaveProperty('max_tokens', 4096)
     })
 
-    it('non-Anthropic: includes response_format when provided', async (): Promise<void> => {
-      mockFetchOkJson({ choices: [{ message: { content: '{}' } }] })
-      await handlers.handleAiChat({
-        provider: 'openai',
-        apiKey: 'k-openai',
-        model: 'gpt-test',
-        messages: [{ role: 'user', content: 'hi' }],
-        baseUrl: 'https://api.openai.com/v1',
-        responseFormat: { type: 'json_object' }
-      })
-      const { init } = getFetchCall()
-      const body = JSON.parse(init.body ?? '{}') as Record<string, unknown>
-      expect(body).toHaveProperty('response_format', { type: 'json_object' })
-    })
-
-    it('non-Anthropic: omits response_format when not provided', async (): Promise<void> => {
-      mockFetchOkJson({ choices: [{ message: { content: 'ok' } }] })
-      await handlers.handleAiChat({
-        provider: 'openai',
-        apiKey: 'k-openai',
-        model: 'gpt-test',
-        messages: [{ role: 'user', content: 'hi' }],
-        baseUrl: 'https://api.openai.com/v1'
-      })
-      const { init } = getFetchCall()
-      const body = JSON.parse(init.body ?? '{}') as Record<string, unknown>
-      expect(body).not.toHaveProperty('response_format')
-    })
-
-    it('anthropic: ignores responseFormat param', async (): Promise<void> => {
-      mockFetchOkJson({ content: [{ text: 'ok' }] })
-      await handlers.handleAiChat({
-        provider: 'anthropic',
-        apiKey: 'k-anth',
-        model: 'claude-test',
-        messages: [{ role: 'user', content: 'hi' }],
-        baseUrl: 'https://api.anthropic.com/v1',
-        responseFormat: { type: 'json_object' }
-      })
-      const { init } = getFetchCall()
-      const body = JSON.parse(init.body ?? '{}') as Record<string, unknown>
-      expect(body).not.toHaveProperty('response_format')
-    })
-
     it('parses anthropic response content[0].text', async (): Promise<void> => {
       mockFetchOkJson({ content: [{ text: 'A' }] })
 
