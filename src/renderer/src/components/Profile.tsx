@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Input } from './ui/input'
 import { MarkdownEditor } from './MarkdownEditor'
 import { Button } from './ui/button'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSettings } from '../context/SettingsContext'
 import { extractProfileFromPdf } from '../lib/provider'
@@ -252,6 +253,7 @@ export function Profile(): React.JSX.Element {
         <h2 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleImportPdf} disabled={importing}>
+            {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {importing ? t('profile.importing') : t('profile.import_pdf')}
           </Button>
           <Button onClick={handleSave}>{t('profile.save_changes')}</Button>
