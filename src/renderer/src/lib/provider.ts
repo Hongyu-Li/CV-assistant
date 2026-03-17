@@ -1,4 +1,5 @@
 import { jsonrepair } from 'jsonrepair'
+import { z } from 'zod/v4'
 
 export type AIProvider =
   | 'openai'
@@ -189,6 +190,45 @@ export interface ExtractedProfileData {
   }>
 }
 
+const coerceString = z
+  .union([z.string(), z.number(), z.boolean(), z.null()])
+  .transform((v): string => (v === null ? '' : String(v)))
+const optionalString = coerceString.optional().transform((v): string => v ?? '')
+
+const ExtractedProfileDataSchema = z
+  .object({
+    personalInfo: z.object({
+      name: optionalString,
+      email: optionalString,
+      phone: optionalString,
+      summary: optionalString
+    }),
+    workExperience: z
+      .array(
+        z.object({
+          company: optionalString,
+          role: optionalString,
+          date: optionalString,
+          description: optionalString
+        })
+      )
+      .optional()
+      .transform(
+        (v): Array<{ company: string; role: string; date: string; description: string }> => v ?? []
+      ),
+    projects: z
+      .array(
+        z.object({
+          name: optionalString,
+          techStack: optionalString,
+          description: optionalString
+        })
+      )
+      .optional()
+      .transform((v): Array<{ name: string; techStack: string; description: string }> => v ?? [])
+  })
+  .strip()
+
 export function parseJsonFromAiResponse(text: string): unknown {
   // Strategy 1: Direct parse
   try {
@@ -302,33 +342,10 @@ Rules:
     throw new Error(result.error)
   }
 
-  const parsed = parseJsonFromAiResponse(result.content as string) as ExtractedProfileData
-
-  if (!parsed.personalInfo || typeof parsed.personalInfo !== 'object') {
-    throw new Error('Invalid response: missing personalInfo')
+  const raw = parseJsonFromAiResponse(result.content as string)
+  const validated = ExtractedProfileDataSchema.safeParse(raw)
+  if (!validated.success) {
+    throw new Error(`Invalid extracted data: ${validated.error.message}`)
   }
-
-  return {
-    personalInfo: {
-      name: parsed.personalInfo.name ?? '',
-      email: parsed.personalInfo.email ?? '',
-      phone: parsed.personalInfo.phone ?? '',
-      summary: parsed.personalInfo.summary ?? ''
-    },
-    workExperience: Array.isArray(parsed.workExperience)
-      ? parsed.workExperience.map((exp) => ({
-          company: exp.company ?? '',
-          role: exp.role ?? '',
-          date: exp.date ?? '',
-          description: exp.description ?? ''
-        }))
-      : [],
-    projects: Array.isArray(parsed.projects)
-      ? parsed.projects.map((proj) => ({
-          name: proj.name ?? '',
-          techStack: proj.techStack ?? '',
-          description: proj.description ?? ''
-        }))
-      : []
-  }
+  return validated.data
 }

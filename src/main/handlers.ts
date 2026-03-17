@@ -32,10 +32,19 @@ export interface ProfileProjectSaveData {
   description: string
 }
 
+export interface ProfileEducationSaveData {
+  id: string
+  school: string
+  degree: string
+  date: string
+  description: string
+}
+
 export interface ProfileSaveData {
   personalInfo?: ProfilePersonalInfoSaveData
   workExperience?: ProfileWorkExperienceSaveData[]
   projects?: ProfileProjectSaveData[]
+  education?: ProfileEducationSaveData[]
 }
 
 export interface ProfileLoadPersonalInfo {
@@ -60,10 +69,19 @@ export interface ProfileLoadProject {
   description: string
 }
 
+export interface ProfileLoadEducation {
+  id: string
+  school: string
+  degree: string
+  date: string
+  description: string
+}
+
 export interface ProfileLoadResult {
   personalInfo: ProfileLoadPersonalInfo
   workExperience: ProfileLoadWorkExperience[]
   projects: ProfileLoadProject[]
+  education: ProfileLoadEducation[]
 }
 
 export interface CvSaveData {

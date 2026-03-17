@@ -454,9 +454,66 @@ describe('extractProfileFromPdf', () => {
     const noPersonalInfo = { workExperience: [], projects: [] }
     mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(noPersonalInfo) })
 
-    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow(
-      'Invalid response: missing personalInfo'
-    )
+    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow('Invalid extracted data')
+  })
+
+  it('coerces numeric phone to string via Zod', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: JSON.stringify({
+        personalInfo: { name: 'Test', email: 'a@b.com', phone: 12345, summary: 'Dev' },
+        workExperience: [],
+        projects: []
+      })
+    })
+
+    const result = await extractProfileFromPdf(baseOptions)
+    expect(result.personalInfo.phone).toBe('12345')
+  })
+
+  it('coerces null phone to empty string', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: JSON.stringify({
+        personalInfo: { name: 'Test', email: 'a@b.com', phone: null, summary: 'Dev' },
+        workExperience: [],
+        projects: []
+      })
+    })
+
+    const result = await extractProfileFromPdf(baseOptions)
+    expect(result.personalInfo.phone).toBe('')
+  })
+
+  it('rejects completely invalid structure (array)', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: JSON.stringify([1, 2, 3])
+    })
+
+    await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow('Invalid extracted data')
+  })
+
+  it('strips unknown fields from extracted data', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: JSON.stringify({
+        personalInfo: {
+          name: 'Test',
+          email: '',
+          phone: '',
+          summary: '',
+          unknownField: 'should be removed'
+        },
+        workExperience: [],
+        projects: [],
+        extraTopLevel: 'should be removed'
+      })
+    })
+
+    const result = await extractProfileFromPdf(baseOptions)
+    expect(result.personalInfo).toEqual({ name: 'Test', email: '', phone: '', summary: '' })
+    expect(result).not.toHaveProperty('extraTopLevel')
   })
 })
 
