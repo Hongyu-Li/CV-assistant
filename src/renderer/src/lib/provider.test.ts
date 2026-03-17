@@ -295,7 +295,8 @@ describe('extractProfileFromPdf', () => {
         techStack: 'TypeScript, React',
         description: '- Built core features'
       }
-    ]
+    ],
+    education: [{ school: 'MIT', degree: 'CS', date: '2016-2020', description: '- GPA 3.9' }]
   }
 
   const baseOptions: ExtractProfileFromPdfOptions = {
@@ -338,6 +339,8 @@ describe('extractProfileFromPdf', () => {
     expect(result.workExperience[0].company).toBe('Acme Corp')
     expect(result.projects).toHaveLength(1)
     expect(result.projects[0].name).toBe('My Project')
+    expect(result.education).toHaveLength(1)
+    expect(result.education[0].school).toBe('MIT')
   })
 
   it('successfully parses JSON wrapped in markdown code block', async (): Promise<void> => {
@@ -396,7 +399,8 @@ describe('extractProfileFromPdf', () => {
     const sparseResponse = {
       personalInfo: {},
       workExperience: [{ company: 'Corp' }],
-      projects: [{ name: 'Proj' }]
+      projects: [{ name: 'Proj' }],
+      education: [{ school: 'Uni' }]
     }
     mockInvoke.mockResolvedValue({ success: true, content: JSON.stringify(sparseResponse) })
 
@@ -411,6 +415,9 @@ describe('extractProfileFromPdf', () => {
     expect(result.workExperience[0].description).toBe('')
     expect(result.projects[0].techStack).toBe('')
     expect(result.projects[0].description).toBe('')
+    expect(result.education[0].degree).toBe('')
+    expect(result.education[0].date).toBe('')
+    expect(result.education[0].description).toBe('')
   })
 
   it('returns empty arrays when workExperience and projects are missing from response', async (): Promise<void> => {
@@ -428,6 +435,7 @@ describe('extractProfileFromPdf', () => {
 
     expect(result.workExperience).toEqual([])
     expect(result.projects).toEqual([])
+    expect(result.education).toEqual([])
   })
 
   it('throws when IPC returns { success: false, error }', async (): Promise<void> => {
@@ -463,7 +471,8 @@ describe('extractProfileFromPdf', () => {
       content: JSON.stringify({
         personalInfo: { name: 'Test', email: 'a@b.com', phone: 12345, summary: 'Dev' },
         workExperience: [],
-        projects: []
+        projects: [],
+        education: []
       })
     })
 
@@ -477,7 +486,8 @@ describe('extractProfileFromPdf', () => {
       content: JSON.stringify({
         personalInfo: { name: 'Test', email: 'a@b.com', phone: null, summary: 'Dev' },
         workExperience: [],
-        projects: []
+        projects: [],
+        education: []
       })
     })
 
@@ -507,6 +517,7 @@ describe('extractProfileFromPdf', () => {
         },
         workExperience: [],
         projects: [],
+        education: [],
         extraTopLevel: 'should be removed'
       })
     })

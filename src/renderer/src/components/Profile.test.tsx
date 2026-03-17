@@ -55,7 +55,8 @@ describe('Profile Component', () => {
               summary: 'A test summary'
             },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -178,7 +179,8 @@ describe('Profile - Save Error Paths', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -198,7 +200,8 @@ describe('Profile - Save Error Paths', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -230,7 +233,8 @@ describe('Profile - Save Error Paths', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -335,7 +339,8 @@ describe('Profile - Work Experience CRUD', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -466,7 +471,8 @@ describe('Profile - Project CRUD', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -566,6 +572,134 @@ describe('Profile - Project CRUD', () => {
   })
 })
 
+describe('Profile - Education CRUD', () => {
+  beforeEach((): void => {
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      async (channel: string) => {
+        if (channel === 'profile:load') {
+          return {
+            personalInfo: { name: '', email: '', phone: '', summary: '' },
+            workExperience: [],
+            projects: [],
+            education: []
+          }
+        }
+        if (channel === 'profile:save') {
+          return { success: true }
+        }
+        if (channel === 'settings:load') {
+          return { workspacePath: '' }
+        }
+        return undefined
+      }
+    )
+  })
+
+  it('can add two education entries and verify both render', async (): Promise<void> => {
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    const addBtn = screen.getByText('profile.add_education')
+    fireEvent.click(addBtn)
+    fireEvent.click(addBtn)
+
+    await waitFor(() => {
+      const schoolInputs = screen.getAllByPlaceholderText('profile.school_ph')
+      expect(schoolInputs).toHaveLength(2)
+    })
+
+    expect(screen.getAllByPlaceholderText('profile.degree_ph')).toHaveLength(2)
+  })
+
+  it('removes specific education (not the first one)', async (): Promise<void> => {
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    const addBtn = screen.getByText('profile.add_education')
+    fireEvent.click(addBtn)
+    fireEvent.click(addBtn)
+
+    await waitFor(() => {
+      expect(screen.getAllByPlaceholderText('profile.school_ph')).toHaveLength(2)
+    })
+
+    const schoolInputs = screen.getAllByPlaceholderText('profile.school_ph')
+    fireEvent.change(schoolInputs[0], { target: { value: 'School A' } })
+    fireEvent.change(schoolInputs[1], { target: { value: 'School B' } })
+
+    // Remove the second one
+    const removeBtns = screen.getAllByText('profile.remove')
+    fireEvent.click(removeBtns[1])
+
+    await waitFor(() => {
+      expect(screen.getAllByPlaceholderText('profile.school_ph')).toHaveLength(1)
+    })
+
+    expect(screen.getByDisplayValue('School A')).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('School B')).not.toBeInTheDocument()
+  })
+
+  it('updates education degree field', async (): Promise<void> => {
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.add_education'))
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('profile.degree_ph')).toBeInTheDocument()
+    })
+
+    const degreeInput = screen.getByPlaceholderText('profile.degree_ph')
+    fireEvent.change(degreeInput, { target: { value: 'Bachelor of CS' } })
+
+    expect(screen.getByDisplayValue('Bachelor of CS')).toBeInTheDocument()
+  })
+
+  it('updates education date field', async (): Promise<void> => {
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.add_education'))
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText('profile.date_range_ph')).toBeInTheDocument()
+    })
+
+    const dateInput = screen.getByPlaceholderText('profile.date_range_ph')
+    fireEvent.change(dateInput, { target: { value: '2016 - 2020' } })
+
+    expect(screen.getByDisplayValue('2016 - 2020')).toBeInTheDocument()
+  })
+
+  it('updates education description via MarkdownEditor', async (): Promise<void> => {
+    renderWithProvider(<Profile />)
+    await waitFor(() => {
+      expect(screen.getByText('profile.title')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('profile.add_education'))
+
+    await waitFor(() => {
+      expect(screen.getAllByTestId('markdown-editor').length).toBeGreaterThanOrEqual(2)
+    })
+
+    // Summary editor is index 0, education description is index 1
+    const editors = screen.getAllByTestId('markdown-editor')
+    const eduDescEditor = editors[1]
+    fireEvent.change(eduDescEditor, { target: { value: 'Studied CS' } })
+
+    expect(eduDescEditor).toHaveValue('Studied CS')
+  })
+})
+
 describe('Profile - Edge Cases', () => {
   beforeEach((): void => {
     ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
@@ -574,7 +708,8 @@ describe('Profile - Edge Cases', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -671,7 +806,8 @@ describe('Profile - PDF Import', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -710,7 +846,8 @@ describe('Profile - PDF Import', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -744,7 +881,8 @@ describe('Profile - PDF Import', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -788,7 +926,8 @@ describe('Profile - PDF Import', () => {
           return {
             personalInfo: { name: '', email: '', phone: '', summary: '' },
             workExperience: [],
-            projects: []
+            projects: [],
+            education: []
           }
         }
         if (channel === 'profile:save') {
@@ -833,7 +972,15 @@ describe('Profile - PDF Import', () => {
       workExperience: [
         { company: 'Acme Corp', role: 'Engineer', date: '2020-2024', description: 'Built stuff' }
       ],
-      projects: [{ name: 'Cool Project', techStack: 'React, Node', description: 'A cool project' }]
+      projects: [{ name: 'Cool Project', techStack: 'React, Node', description: 'A cool project' }],
+      education: [
+        {
+          school: 'MIT',
+          degree: 'BS Computer Science',
+          date: '2016-2020',
+          description: 'Studied CS'
+        }
+      ]
     })
 
     renderWithProvider(<Profile />)
@@ -848,6 +995,7 @@ describe('Profile - PDF Import', () => {
     })
 
     expect(screen.getByDisplayValue('jane@test.com')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('MIT')).toBeInTheDocument()
     expect(toast.success).toHaveBeenCalledWith('profile.import_success')
   })
 

@@ -188,6 +188,12 @@ export interface ExtractedProfileData {
     techStack: string
     description: string
   }>
+  education: Array<{
+    school: string
+    degree: string
+    date: string
+    description: string
+  }>
 }
 
 const coerceString = z
@@ -225,7 +231,20 @@ const ExtractedProfileDataSchema = z
         })
       )
       .optional()
-      .transform((v): Array<{ name: string; techStack: string; description: string }> => v ?? [])
+      .transform((v): Array<{ name: string; techStack: string; description: string }> => v ?? []),
+    education: z
+      .array(
+        z.object({
+          school: optionalString,
+          degree: optionalString,
+          date: optionalString,
+          description: optionalString
+        })
+      )
+      .optional()
+      .transform(
+        (v): Array<{ school: string; degree: string; date: string; description: string }> => v ?? []
+      )
   })
   .strip()
 
@@ -312,6 +331,14 @@ The JSON must have this exact structure:
       "techStack": "",
       "description": ""
     }
+  ],
+  "education": [
+    {
+      "school": "",
+      "degree": "",
+      "date": "",
+      "description": ""
+    }
   ]
 }
 Rules:
@@ -320,6 +347,7 @@ Rules:
 - "date" should be formatted as a human-readable range like "Jan 2020 - Present".
 - "summary" should be a concise professional summary derived from the resume content.
 - "techStack" should be a comma-separated list of technologies.
+- "degree" should include degree type and major, e.g., "Bachelor of Science in Computer Science".
 - Do NOT generate any "id" fields.
 - Preserve the original language of the resume content.`
 

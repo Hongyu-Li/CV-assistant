@@ -626,6 +626,15 @@ describe('main/handlers', (): void => {
             techStack: 'TS',
             descriptionFile: 'project-p1.md'
           }
+        ],
+        education: [
+          {
+            id: 'e1',
+            school: 'MIT',
+            degree: 'CS',
+            date: '2020',
+            descriptionFile: 'education-e1.md'
+          }
         ]
       }
 
@@ -635,6 +644,7 @@ describe('main/handlers', (): void => {
           if (filename === 'profile/summary.md') return 'SUM'
           if (filename === 'profile/work-exp-1.md') return 'WORK'
           if (filename === 'profile/project-p1.md') return 'PROJ'
+          if (filename === 'profile/education-e1.md') return 'EDU'
           throw new Error('unexpected')
         }
       )
@@ -645,7 +655,8 @@ describe('main/handlers', (): void => {
         workExperience: [
           { id: '1', company: 'Co', role: 'Dev', date: '2020', description: 'WORK' }
         ],
-        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', description: 'PROJ' }]
+        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', description: 'PROJ' }],
+        education: [{ id: 'e1', school: 'MIT', degree: 'CS', date: '2020', description: 'EDU' }]
       })
       expect(vi.mocked(fs.readWorkspaceFile)).toHaveBeenCalledWith('profile/index.json', '/ws')
     })
@@ -658,7 +669,8 @@ describe('main/handlers', (): void => {
       expect(result).toEqual({
         personalInfo: { name: '', email: '', phone: '', summary: '' },
         workExperience: [],
-        projects: []
+        projects: [],
+        education: []
       })
     })
 
@@ -670,14 +682,15 @@ describe('main/handlers', (): void => {
   })
 
   describe('handleProfileSave', (): void => {
-    it('writes summary.md, work exp .md, project .md, and index.json', async (): Promise<void> => {
+    it('writes summary.md, work exp .md, project .md, education .md, and index.json', async (): Promise<void> => {
       vi.mocked(fs.writeWorkspaceFile).mockResolvedValue(undefined)
       const data: ProfileSaveData = {
         personalInfo: { name: 'A', email: 'B', phone: 'C', summary: 'SUM' },
         workExperience: [
           { id: '1', company: 'Co', role: 'Dev', date: '2020', description: 'WORK' }
         ],
-        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', description: 'PROJ' }]
+        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', description: 'PROJ' }],
+        education: [{ id: 'e1', school: 'MIT', degree: 'CS', date: '2020', description: 'EDU' }]
       }
 
       const result = await handlers.handleProfileSave(data, '/ws')
@@ -698,6 +711,11 @@ describe('main/handlers', (): void => {
         'PROJ',
         '/ws'
       )
+      expect(vi.mocked(fs.writeWorkspaceFile)).toHaveBeenCalledWith(
+        'profile/education-e1.md',
+        'EDU',
+        '/ws'
+      )
 
       const indexCall = vi
         .mocked(fs.writeWorkspaceFile)
@@ -710,6 +728,9 @@ describe('main/handlers', (): void => {
         phone: 'C',
         summaryFile: 'summary.md'
       })
+      expect(indexJson['education']).toEqual([
+        { id: 'e1', school: 'MIT', degree: 'CS', date: '2020', descriptionFile: 'education-e1.md' }
+      ])
     })
 
     it('returns {success:false} when write fails', async (): Promise<void> => {

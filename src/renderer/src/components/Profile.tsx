@@ -24,6 +24,14 @@ interface Project {
   description: string
 }
 
+interface Education {
+  id: string
+  school: string
+  degree: string
+  date: string
+  description: string
+}
+
 interface ProfileData {
   personalInfo: {
     name: string
@@ -33,6 +41,7 @@ interface ProfileData {
   }
   workExperience: WorkExperience[]
   projects: Project[]
+  education: Education[]
 }
 
 const initialProfile: ProfileData = {
@@ -43,7 +52,8 @@ const initialProfile: ProfileData = {
     summary: ''
   },
   workExperience: [],
-  projects: []
+  projects: [],
+  education: []
 }
 
 export function Profile(): React.JSX.Element {
@@ -148,6 +158,30 @@ export function Profile(): React.JSX.Element {
     }))
   }
 
+  const addEducation = (): void => {
+    setProfile((prev) => ({
+      ...prev,
+      education: [
+        ...prev.education,
+        { id: crypto.randomUUID(), school: '', degree: '', date: '', description: '' }
+      ]
+    }))
+  }
+
+  const updateEducation = (id: string, field: keyof Education, value: string): void => {
+    setProfile((prev) => ({
+      ...prev,
+      education: prev.education.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu))
+    }))
+  }
+
+  const removeEducation = (id: string): void => {
+    setProfile((prev) => ({
+      ...prev,
+      education: prev.education.filter((edu) => edu.id !== id)
+    }))
+  }
+
   const handleImportPdf = async (): Promise<void> => {
     const apiKey = settings.apiKeys?.[settings.provider] || ''
     if (!settings.provider || !apiKey) {
@@ -181,6 +215,10 @@ export function Profile(): React.JSX.Element {
         })),
         projects: extracted.projects.map((proj) => ({
           ...proj,
+          id: crypto.randomUUID()
+        })),
+        education: extracted.education.map((edu) => ({
+          ...edu,
           id: crypto.randomUUID()
         }))
       })
@@ -327,6 +365,73 @@ export function Profile(): React.JSX.Element {
           {profile.workExperience.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               {t('profile.no_work_experience')}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Education */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{t('profile.education')}</CardTitle>
+            <CardDescription>{t('profile.education_desc')}</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={addEducation}>
+            {t('profile.add_education')}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {profile.education.map((edu) => (
+            <div key={edu.id} className="grid gap-4 p-4 border rounded-lg relative bg-muted/20">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                onClick={() => removeEducation(edu.id)}
+              >
+                {t('profile.remove')}
+              </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('profile.school')}</label>
+                  <Input
+                    value={edu.school}
+                    onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
+                    placeholder={t('profile.school_ph')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('profile.degree')}</label>
+                  <Input
+                    value={edu.degree}
+                    onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
+                    placeholder={t('profile.degree_ph')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('profile.date_range')}</label>
+                  <Input
+                    value={edu.date}
+                    onChange={(e) => updateEducation(edu.id, 'date', e.target.value)}
+                    placeholder={t('profile.date_range_ph')}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('profile.description')}</label>
+                <MarkdownEditor
+                  value={edu.description}
+                  onChange={(val) => updateEducation(edu.id, 'description', val)}
+                  placeholder={t('profile.education_description_ph')}
+                  minHeight="80px"
+                />
+              </div>
+            </div>
+          ))}
+          {profile.education.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              {t('profile.no_education')}
             </div>
           )}
         </CardContent>

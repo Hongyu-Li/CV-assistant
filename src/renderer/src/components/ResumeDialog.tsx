@@ -117,6 +117,13 @@ export function ResumeDialog({
           if (exp.description) profileText += `  ${exp.description}\n`
         }
       }
+      if (profileData?.education?.length > 0) {
+        profileText += '\nEducation:\n'
+        for (const edu of profileData.education) {
+          profileText += `- ${edu.degree} at ${edu.school} (${edu.date})\n`
+          if (edu.description) profileText += `  ${edu.description}\n`
+        }
+      }
       if (profileData?.projects?.length > 0) {
         profileText += '\nProjects:\n'
         for (const proj of profileData.projects) {

@@ -138,6 +138,13 @@ export async function handleProfileLoad(
         descriptionFile?: string
       }>
       projects?: Array<{ id: string; name: string; techStack: string; descriptionFile?: string }>
+      education?: Array<{
+        id: string
+        school: string
+        degree: string
+        date: string
+        descriptionFile?: string
+      }>
     }
 
     let summary = ''
@@ -191,6 +198,26 @@ export async function handleProfileLoad(
       })
     )
 
+    const education = await Promise.all(
+      (index.education || []).map(async (edu): Promise<ProfileLoadEducation> => {
+        let description = ''
+        if (edu.descriptionFile) {
+          try {
+            description = await readWorkspaceFile(`profile/${edu.descriptionFile}`, workspacePath)
+          } catch {
+            /* file may not exist */
+          }
+        }
+        return {
+          id: edu.id,
+          school: edu.school,
+          degree: edu.degree,
+          date: edu.date,
+          description
+        }
+      })
+    )
+
     const result: ProfileLoadResult = {
       personalInfo: {
         name: index.personalInfo?.name || '',
@@ -199,7 +226,8 @@ export async function handleProfileLoad(
         summary
       },
       workExperience,
-      projects
+      projects,
+      education
     }
 
     return result
@@ -269,6 +297,34 @@ export async function handleProfileSave(
       )
     )
 
+    const education = await Promise.all(
+      (data.education || []).map(
+        async (edu: {
+          id: string
+          school: string
+          degree: string
+          date: string
+          description: string
+        }): Promise<{
+          id: string
+          school: string
+          degree: string
+          date: string
+          descriptionFile: string
+        }> => {
+          const descFile = `education-${edu.id}.md`
+          await writeWorkspaceFile(`profile/${descFile}`, edu.description || '', workspacePath)
+          return {
+            id: edu.id,
+            school: edu.school,
+            degree: edu.degree,
+            date: edu.date,
+            descriptionFile: descFile
+          }
+        }
+      )
+    )
+
     const index = {
       personalInfo: {
         name: data.personalInfo?.name || '',
@@ -277,7 +333,8 @@ export async function handleProfileSave(
         summaryFile
       },
       workExperience,
-      projects
+      projects,
+      education
     }
     await writeWorkspaceFile('profile/index.json', JSON.stringify(index, null, 2), workspacePath)
 
