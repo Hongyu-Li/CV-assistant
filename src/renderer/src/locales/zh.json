@@ -110,6 +110,7 @@
     "school_ph": "大学或院校名称",
     "degree": "学位",
     "degree_ph": "例如：计算机科学学士",
+    "education_description_ph": "描述您的学业、成就或相关课程...",
     "load_error": "加载个人资料失败",
     "save_error": "保存个人资料失败：",
     "save_success": "个人资料保存成功",

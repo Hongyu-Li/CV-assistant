@@ -110,6 +110,7 @@
     "school_ph": "University or institution name",
     "degree": "Degree",
     "degree_ph": "e.g. B.S. Computer Science",
+    "education_description_ph": "Describe your studies, achievements, or relevant coursework...",
     "load_error": "Failed to load profile",
     "save_error": "Failed to save profile: ",
     "save_success": "Profile saved successfully",
