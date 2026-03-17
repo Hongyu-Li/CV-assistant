@@ -303,73 +303,6 @@ export function Profile(): React.JSX.Element {
         </CardContent>
       </Card>
 
-      {/* Work Experience */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{t('profile.work_experience')}</CardTitle>
-            <CardDescription>{t('profile.work_experience_desc')}</CardDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={addWorkExperience}>
-            {t('profile.add_experience')}
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {profile.workExperience.map((exp) => (
-            <div key={exp.id} className="grid gap-4 p-4 border rounded-lg relative bg-muted/20">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
-                onClick={() => removeWorkExperience(exp.id)}
-              >
-                {t('profile.remove')}
-              </Button>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.company')}</label>
-                  <Input
-                    value={exp.company}
-                    onChange={(e) => updateWorkExperience(exp.id, 'company', e.target.value)}
-                    placeholder={t('profile.company_ph')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.role')}</label>
-                  <Input
-                    value={exp.role}
-                    onChange={(e) => updateWorkExperience(exp.id, 'role', e.target.value)}
-                    placeholder={t('profile.role_ph')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.date_range')}</label>
-                  <Input
-                    value={exp.date}
-                    onChange={(e) => updateWorkExperience(exp.id, 'date', e.target.value)}
-                    placeholder={t('profile.date_range_ph')}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t('profile.description')}</label>
-                <MarkdownEditor
-                  value={exp.description}
-                  onChange={(val) => updateWorkExperience(exp.id, 'description', val)}
-                  placeholder={t('profile.description_ph')}
-                  minHeight="80px"
-                />
-              </div>
-            </div>
-          ))}
-          {profile.workExperience.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {t('profile.no_work_experience')}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Education */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -432,6 +365,73 @@ export function Profile(): React.JSX.Element {
           {profile.education.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               {t('profile.no_education')}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Work Experience */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>{t('profile.work_experience')}</CardTitle>
+            <CardDescription>{t('profile.work_experience_desc')}</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={addWorkExperience}>
+            {t('profile.add_experience')}
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {profile.workExperience.map((exp) => (
+            <div key={exp.id} className="grid gap-4 p-4 border rounded-lg relative bg-muted/20">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                onClick={() => removeWorkExperience(exp.id)}
+              >
+                {t('profile.remove')}
+              </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('profile.company')}</label>
+                  <Input
+                    value={exp.company}
+                    onChange={(e) => updateWorkExperience(exp.id, 'company', e.target.value)}
+                    placeholder={t('profile.company_ph')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('profile.role')}</label>
+                  <Input
+                    value={exp.role}
+                    onChange={(e) => updateWorkExperience(exp.id, 'role', e.target.value)}
+                    placeholder={t('profile.role_ph')}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('profile.date_range')}</label>
+                  <Input
+                    value={exp.date}
+                    onChange={(e) => updateWorkExperience(exp.id, 'date', e.target.value)}
+                    placeholder={t('profile.date_range_ph')}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('profile.description')}</label>
+                <MarkdownEditor
+                  value={exp.description}
+                  onChange={(val) => updateWorkExperience(exp.id, 'description', val)}
+                  placeholder={t('profile.description_ph')}
+                  minHeight="80px"
+                />
+              </div>
+            </div>
+          ))}
+          {profile.workExperience.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              {t('profile.no_work_experience')}
             </div>
           )}
         </CardContent>

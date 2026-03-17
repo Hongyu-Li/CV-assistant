@@ -110,18 +110,18 @@ export function ResumeDialog({
         if (pi.phone) profileText += `Phone: ${pi.phone}\n`
         if (pi.summary) profileText += `\nSummary:\n${pi.summary}\n`
       }
-      if (profileData?.workExperience?.length > 0) {
-        profileText += '\nWork Experience:\n'
-        for (const exp of profileData.workExperience) {
-          profileText += `- ${exp.role} at ${exp.company} (${exp.date})\n`
-          if (exp.description) profileText += `  ${exp.description}\n`
-        }
-      }
       if (profileData?.education?.length > 0) {
         profileText += '\nEducation:\n'
         for (const edu of profileData.education) {
           profileText += `- ${edu.degree} at ${edu.school} (${edu.date})\n`
           if (edu.description) profileText += `  ${edu.description}\n`
+        }
+      }
+      if (profileData?.workExperience?.length > 0) {
+        profileText += '\nWork Experience:\n'
+        for (const exp of profileData.workExperience) {
+          profileText += `- ${exp.role} at ${exp.company} (${exp.date})\n`
+          if (exp.description) profileText += `  ${exp.description}\n`
         }
       }
       if (profileData?.projects?.length > 0) {
