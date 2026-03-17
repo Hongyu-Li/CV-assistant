@@ -3,6 +3,7 @@ import {
   PROVIDER_CONFIGS,
   generateCV,
   extractProfileFromPdf,
+  parseJsonFromAiResponse,
   type AIProvider,
   type GenerateCVOptions,
   type ExtractProfileFromPdfOptions
@@ -456,5 +457,70 @@ describe('extractProfileFromPdf', () => {
     await expect(extractProfileFromPdf(baseOptions)).rejects.toThrow(
       'Invalid response: missing personalInfo'
     )
+  })
+})
+
+describe('parseJsonFromAiResponse', () => {
+  it('parses valid JSON directly', (): void => {
+    const result = parseJsonFromAiResponse('{"name":"John"}')
+    expect(result).toEqual({ name: 'John' })
+  })
+
+  it('parses JSON from markdown code block', (): void => {
+    const input = '```json\n{"a":1}\n```'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it('parses JSON from code block without json tag', (): void => {
+    const input = '```\n{"a":1}\n```'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it('parses JSON embedded in extra text', (): void => {
+    const input = 'Here is data: {"a":1} done.'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it('repairs trailing commas', (): void => {
+    const input = '{"a":1, "b":2,}'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ a: 1, b: 2 })
+  })
+
+  it('repairs unquoted keys', (): void => {
+    const input = '{name: "John", age: 30}'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ name: 'John', age: 30 })
+  })
+
+  it('repairs truncated JSON (missing closing brace)', (): void => {
+    const input = '{"name":"John"'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ name: 'John' })
+  })
+
+  it('repairs malformed JSON inside code block', (): void => {
+    const input = '```json\n{name: "test",}\n```'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ name: 'test' })
+  })
+
+  it('repairs malformed JSON extracted from text', (): void => {
+    const input = 'Result: {name: "test",} end'
+    const result = parseJsonFromAiResponse(input)
+    expect(result).toEqual({ name: 'test' })
+  })
+
+  it('throws on non-JSON text', (): void => {
+    expect(() => parseJsonFromAiResponse('hello world no json')).toThrow(
+      'No valid JSON found in AI response'
+    )
+  })
+
+  it('throws on empty string', (): void => {
+    expect(() => parseJsonFromAiResponse('')).toThrow('No valid JSON found in AI response')
   })
 })

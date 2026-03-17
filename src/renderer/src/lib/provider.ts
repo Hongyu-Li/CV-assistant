@@ -1,3 +1,5 @@
+import { jsonrepair } from 'jsonrepair'
+
 export type AIProvider =
   | 'openai'
   | 'anthropic'
@@ -187,21 +189,56 @@ export interface ExtractedProfileData {
   }>
 }
 
-function parseJsonFromAiResponse(text: string): unknown {
+export function parseJsonFromAiResponse(text: string): unknown {
+  // Strategy 1: Direct parse
   try {
     return JSON.parse(text)
   } catch {
-    // AI responses often wrap JSON in markdown code blocks — extract the inner JSON
-    const codeBlockMatch = /```(?:json)?\s*\n?([\s\S]*?)\n?```/.exec(text)
-    if (codeBlockMatch?.[1]) {
-      return JSON.parse(codeBlockMatch[1].trim())
-    }
-    const jsonMatch = /\{[\s\S]*\}/.exec(text)
-    if (jsonMatch?.[0]) {
-      return JSON.parse(jsonMatch[0])
-    }
-    throw new Error('No valid JSON found in AI response')
+    /* continue */
   }
+
+  // Strategy 2-3: Code block extraction (with and without repair)
+  const codeBlockMatch = /```(?:json)?\s*\n?([\s\S]*?)\n?```/.exec(text)
+  if (codeBlockMatch?.[1]) {
+    const inner = codeBlockMatch[1].trim()
+    try {
+      return JSON.parse(inner)
+    } catch {
+      /* continue */
+    }
+    try {
+      return JSON.parse(jsonrepair(inner))
+    } catch {
+      /* continue */
+    }
+  }
+
+  // Strategy 4-5: Brace extraction (with and without repair)
+  const jsonMatch = /\{[\s\S]*\}/.exec(text)
+  if (jsonMatch?.[0]) {
+    try {
+      return JSON.parse(jsonMatch[0])
+    } catch {
+      /* continue */
+    }
+    try {
+      return JSON.parse(jsonrepair(jsonMatch[0]))
+    } catch {
+      /* continue */
+    }
+  }
+
+  // Strategy 6: Full text repair (only accept objects/arrays, not primitives)
+  try {
+    const repaired = JSON.parse(jsonrepair(text))
+    if (typeof repaired === 'object' && repaired !== null) {
+      return repaired
+    }
+  } catch {
+    /* exhausted */
+  }
+
+  throw new Error('No valid JSON found in AI response')
 }
 
 export async function extractProfileFromPdf(
