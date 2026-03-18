@@ -419,12 +419,6 @@ describe('ResumeDialog', () => {
     // CV section starts collapsed when there's a generated CV, need to expand it
     fireEvent.click(screen.getByText('resumes.generated_cv'))
     await waitFor(() => {
-      // Default is preview mode, need to click Edit to see the editor
-      expect(screen.getByText('Edit')).toBeInTheDocument()
-    })
-    // Click Edit to access the markdown editor
-    fireEvent.click(screen.getByText('Edit'))
-    await waitFor(() => {
       expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
     })
   })
