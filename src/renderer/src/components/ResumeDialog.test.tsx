@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { toast } from 'sonner'
-import { generateCV } from '../lib/provider'
+import { generateCV, extractKeywordsFromJD } from '../lib/provider'
 import { ResumeDialog, CV } from './ResumeDialog'
 
 // Mock sonner
@@ -16,6 +16,7 @@ vi.mock('sonner', () => ({
 // Mock provider module
 vi.mock('../lib/provider', () => ({
   generateCV: vi.fn(),
+  extractKeywordsFromJD: vi.fn(),
   PROVIDER_CONFIGS: {
     openai: {
       label: 'OpenAI',
@@ -96,7 +97,7 @@ describe('ResumeDialog', () => {
     expect(screen.getByText('resumes.create_resume')).toBeInTheDocument()
   })
 
-  it('renders edit mode title with prefilled values when resume prop passed', () => {
+  it('renders edit mode title with prefilled values when resume prop passed', async () => {
     const resume: CV = {
       id: '1',
       filename: 'test.json',
@@ -115,8 +116,13 @@ describe('ResumeDialog', () => {
     expect(screen.getByDisplayValue('Frontend Dev')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Acme')).toBeInTheDocument()
     expect(screen.getByDisplayValue('100k')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Some notes')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Build things')).toBeInTheDocument()
+
+    // Generated CV section is collapsed when CV exists, need to expand it
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Some notes')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Build things')).toBeInTheDocument()
+    })
   })
 
   it('renders all form field labels', () => {
@@ -246,6 +252,7 @@ describe('ResumeDialog', () => {
     }
     mockInvoke.mockResolvedValue(profileData)
     vi.mocked(generateCV).mockResolvedValue('# Generated Resume')
+    vi.mocked(extractKeywordsFromJD).mockResolvedValue(['React', 'TypeScript', 'Node.js'])
 
     renderDialog()
 
@@ -400,7 +407,7 @@ describe('ResumeDialog', () => {
     removeChildSpy.mockRestore()
   })
 
-  it('shows generated CV section when generatedCV is set via edit mode', () => {
+  it('shows generated CV section when generatedCV is set via edit mode', async () => {
     const resume: CV = {
       id: '1',
       filename: 'test.json',
@@ -409,6 +416,10 @@ describe('ResumeDialog', () => {
     renderDialog({ resume })
 
     expect(screen.getByText('resumes.generated_cv')).toBeInTheDocument()
-    expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
+    // CV section starts collapsed when there's a generated CV, need to expand it
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+    await waitFor(() => {
+      expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
+    })
   })
 })

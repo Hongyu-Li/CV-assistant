@@ -159,7 +159,17 @@ Generate the CV now.${options.language ? ` Write the CV entirely in ${languageNa
     throw new Error(result.error)
   }
 
-  return result.content as string
+  // Strip markdown code block fences if present (e.g., ```markdown ... ```)
+  let content = result.content as string
+  content = content.trim()
+  if (content.startsWith('```')) {
+    // Remove opening fence (``` or ```markdown)
+    content = content.replace(/^```(?:markdown)?\s*\n?/, '')
+    // Remove closing fence
+    content = content.replace(/\n?```\s*$/, '')
+  }
+
+  return content
 }
 
 export interface ExtractProfileFromPdfOptions {
@@ -298,6 +308,73 @@ export function parseJsonFromAiResponse(text: string): unknown {
   }
 
   throw new Error('No valid JSON found in AI response')
+}
+
+export interface ExtractKeywordsOptions {
+  jobDescription: string
+  provider: AIProvider
+  apiKey: string
+  model: string
+  baseUrl: string
+}
+
+export interface ExtractedKeywords {
+  keywords: string[]
+}
+
+const ExtractedKeywordsSchema = z
+  .object({
+    keywords: z
+      .array(z.string())
+      .optional()
+      .transform((v): string[] => v ?? [])
+  })
+  .strip()
+
+export async function extractKeywordsFromJD(options: ExtractKeywordsOptions): Promise<string[]> {
+  const config = PROVIDER_CONFIGS[options.provider]
+  const baseUrl = options.baseUrl || config.defaultBaseUrl
+  const model = options.model || config.defaultModel
+
+  const systemPrompt = `You are a job description analyzer. Extract the 3-4 most important technical skills/keywords from the job description.
+Return ONLY a valid JSON object with no markdown formatting, no code blocks, no extra text.
+The JSON must have this exact structure:
+{
+  "keywords": ["skill1", "skill2", "skill3", "skill4"]
+}
+Rules:
+- Extract technical skills, programming languages, frameworks, tools, or key competencies mentioned in the JD
+- Focus on the most important/required skills, not nice-to-haves
+- Use concise terms (1-2 words each)
+- Return exactly 3-4 keywords, no more, no less
+- If fewer than 3 relevant skills are found, pad with general domain terms from the field`
+
+  const userPrompt = `Extract key technical skills from this job description:\n\n${options.jobDescription}`
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ]
+
+  const result = await window.electron.ipcRenderer.invoke('ai:chat', {
+    provider: options.provider,
+    apiKey: options.apiKey,
+    model,
+    messages,
+    baseUrl,
+    timeoutMs: 60_000
+  })
+
+  if (!result.success) {
+    throw new Error(result.error)
+  }
+
+  const raw = parseJsonFromAiResponse(result.content as string)
+  const validated = ExtractedKeywordsSchema.safeParse(raw)
+  if (!validated.success) {
+    throw new Error(`Invalid keywords data: ${validated.error.message}`)
+  }
+  return validated.data.keywords.slice(0, 4)
 }
 
 export async function extractProfileFromPdf(
