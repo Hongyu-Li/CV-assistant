@@ -29,6 +29,7 @@ import { useSettings } from '../context/SettingsContext'
 import { generateCV, extractKeywordsFromJD } from '../lib/provider'
 import { toast } from 'sonner'
 import { PdfPreviewDialog } from './PdfPreviewDialog'
+import { MarkdownPreview } from './MarkdownPreview'
 
 export type InterviewStatus =
   | 'resume_sent'
@@ -103,6 +104,7 @@ export function ResumeDialog({
   const [keywords, setKeywords] = useState<string[]>([])
   const [cvExpanded, setCvExpanded] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  const [cvEditMode, setCvEditMode] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -535,12 +537,40 @@ export function ResumeDialog({
 
               {generatedCV ? (
                 <div className="rounded-lg overflow-hidden border bg-slate-900 dark:bg-slate-950">
-                  <MarkdownEditor
-                    value={generatedCV}
-                    onChange={setGeneratedCV}
-                    minHeight="200px"
-                    className="max-h-[400px] overflow-y-auto prose-invert [&_.ProseMirror]:text-slate-100 [&_.ProseMirror]:bg-slate-900 dark:[&_.ProseMirror]:bg-slate-950 [&_.ProseMirror]:p-4 [&_.ProseMirror]:prose-headings:text-slate-100 [&_.ProseMirror]:prose-p:text-slate-300 [&_.ProseMirror]:prose-strong:text-slate-100 [&_.ProseMirror]:prose-code:text-slate-200 [&_.ProseMirror]:prose-code:bg-slate-800 [&_.ProseMirror]:prose-li:text-slate-300"
-                  />
+                  {/* Toggle between Preview and Edit */}
+                  <div className="flex justify-end gap-2 p-2 border-b border-slate-700">
+                    <Button
+                      variant={cvEditMode ? 'ghost' : 'secondary'}
+                      size="sm"
+                      onClick={() => setCvEditMode(false)}
+                      className="h-7 text-xs"
+                    >
+                      Preview
+                    </Button>
+                    <Button
+                      variant={cvEditMode ? 'secondary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setCvEditMode(true)}
+                      className="h-7 text-xs"
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                  <div className="max-h-[400px] overflow-y-auto p-4">
+                    {cvEditMode ? (
+                      <MarkdownEditor
+                        value={generatedCV}
+                        onChange={setGeneratedCV}
+                        minHeight="200px"
+                        className="prose-invert [&_.ProseMirror]:text-slate-100 [&_.ProseMirror]:bg-slate-900 dark:[&_.ProseMirror]:bg-slate-950 [&_.ProseMirror]:p-0 [&_.ProseMirror]:prose-headings:text-slate-100 [&_.ProseMirror]:prose-p:text-slate-300 [&_.ProseMirror]:prose-strong:text-slate-100 [&_.ProseMirror]:prose-code:text-slate-200 [&_.ProseMirror]:prose-code:bg-slate-800 [&_.ProseMirror]:prose-li:text-slate-300"
+                      />
+                    ) : (
+                      <MarkdownPreview
+                        content={generatedCV}
+                        className="text-slate-200 [&_h1]:text-slate-100 [&_h2]:text-slate-100 [&_h3]:text-slate-100 [&_p]:text-slate-300 [&_li]:text-slate-300"
+                      />
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 space-y-4">
