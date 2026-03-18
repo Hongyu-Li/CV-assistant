@@ -18,6 +18,18 @@ import { useSettings } from '../context/SettingsContext'
 import { generateCV } from '../lib/provider'
 import { toast } from 'sonner'
 
+export type InterviewStatus =
+  | 'resume_sent'
+  | 'first_interview'
+  | 'second_interview'
+  | 'third_interview'
+  | 'fourth_interview'
+  | 'fifth_interview'
+  | 'hr_interview'
+  | 'offer_accepted'
+  | 'offer_rejected'
+  | 'interview_failed'
+
 export interface CV {
   id: string
   filename: string
@@ -32,6 +44,7 @@ export interface CV {
   createdAt?: string
   lastModified?: string
   status?: string
+  interviewStatus?: InterviewStatus
   [key: string]: unknown
 }
 
@@ -61,6 +74,7 @@ export function ResumeDialog({
   const [isGenerating, setIsGenerating] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [cvLanguage, setCvLanguage] = useState('en')
+  const [interviewStatus, setInterviewStatus] = useState<InterviewStatus>('resume_sent')
 
   useEffect(() => {
     if (open) {
@@ -73,6 +87,7 @@ export function ResumeDialog({
         setJobDescription(resume.jobDescription ?? '')
         setGeneratedCV(resume.generatedCV ?? '')
         setCvLanguage(resume.cvLanguage ?? 'en')
+        setInterviewStatus(resume.interviewStatus ?? 'resume_sent')
       } else {
         setJobTitle('')
         setExperienceLevel('')
@@ -82,6 +97,7 @@ export function ResumeDialog({
         setJobDescription('')
         setGeneratedCV('')
         setCvLanguage('en')
+        setInterviewStatus('resume_sent')
       }
       setIsGenerating(false)
       setIsCopied(false)
@@ -203,7 +219,8 @@ export function ResumeDialog({
         cvLanguage,
         createdAt: resume?.createdAt ?? new Date().toISOString(),
         lastModified: new Date().toISOString(),
-        status: generatedCV ? 'generated' : 'draft'
+        status: generatedCV ? 'generated' : 'draft',
+        interviewStatus
       }
       const result = await window.electron.ipcRenderer.invoke('cv:save', {
         filename,
@@ -272,6 +289,41 @@ export function ResumeDialog({
               value={targetSalary}
               onChange={(e): void => setTargetSalary(e.target.value)}
             />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <label className="text-sm font-medium">{t('resumes.interview_status')}</label>
+            <Select
+              value={interviewStatus}
+              onValueChange={(value) => setInterviewStatus(value as InterviewStatus)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('resumes.interview_status_ph')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="resume_sent">{t('resumes.status_resume_sent')}</SelectItem>
+                <SelectItem value="first_interview">
+                  {t('resumes.status_first_interview')}
+                </SelectItem>
+                <SelectItem value="second_interview">
+                  {t('resumes.status_second_interview')}
+                </SelectItem>
+                <SelectItem value="third_interview">
+                  {t('resumes.status_third_interview')}
+                </SelectItem>
+                <SelectItem value="fourth_interview">
+                  {t('resumes.status_fourth_interview')}
+                </SelectItem>
+                <SelectItem value="fifth_interview">
+                  {t('resumes.status_fifth_interview')}
+                </SelectItem>
+                <SelectItem value="hr_interview">{t('resumes.status_hr_interview')}</SelectItem>
+                <SelectItem value="offer_accepted">{t('resumes.status_offer_accepted')}</SelectItem>
+                <SelectItem value="offer_rejected">{t('resumes.status_offer_rejected')}</SelectItem>
+                <SelectItem value="interview_failed">
+                  {t('resumes.status_interview_failed')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <div className="space-y-2">
