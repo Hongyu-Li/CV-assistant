@@ -9,7 +9,8 @@ import {
   Plus,
   Trash2,
   Edit2,
-  RotateCcw
+  RotateCcw,
+  FileText
 } from 'lucide-react'
 import {
   Dialog,
@@ -27,6 +28,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { useSettings } from '../context/SettingsContext'
 import { generateCV, extractKeywordsFromJD } from '../lib/provider'
 import { toast } from 'sonner'
+import { PdfPreviewDialog } from './PdfPreviewDialog'
 
 export type InterviewStatus =
   | 'resume_sent'
@@ -100,6 +102,7 @@ export function ResumeDialog({
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null)
   const [keywords, setKeywords] = useState<string[]>([])
   const [cvExpanded, setCvExpanded] = useState(false)
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -468,6 +471,15 @@ export function ResumeDialog({
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={() => setPdfPreviewOpen(true)}
+                    title={t('resumes.preview_pdf')}
+                    className="h-7 w-7"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handleGenerate}
                     disabled={isGenerating}
                     title={t('resumes.generate_cv')}
@@ -522,12 +534,14 @@ export function ResumeDialog({
               )}
 
               {generatedCV ? (
-                <MarkdownEditor
-                  value={generatedCV}
-                  onChange={setGeneratedCV}
-                  minHeight="200px"
-                  className="max-h-[400px] overflow-y-auto"
-                />
+                <div className="rounded-lg overflow-hidden border bg-slate-900 dark:bg-slate-950">
+                  <MarkdownEditor
+                    value={generatedCV}
+                    onChange={setGeneratedCV}
+                    minHeight="200px"
+                    className="max-h-[400px] overflow-y-auto prose-invert [&_.ProseMirror]:text-slate-100 [&_.ProseMirror]:bg-slate-900 dark:[&_.ProseMirror]:bg-slate-950 [&_.ProseMirror]:p-4 [&_.ProseMirror]:prose-headings:text-slate-100 [&_.ProseMirror]:prose-p:text-slate-300 [&_.ProseMirror]:prose-strong:text-slate-100 [&_.ProseMirror]:prose-code:text-slate-200 [&_.ProseMirror]:prose-code:bg-slate-800 [&_.ProseMirror]:prose-li:text-slate-300"
+                  />
+                </div>
               ) : (
                 <div className="text-center py-8 space-y-4">
                   <p className="text-sm text-muted-foreground">{t('resumes.generated_cv_desc')}</p>
@@ -689,18 +703,26 @@ export function ResumeDialog({
                                   </div>
                                 </div>
 
-                                {/* Interview Notes */}
+                                {/* Interview Notes - Scrollable full content */}
                                 {round.notes && (
                                   <div className="space-y-2 text-sm">
                                     <div className="bg-muted/50 rounded p-2">
                                       <p className="text-xs font-medium text-muted-foreground mb-1">
                                         {t('resumes.interview_notes')}
                                       </p>
-                                      <p className="text-sm whitespace-pre-wrap">
-                                        {round.notes.length > 200
-                                          ? `${round.notes.substring(0, 200)}...`
-                                          : round.notes}
-                                      </p>
+                                      <div
+                                        className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
+                                        dangerouslySetInnerHTML={{
+                                          __html: round.notes
+                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                                            .replace(
+                                              /`([^`]+)`/g,
+                                              '<code class="bg-muted px-1 rounded text-xs">$1</code>'
+                                            )
+                                            .replace(/\n/g, '<br/>')
+                                        }}
+                                      />
                                     </div>
                                   </div>
                                 )}
@@ -846,6 +868,14 @@ export function ResumeDialog({
           <Button onClick={handleSave}>{t('resumes.save')}</Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* PDF Preview Dialog */}
+      <PdfPreviewDialog
+        open={pdfPreviewOpen}
+        onOpenChange={setPdfPreviewOpen}
+        markdown={generatedCV}
+        filename={jobTitle || t('resumes.default_filename')}
+      />
     </Dialog>
   )
 }

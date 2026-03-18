@@ -123,7 +123,8 @@
   "common": {
     "delete": "删除",
     "cancel": "取消",
-    "save": "保存"
+    "save": "保存",
+    "download": "下载"
   },
   "resumes": {
     "description": "管理您的简历草稿和已生成的简历。",
@@ -196,6 +197,7 @@
     "lang_de": "德语",
     "lang_es": "西班牙语",
     "copy_error": "复制到剪贴板失败",
+    "preview_pdf": "预览 PDF",
     "default_filename": "简历",
     "interview_rounds": "面试记录",
     "no_rounds": "暂无面试记录",

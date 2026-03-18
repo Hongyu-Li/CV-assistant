@@ -123,7 +123,8 @@
   "common": {
     "delete": "Delete",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "download": "Download"
   },
   "resumes": {
     "description": "Manage your CV drafts and generated resumes.",
@@ -196,6 +197,7 @@
     "lang_de": "German",
     "lang_es": "Spanish",
     "copy_error": "Failed to copy to clipboard",
+    "preview_pdf": "Preview PDF",
     "default_filename": "resume",
     "interview_rounds": "Interview Rounds",
     "no_rounds": "No interview rounds recorded yet",
