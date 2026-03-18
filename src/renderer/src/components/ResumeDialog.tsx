@@ -441,69 +441,141 @@ export function ResumeDialog({
               />
             </button>
             {roundsExpanded && (
-              <div className="p-3 space-y-3">
+              <div className="p-4">
                 {interviewRounds.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     {t('resumes.no_rounds')}
                   </p>
                 ) : (
-                  interviewRounds.map((round) => (
-                    <div key={round.id} className="border rounded p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{t(`resumes.round_${round.round}`)}</span>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded ${
-                              round.result === 'passed'
-                                ? 'bg-green-100 text-green-700'
-                                : round.result === 'failed'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-yellow-100 text-yellow-700'
-                            }`}
-                          >
-                            {t(`resumes.result_${round.result}`)}
-                          </span>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => setEditingRound(round)}
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() =>
-                              setInterviewRounds((prev) => prev.filter((r) => r.id !== round.id))
-                            }
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{round.date}</p>
-                      {(round.questions || round.answers || round.notes) && (
-                        <div className="text-sm space-y-1">
-                          {round.questions && (
-                            <p>
-                              <span className="font-medium">{t('resumes.questions')}:</span>{' '}
-                              {round.questions.substring(0, 100)}
-                              {round.questions.length > 100 ? '...' : ''}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-muted" />
+
+                    {/* Timeline items */}
+                    <div className="space-y-0">
+                      {[...interviewRounds]
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                        .map((round, index) => {
+                          const dotColor =
+                            round.result === 'passed'
+                              ? 'bg-green-500 border-green-500'
+                              : round.result === 'failed'
+                                ? 'bg-red-500 border-red-500'
+                                : 'bg-yellow-400 border-yellow-400'
+
+                          return (
+                            <div key={round.id} className="relative flex gap-4 pb-6">
+                              {/* Timeline dot */}
+                              <div className="relative z-10">
+                                <div
+                                  className={`w-10 h-10 rounded-full border-4 border-background ${dotColor} flex items-center justify-center shadow-sm`}
+                                >
+                                  <span className="text-xs font-bold text-white">{index + 1}</span>
+                                </div>
+                              </div>
+
+                              {/* Content card */}
+                              <div className="flex-1 -mt-1">
+                                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                                  {/* Header */}
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <h4 className="font-semibold text-sm">
+                                        {t(`resumes.round_${round.round}`)}
+                                      </h4>
+                                      <p className="text-xs text-muted-foreground">
+                                        {new Date(round.date).toLocaleDateString()} ·{' '}
+                                        {new Date(round.date).toLocaleTimeString([], {
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span
+                                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                          round.result === 'passed'
+                                            ? 'bg-green-100 text-green-700'
+                                            : round.result === 'failed'
+                                              ? 'bg-red-100 text-red-700'
+                                              : 'bg-yellow-100 text-yellow-700'
+                                        }`}
+                                      >
+                                        {t(`resumes.result_${round.result}`)}
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() => setEditingRound(round)}
+                                      >
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() =>
+                                          setInterviewRounds((prev) =>
+                                            prev.filter((r) => r.id !== round.id)
+                                          )
+                                        }
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  {/* Questions & Answers */}
+                                  {(round.questions || round.answers || round.notes) && (
+                                    <div className="space-y-2 text-sm">
+                                      {round.questions && (
+                                        <div className="bg-background rounded p-2">
+                                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                                            {t('resumes.questions')}
+                                          </p>
+                                          <p className="text-sm whitespace-pre-wrap">
+                                            {round.questions.length > 150
+                                              ? `${round.questions.substring(0, 150)}...`
+                                              : round.questions}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {round.answers && (
+                                        <div className="bg-green-50 rounded p-2 border border-green-100">
+                                          <p className="text-xs font-medium text-green-600 mb-1">
+                                            {t('resumes.answers')}
+                                          </p>
+                                          <p className="text-sm text-green-800 whitespace-pre-wrap">
+                                            {round.answers.length > 150
+                                              ? `${round.answers.substring(0, 150)}...`
+                                              : round.answers}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {round.notes && (
+                                        <div className="bg-yellow-50 rounded p-2 border border-yellow-100">
+                                          <p className="text-xs font-medium text-yellow-600 mb-1">
+                                            {t('resumes.round_notes')}
+                                          </p>
+                                          <p className="text-sm text-yellow-800">{round.notes}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
                     </div>
-                  ))
+                  </div>
                 )}
+
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full"
+                  className="w-full mt-2"
                   onClick={() =>
                     setEditingRound({
                       id: crypto.randomUUID(),
