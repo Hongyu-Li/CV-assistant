@@ -100,12 +100,13 @@ describe('Resumes Component', () => {
     })
   })
 
-  it('renders status badge for generated resumes', async () => {
+  it('renders company name and job title for resumes', async () => {
     const resumes = [
       {
         id: '1',
         filename: 'cv1.json',
         jobTitle: 'Developer',
+        companyName: 'Google',
         status: 'generated',
         lastModified: '2023-01-01'
       }
@@ -114,7 +115,8 @@ describe('Resumes Component', () => {
     renderWithProvider(<Resumes />)
 
     await waitFor(() => {
-      expect(screen.getByText('resumes.status_generated')).toBeInTheDocument()
+      expect(screen.getByText('Google')).toBeInTheDocument()
+      expect(screen.getByText('Developer')).toBeInTheDocument()
     })
   })
 

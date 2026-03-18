@@ -231,6 +231,10 @@
     "tab_rejected": "Rejected",
     "search_placeholder": "Search by job title or company...",
     "no_search_results": "No results found",
-    "no_search_results_desc": "Try adjusting your search or filter"
+    "no_search_results_desc": "Try adjusting your search or filter",
+    "unknown_company": "Unknown Company",
+    "keywords": "Key Skills/Tags",
+    "keywords_ph": "Type and press Enter...",
+    "keywords_help": "Add 3-4 keywords extracted from JD (e.g., React, Node.js, System Design)"
   }
 }

@@ -56,6 +56,7 @@ export interface CV {
   status?: string
   interviewStatus?: InterviewStatus
   interviewRounds?: InterviewRound[]
+  keywords?: string[]
   [key: string]: unknown
 }
 
@@ -89,6 +90,8 @@ export function ResumeDialog({
   const [interviewRounds, setInterviewRounds] = useState<InterviewRound[]>([])
   const [roundsExpanded, setRoundsExpanded] = useState(false)
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null)
+  const [keywords, setKeywords] = useState<string[]>([])
+  const [keywordInput, setKeywordInput] = useState('')
 
   useEffect(() => {
     if (open) {
@@ -103,6 +106,8 @@ export function ResumeDialog({
         setCvLanguage(resume.cvLanguage ?? 'en')
         setInterviewStatus(resume.interviewStatus ?? 'resume_sent')
         setInterviewRounds(resume.interviewRounds ?? [])
+        setKeywords(resume.keywords ?? [])
+        setKeywordInput('')
         setRoundsExpanded(false)
         setEditingRound(null)
       } else {
@@ -116,6 +121,8 @@ export function ResumeDialog({
         setCvLanguage('en')
         setInterviewStatus('resume_sent')
         setInterviewRounds([])
+        setKeywords([])
+        setKeywordInput('')
         setRoundsExpanded(false)
         setEditingRound(null)
       }
@@ -241,7 +248,8 @@ export function ResumeDialog({
         lastModified: new Date().toISOString(),
         status: generatedCV ? 'generated' : 'draft',
         interviewStatus,
-        interviewRounds
+        interviewRounds,
+        keywords
       }
       const result = await window.electron.ipcRenderer.invoke('cv:save', {
         filename,
@@ -385,6 +393,44 @@ export function ResumeDialog({
             onChange={(e): void => setJobDescription(e.target.value)}
             className="min-h-[120px] font-mono text-sm"
           />
+        </div>
+
+        {/* Keywords */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t('resumes.keywords')}</label>
+          <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[42px]">
+            {keywords.map((keyword, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-sm rounded-md"
+              >
+                {keyword}
+                <button
+                  type="button"
+                  onClick={() => setKeywords((prev) => prev.filter((_, i) => i !== index))}
+                  className="hover:bg-primary/20 rounded"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <Input
+              placeholder={t('resumes.keywords_ph')}
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && keywordInput.trim()) {
+                  e.preventDefault()
+                  if (!keywords.includes(keywordInput.trim())) {
+                    setKeywords((prev) => [...prev, keywordInput.trim()])
+                  }
+                  setKeywordInput('')
+                }
+              }}
+              className="flex-1 min-w-[120px] border-0 focus-visible:ring-0 px-0"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{t('resumes.keywords_help')}</p>
         </div>
 
         {/* Generate button */}

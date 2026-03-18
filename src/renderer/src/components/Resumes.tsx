@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { toast } from 'sonner'
-import { Trash2, FileText, Calendar, Briefcase, Plus, Building2, Search } from 'lucide-react'
+import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
 import { ResumeDialog } from './ResumeDialog'
 import type { CV, InterviewStatus } from './ResumeDialog'
 
@@ -225,46 +225,6 @@ export function Resumes(): React.JSX.Element {
         </Button>
       </div>
 
-      {/* Statistics Cards */}
-      {resumes.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-gray-700">{stats.resumeSent}</p>
-              <p className="text-xs text-gray-500 font-medium">{t('resumes.stats_resume_sent')}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-blue-700">{stats.inInterview}</p>
-              <p className="text-xs text-blue-600 font-medium">{t('resumes.stats_in_interview')}</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-purple-700">{stats.hrInterview}</p>
-              <p className="text-xs text-purple-600 font-medium">
-                {t('resumes.stats_hr_interview')}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-green-700">{stats.offerAccepted}</p>
-              <p className="text-xs text-green-600 font-medium">
-                {t('resumes.stats_offer_accepted')}
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-red-700">{stats.rejected}</p>
-              <p className="text-xs text-red-600 font-medium">{t('resumes.stats_rejected')}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       {/* Filter Tabs & Search */}
       {resumes.length > 0 && (
         <div className="space-y-4">
@@ -336,65 +296,70 @@ export function Resumes(): React.JSX.Element {
                 handleEdit(resume)
               }}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2 truncate">
-                    <FileText className="h-4 w-4 text-primary" />
-                    <span className="truncate">{resume.jobTitle || t('resumes.untitled')}</span>
-                  </CardTitle>
-                  {resume.status && (
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        resume.status === 'generated'
-                          ? 'bg-success/10 text-success'
-                          : 'bg-warning/10 text-warning'
-                      }`}
-                    >
-                      {resume.status === 'generated'
-                        ? t('resumes.status_generated')
-                        : t('resumes.status_draft')}
+              <CardHeader className="pb-2">
+                {/* Company Name - Most Prominent */}
+                <CardTitle className="text-xl font-bold text-foreground truncate">
+                  {resume.companyName || t('resumes.untitled')}
+                </CardTitle>
+
+                {/* Job Title as Tag */}
+                {resume.jobTitle && (
+                  <div className="mt-1">
+                    <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
+                      {resume.jobTitle}
                     </span>
-                  )}
-                </div>
-                <CardDescription className="flex items-center gap-2 text-xs">
+                  </div>
+                )}
+
+                {/* Salary */}
+                {resume.targetSalary && (
+                  <div className="mt-2 text-sm font-medium text-green-600">
+                    {resume.targetSalary}
+                  </div>
+                )}
+              </CardHeader>
+
+              <CardContent className="pt-0">
+                {/* Keywords Tags */}
+                {resume.keywords && resume.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {resume.keywords.slice(0, 4).map((keyword, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                    {resume.keywords.length > 4 && (
+                      <span className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full">
+                        +{resume.keywords.length - 4}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Interview Status */}
+                {resume.interviewStatus && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border ${getInterviewStatusColor(resume.interviewStatus)}`}
+                    >
+                      {t(`resumes.status_${resume.interviewStatus}`)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Last Modified Date */}
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3">
                   <Calendar className="h-3 w-3" />
                   {resume.lastModified
                     ? new Date(resume.lastModified).toLocaleDateString()
                     : t('resumes.unknown_date')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 mb-4">
-                  {resume.companyName && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building2 className="h-4 w-4" />
-                      <span>{resume.companyName}</span>
-                    </div>
-                  )}
-                  {resume.experienceLevel && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Briefcase className="h-4 w-4" />
-                      <span className="capitalize">
-                        {t('resumes.experience_display', {
-                          level: t(
-                            `resumes.level_${resume.experienceLevel}`,
-                            resume.experienceLevel
-                          )
-                        })}
-                      </span>
-                    </div>
-                  )}
-                  {resume.interviewStatus && (
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full border ${getInterviewStatusColor(resume.interviewStatus)}`}
-                      >
-                        {t(`resumes.status_${resume.interviewStatus}`)}
-                      </span>
-                    </div>
-                  )}
                 </div>
-                <div className="flex justify-end gap-2">
+
+                {/* Delete Button */}
+                <div className="flex justify-end mt-3">
                   <Button
                     variant="destructive"
                     size="sm"
