@@ -126,6 +126,26 @@ export function Resumes(): React.JSX.Element {
     )
   }
 
+  // Calculate statistics
+  const stats = {
+    resumeSent: resumes.filter((r) => !r.interviewStatus || r.interviewStatus === 'resume_sent')
+      .length,
+    inInterview: resumes.filter((r) =>
+      [
+        'first_interview',
+        'second_interview',
+        'third_interview',
+        'fourth_interview',
+        'fifth_interview'
+      ].includes(r.interviewStatus || '')
+    ).length,
+    hrInterview: resumes.filter((r) => r.interviewStatus === 'hr_interview').length,
+    offerAccepted: resumes.filter((r) => r.interviewStatus === 'offer_accepted').length,
+    rejected: resumes.filter((r) =>
+      ['offer_rejected', 'interview_failed'].includes(r.interviewStatus || '')
+    ).length
+  }
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
@@ -138,6 +158,42 @@ export function Resumes(): React.JSX.Element {
           {t('resumes.new_resume')}
         </Button>
       </div>
+
+      {/* Statistics Cards */}
+      {resumes.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <Card className="bg-gray-50">
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-gray-600">{stats.resumeSent}</p>
+              <p className="text-xs text-gray-500">{t('resumes.stats_resume_sent')}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-blue-50">
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-blue-600">{stats.inInterview}</p>
+              <p className="text-xs text-blue-500">{t('resumes.stats_in_interview')}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-purple-50">
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-purple-600">{stats.hrInterview}</p>
+              <p className="text-xs text-purple-500">{t('resumes.stats_hr_interview')}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-green-50">
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-green-600">{stats.offerAccepted}</p>
+              <p className="text-xs text-green-500">{t('resumes.stats_offer_accepted')}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-red-50">
+            <CardContent className="p-3 text-center">
+              <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+              <p className="text-xs text-red-500">{t('resumes.stats_rejected')}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {resumes.length === 0 ? (
         <Card className="border-dashed">

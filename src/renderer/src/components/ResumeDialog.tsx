@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Copy, Check, Download, Loader2 } from 'lucide-react'
+import { Copy, Check, Download, Loader2, ChevronDown, Plus, Trash2, Edit2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,16 @@ export type InterviewStatus =
   | 'offer_rejected'
   | 'interview_failed'
 
+export interface InterviewRound {
+  id: string
+  round: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'hr'
+  date: string
+  questions: string
+  answers: string
+  notes: string
+  result: 'pending' | 'passed' | 'failed'
+}
+
 export interface CV {
   id: string
   filename: string
@@ -45,6 +55,7 @@ export interface CV {
   lastModified?: string
   status?: string
   interviewStatus?: InterviewStatus
+  interviewRounds?: InterviewRound[]
   [key: string]: unknown
 }
 
@@ -75,6 +86,9 @@ export function ResumeDialog({
   const [isCopied, setIsCopied] = useState(false)
   const [cvLanguage, setCvLanguage] = useState('en')
   const [interviewStatus, setInterviewStatus] = useState<InterviewStatus>('resume_sent')
+  const [interviewRounds, setInterviewRounds] = useState<InterviewRound[]>([])
+  const [roundsExpanded, setRoundsExpanded] = useState(false)
+  const [editingRound, setEditingRound] = useState<InterviewRound | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -88,6 +102,9 @@ export function ResumeDialog({
         setGeneratedCV(resume.generatedCV ?? '')
         setCvLanguage(resume.cvLanguage ?? 'en')
         setInterviewStatus(resume.interviewStatus ?? 'resume_sent')
+        setInterviewRounds(resume.interviewRounds ?? [])
+        setRoundsExpanded(false)
+        setEditingRound(null)
       } else {
         setJobTitle('')
         setExperienceLevel('')
@@ -98,6 +115,9 @@ export function ResumeDialog({
         setGeneratedCV('')
         setCvLanguage('en')
         setInterviewStatus('resume_sent')
+        setInterviewRounds([])
+        setRoundsExpanded(false)
+        setEditingRound(null)
       }
       setIsGenerating(false)
       setIsCopied(false)
@@ -220,7 +240,8 @@ export function ResumeDialog({
         createdAt: resume?.createdAt ?? new Date().toISOString(),
         lastModified: new Date().toISOString(),
         status: generatedCV ? 'generated' : 'draft',
-        interviewStatus
+        interviewStatus,
+        interviewRounds
       }
       const result = await window.electron.ipcRenderer.invoke('cv:save', {
         filename,
@@ -404,6 +425,229 @@ export function ResumeDialog({
               className="max-h-[400px] overflow-y-auto"
             />
           </div>
+        )}
+
+        {/* Interview Rounds */}
+        {isEditMode && (
+          <div className="border rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setRoundsExpanded(!roundsExpanded)}
+              className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors"
+            >
+              <span className="font-medium">{t('resumes.interview_rounds')}</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${roundsExpanded ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {roundsExpanded && (
+              <div className="p-3 space-y-3">
+                {interviewRounds.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t('resumes.no_rounds')}
+                  </p>
+                ) : (
+                  interviewRounds.map((round) => (
+                    <div key={round.id} className="border rounded p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{t(`resumes.round_${round.round}`)}</span>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded ${
+                              round.result === 'passed'
+                                ? 'bg-green-100 text-green-700'
+                                : round.result === 'failed'
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                          >
+                            {t(`resumes.result_${round.result}`)}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setEditingRound(round)}
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() =>
+                              setInterviewRounds((prev) => prev.filter((r) => r.id !== round.id))
+                            }
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{round.date}</p>
+                      {(round.questions || round.answers || round.notes) && (
+                        <div className="text-sm space-y-1">
+                          {round.questions && (
+                            <p>
+                              <span className="font-medium">{t('resumes.questions')}:</span>{' '}
+                              {round.questions.substring(0, 100)}
+                              {round.questions.length > 100 ? '...' : ''}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() =>
+                    setEditingRound({
+                      id: crypto.randomUUID(),
+                      round: 'first',
+                      date: new Date().toISOString().split('T')[0],
+                      questions: '',
+                      answers: '',
+                      notes: '',
+                      result: 'pending'
+                    })
+                  }
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {t('resumes.add_round')}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Edit Round Dialog */}
+        {editingRound && (
+          <Dialog open={!!editingRound} onOpenChange={() => setEditingRound(null)}>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{t('resumes.edit_round')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('resumes.round')}</label>
+                    <Select
+                      value={editingRound.round}
+                      onValueChange={(value) =>
+                        setEditingRound((prev) =>
+                          prev ? { ...prev, round: value as InterviewRound['round'] } : null
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="first">{t('resumes.round_first')}</SelectItem>
+                        <SelectItem value="second">{t('resumes.round_second')}</SelectItem>
+                        <SelectItem value="third">{t('resumes.round_third')}</SelectItem>
+                        <SelectItem value="fourth">{t('resumes.round_fourth')}</SelectItem>
+                        <SelectItem value="fifth">{t('resumes.round_fifth')}</SelectItem>
+                        <SelectItem value="hr">{t('resumes.round_hr')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('resumes.result')}</label>
+                    <Select
+                      value={editingRound.result}
+                      onValueChange={(value) =>
+                        setEditingRound((prev) =>
+                          prev ? { ...prev, result: value as InterviewRound['result'] } : null
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">{t('resumes.result_pending')}</SelectItem>
+                        <SelectItem value="passed">{t('resumes.result_passed')}</SelectItem>
+                        <SelectItem value="failed">{t('resumes.result_failed')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('resumes.date')}</label>
+                  <Input
+                    type="date"
+                    value={editingRound.date}
+                    onChange={(e) =>
+                      setEditingRound((prev) => (prev ? { ...prev, date: e.target.value } : null))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('resumes.questions')}</label>
+                  <Textarea
+                    placeholder={t('resumes.questions_ph')}
+                    value={editingRound.questions}
+                    onChange={(e) =>
+                      setEditingRound((prev) =>
+                        prev ? { ...prev, questions: e.target.value } : null
+                      )
+                    }
+                    className="min-h-[80px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('resumes.answers')}</label>
+                  <Textarea
+                    placeholder={t('resumes.answers_ph')}
+                    value={editingRound.answers}
+                    onChange={(e) =>
+                      setEditingRound((prev) =>
+                        prev ? { ...prev, answers: e.target.value } : null
+                      )
+                    }
+                    className="min-h-[80px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('resumes.round_notes')}</label>
+                  <Textarea
+                    placeholder={t('resumes.round_notes_ph')}
+                    value={editingRound.notes}
+                    onChange={(e) =>
+                      setEditingRound((prev) => (prev ? { ...prev, notes: e.target.value } : null))
+                    }
+                    className="min-h-[60px]"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingRound(null)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (editingRound) {
+                      setInterviewRounds((prev) => {
+                        const existing = prev.find((r) => r.id === editingRound.id)
+                        if (existing) {
+                          return prev.map((r) => (r.id === editingRound.id ? editingRound : r))
+                        }
+                        return [...prev, editingRound]
+                      })
+                      setEditingRound(null)
+                    }
+                  }}
+                >
+                  {t('common.save')}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* Footer */}
