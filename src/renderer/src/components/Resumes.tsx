@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
+import { Input } from './ui/input'
 import { toast } from 'sonner'
-import { Trash2, FileText, Calendar, Briefcase, Plus, Building2 } from 'lucide-react'
+import { Trash2, FileText, Calendar, Briefcase, Plus, Building2, Search } from 'lucide-react'
 import { ResumeDialog } from './ResumeDialog'
 import type { CV, InterviewStatus } from './ResumeDialog'
+
+type FilterTab = 'all' | 'interview' | 'hr' | 'offer' | 'rejected'
 
 function getInterviewStatusColor(status: InterviewStatus): string {
   switch (status) {
@@ -37,6 +40,8 @@ export function Resumes(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingResume, setEditingResume] = useState<CV | null>(null)
+  const [activeTab, setActiveTab] = useState<FilterTab>('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const loadResumes = React.useCallback(async (): Promise<void> => {
     try {
@@ -146,6 +151,67 @@ export function Resumes(): React.JSX.Element {
     ).length
   }
 
+  // Filter resumes by tab and search
+  const filteredResumes = resumes.filter((resume) => {
+    // Tab filter
+    const status = resume.interviewStatus || 'resume_sent'
+    let matchesTab = true
+    switch (activeTab) {
+      case 'interview':
+        matchesTab = [
+          'first_interview',
+          'second_interview',
+          'third_interview',
+          'fourth_interview',
+          'fifth_interview'
+        ].includes(status)
+        break
+      case 'hr':
+        matchesTab = status === 'hr_interview'
+        break
+      case 'offer':
+        matchesTab = status === 'offer_accepted'
+        break
+      case 'rejected':
+        matchesTab = ['offer_rejected', 'interview_failed'].includes(status)
+        break
+      default:
+        matchesTab = true
+    }
+
+    // Search filter
+    const query = searchQuery.toLowerCase()
+    const matchesSearch =
+      !query ||
+      resume.jobTitle?.toLowerCase().includes(query) ||
+      resume.companyName?.toLowerCase().includes(query)
+
+    return matchesTab && matchesSearch
+  })
+
+  const tabs: { key: FilterTab; label: string; count: number; color: string }[] = [
+    { key: 'all', label: t('resumes.tab_all'), count: resumes.length, color: 'bg-gray-500' },
+    {
+      key: 'interview',
+      label: t('resumes.tab_interview'),
+      count: stats.inInterview,
+      color: 'bg-blue-500'
+    },
+    { key: 'hr', label: t('resumes.tab_hr'), count: stats.hrInterview, color: 'bg-purple-500' },
+    {
+      key: 'offer',
+      label: t('resumes.tab_offer'),
+      count: stats.offerAccepted,
+      color: 'bg-green-500'
+    },
+    {
+      key: 'rejected',
+      label: t('resumes.tab_rejected'),
+      count: stats.rejected,
+      color: 'bg-red-500'
+    }
+  ]
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
@@ -162,54 +228,107 @@ export function Resumes(): React.JSX.Element {
       {/* Statistics Cards */}
       {resumes.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <Card className="bg-gray-50">
+          <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
             <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-gray-600">{stats.resumeSent}</p>
-              <p className="text-xs text-gray-500">{t('resumes.stats_resume_sent')}</p>
+              <p className="text-2xl font-bold text-gray-700">{stats.resumeSent}</p>
+              <p className="text-xs text-gray-500 font-medium">{t('resumes.stats_resume_sent')}</p>
             </CardContent>
           </Card>
-          <Card className="bg-blue-50">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
             <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-blue-600">{stats.inInterview}</p>
-              <p className="text-xs text-blue-500">{t('resumes.stats_in_interview')}</p>
+              <p className="text-2xl font-bold text-blue-700">{stats.inInterview}</p>
+              <p className="text-xs text-blue-600 font-medium">{t('resumes.stats_in_interview')}</p>
             </CardContent>
           </Card>
-          <Card className="bg-purple-50">
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
             <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-purple-600">{stats.hrInterview}</p>
-              <p className="text-xs text-purple-500">{t('resumes.stats_hr_interview')}</p>
+              <p className="text-2xl font-bold text-purple-700">{stats.hrInterview}</p>
+              <p className="text-xs text-purple-600 font-medium">
+                {t('resumes.stats_hr_interview')}
+              </p>
             </CardContent>
           </Card>
-          <Card className="bg-green-50">
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
             <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-green-600">{stats.offerAccepted}</p>
-              <p className="text-xs text-green-500">{t('resumes.stats_offer_accepted')}</p>
+              <p className="text-2xl font-bold text-green-700">{stats.offerAccepted}</p>
+              <p className="text-xs text-green-600 font-medium">
+                {t('resumes.stats_offer_accepted')}
+              </p>
             </CardContent>
           </Card>
-          <Card className="bg-red-50">
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
             <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-              <p className="text-xs text-red-500">{t('resumes.stats_rejected')}</p>
+              <p className="text-2xl font-bold text-red-700">{stats.rejected}</p>
+              <p className="text-xs text-red-600 font-medium">{t('resumes.stats_rejected')}</p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {resumes.length === 0 ? (
+      {/* Filter Tabs & Search */}
+      {resumes.length > 0 && (
+        <div className="space-y-4">
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === tab.key
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${tab.color}`} />
+                {tab.label}
+                <span
+                  className={`px-1.5 py-0.5 rounded text-xs ${
+                    activeTab === tab.key ? 'bg-primary-foreground/20' : 'bg-background'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('resumes.search_placeholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+      )}
+
+      {filteredResumes.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-10 space-y-4">
             <div className="p-4 bg-muted rounded-full">
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-medium">{t('resumes.empty_title')}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{t('resumes.empty_desc')}</p>
+              <h3 className="text-lg font-medium">
+                {searchQuery || activeTab !== 'all'
+                  ? t('resumes.no_search_results')
+                  : t('resumes.empty_title')}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {searchQuery || activeTab !== 'all'
+                  ? t('resumes.no_search_results_desc')
+                  : t('resumes.empty_desc')}
+              </p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-fade-in">
-          {resumes.map((resume) => (
+          {filteredResumes.map((resume) => (
             <Card
               key={resume.id}
               className="group relative overflow-hidden card-hover cursor-pointer"

@@ -223,6 +223,14 @@
     "stats_in_interview": "面试中",
     "stats_hr_interview": "HR面",
     "stats_offer_accepted": "已通过",
-    "stats_rejected": "已拒绝"
+    "stats_rejected": "已拒绝",
+    "tab_all": "全部",
+    "tab_interview": "面试中",
+    "tab_hr": "HR面",
+    "tab_offer": "已通过",
+    "tab_rejected": "已拒绝",
+    "search_placeholder": "搜索职位或公司...",
+    "no_search_results": "未找到结果",
+    "no_search_results_desc": "尝试调整搜索或筛选条件"
   }
 }

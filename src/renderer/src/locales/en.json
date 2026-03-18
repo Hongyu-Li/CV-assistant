@@ -223,6 +223,14 @@
     "stats_in_interview": "In Interview",
     "stats_hr_interview": "HR Interview",
     "stats_offer_accepted": "Offer Accepted",
-    "stats_rejected": "Rejected"
+    "stats_rejected": "Rejected",
+    "tab_all": "All",
+    "tab_interview": "Interview",
+    "tab_hr": "HR Round",
+    "tab_offer": "Offer",
+    "tab_rejected": "Rejected",
+    "search_placeholder": "Search by job title or company...",
+    "no_search_results": "No results found",
+    "no_search_results_desc": "Try adjusting your search or filter"
   }
 }
