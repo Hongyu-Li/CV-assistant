@@ -324,7 +324,8 @@ describe('extractProfileFromPdf', () => {
         expect.objectContaining({ role: 'system' }),
         expect.objectContaining({ role: 'user' })
       ]),
-      baseUrl: 'https://api.openai.com/v1'
+      baseUrl: 'https://api.openai.com/v1',
+      timeoutMs: 180_000
     })
   })
 

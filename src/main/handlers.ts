@@ -637,7 +637,9 @@ export async function handleAiChat(params: {
   model: string
   messages: AiChatMessage[]
   baseUrl: string
+  timeoutMs?: number
 }): Promise<{ success: true; content: string } | IpcErrorResponse> {
+  const timeoutMs = params.timeoutMs ?? 30_000
   try {
     const { url, headers } = buildAiRequestBase(params)
 
@@ -656,7 +658,7 @@ export async function handleAiChat(params: {
     }
 
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 30_000)
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -687,7 +689,8 @@ export async function handleAiChat(params: {
     }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      return { success: false, error: 'AI request timed out after 30 seconds' }
+      const timeoutSec = Math.round(timeoutMs / 1000)
+      return { success: false, error: `AI request timed out after ${timeoutSec} seconds` }
     }
     return { success: false, error: `AI chat failed: ${(error as Error).message}` }
   }

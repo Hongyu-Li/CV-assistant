@@ -348,8 +348,8 @@ app
     )
 
     // AI API proxy IPC — all external HTTP from main process to bypass CSP
-    ipcMain.handle('ai:chat', (_, { provider, apiKey, model, messages, baseUrl }) =>
-      handleAiChat({ provider, apiKey, model, messages, baseUrl })
+    ipcMain.handle('ai:chat', (_, { provider, apiKey, model, messages, baseUrl, timeoutMs }) =>
+      handleAiChat({ provider, apiKey, model, messages, baseUrl, timeoutMs })
     )
 
     ipcMain.handle('ai:test', (_, { provider, apiKey, model, baseUrl }) =>
