@@ -97,7 +97,7 @@ describe('ResumeDialog', () => {
     expect(screen.getByText('resumes.create_resume')).toBeInTheDocument()
   })
 
-  it('renders edit mode title with prefilled values when resume prop passed', () => {
+  it('renders edit mode title with prefilled values when resume prop passed', async () => {
     const resume: CV = {
       id: '1',
       filename: 'test.json',
@@ -116,8 +116,13 @@ describe('ResumeDialog', () => {
     expect(screen.getByDisplayValue('Frontend Dev')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Acme')).toBeInTheDocument()
     expect(screen.getByDisplayValue('100k')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Some notes')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Build things')).toBeInTheDocument()
+
+    // Generated CV section is collapsed when CV exists, need to expand it
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Some notes')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('Build things')).toBeInTheDocument()
+    })
   })
 
   it('renders all form field labels', () => {

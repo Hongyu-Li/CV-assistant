@@ -221,6 +221,7 @@
     "round_notes_ph": "其他需要记录的信息...",
     "interview_notes": "面试记录",
     "interview_notes_ph": "以 Markdown 格式记录面试问题、关键回答和备注...",
+    "configuration": "配置",
     "stats_resume_sent": "简历投递",
     "stats_in_interview": "面试中",
     "stats_hr_interview": "HR面",

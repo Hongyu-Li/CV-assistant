@@ -369,36 +369,8 @@ export function ResumeDialog({
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
-          <Select value={cvLanguage} onValueChange={setCvLanguage}>
-            <SelectTrigger>
-              <SelectValue placeholder={t('resumes.cv_language_ph')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
-              <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
-              <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
-              <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
-              <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
-              <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
-              <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t('resumes.notes')}</label>
-          <Textarea
-            placeholder={t('resumes.notes_ph')}
-            value={notes}
-            onChange={(e): void => setNotes(e.target.value)}
-            className="min-h-[60px]"
-          />
-        </div>
-
-        {/* Job Description */}
+        {/* Job Description - Always visible */}
         <div className="space-y-2">
           <label className="text-sm font-medium">{t('resumes.job_description')}</label>
           <Textarea
@@ -408,6 +380,39 @@ export function ResumeDialog({
             className="min-h-[120px] font-mono text-sm"
           />
         </div>
+
+        {/* CV Language and Notes - Show directly when no CV, inside Generated CV section when CV exists */}
+        {!generatedCV && (
+          <>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
+              <Select value={cvLanguage} onValueChange={setCvLanguage}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('resumes.cv_language_ph')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
+                  <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
+                  <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
+                  <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
+                  <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
+                  <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
+                  <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('resumes.notes')}</label>
+              <Textarea
+                placeholder={t('resumes.notes_ph')}
+                value={notes}
+                onChange={(e): void => setNotes(e.target.value)}
+                className="min-h-[60px]"
+              />
+            </div>
+          </>
+        )}
 
         {/* Keywords - Auto-extracted from JD */}
         {keywords.length > 0 && (
@@ -482,7 +487,40 @@ export function ResumeDialog({
             </div>
           </button>
           {cvExpanded && (
-            <div className="p-4">
+            <div className="p-4 space-y-4">
+              {/* CV Language and Notes - shown when CV exists */}
+              {generatedCV && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
+                    <Select value={cvLanguage} onValueChange={setCvLanguage}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('resumes.cv_language_ph')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
+                        <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
+                        <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
+                        <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
+                        <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
+                        <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
+                        <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t('resumes.notes')}</label>
+                    <Textarea
+                      placeholder={t('resumes.notes_ph')}
+                      value={notes}
+                      onChange={(e): void => setNotes(e.target.value)}
+                      className="min-h-[60px]"
+                    />
+                  </div>
+                </>
+              )}
+
               {generatedCV ? (
                 <MarkdownEditor
                   value={generatedCV}
