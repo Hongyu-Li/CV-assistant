@@ -363,7 +363,8 @@ Rules:
     apiKey: options.apiKey,
     model,
     messages,
-    baseUrl
+    baseUrl,
+    timeoutMs: 180_000
   })
 
   if (!result.success) {
