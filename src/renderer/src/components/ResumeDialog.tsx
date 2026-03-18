@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Copy, Check, Download, Loader2, ChevronDown, Plus, Trash2, Edit2 } from 'lucide-react'
+import {
+  Copy,
+  Check,
+  Download,
+  Loader2,
+  ChevronDown,
+  Plus,
+  Trash2,
+  Edit2,
+  RotateCcw
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -15,7 +25,7 @@ import { MarkdownEditor } from './MarkdownEditor'
 import { Button } from './ui/button'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select'
 import { useSettings } from '../context/SettingsContext'
-import { generateCV } from '../lib/provider'
+import { generateCV, extractKeywordsFromJD } from '../lib/provider'
 import { toast } from 'sonner'
 
 export type InterviewStatus =
@@ -34,8 +44,6 @@ export interface InterviewRound {
   id: string
   round: 'first' | 'second' | 'third' | 'fourth' | 'fifth' | 'hr'
   date: string
-  questions: string
-  answers: string
   notes: string
   result: 'pending' | 'passed' | 'failed'
 }
@@ -91,7 +99,7 @@ export function ResumeDialog({
   const [roundsExpanded, setRoundsExpanded] = useState(false)
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null)
   const [keywords, setKeywords] = useState<string[]>([])
-  const [keywordInput, setKeywordInput] = useState('')
+  const [cvExpanded, setCvExpanded] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -107,9 +115,9 @@ export function ResumeDialog({
         setInterviewStatus(resume.interviewStatus ?? 'resume_sent')
         setInterviewRounds(resume.interviewRounds ?? [])
         setKeywords(resume.keywords ?? [])
-        setKeywordInput('')
         setRoundsExpanded(false)
         setEditingRound(null)
+        setCvExpanded(!resume.generatedCV)
       } else {
         setJobTitle('')
         setExperienceLevel('')
@@ -122,9 +130,9 @@ export function ResumeDialog({
         setInterviewStatus('resume_sent')
         setInterviewRounds([])
         setKeywords([])
-        setKeywordInput('')
         setRoundsExpanded(false)
         setEditingRound(null)
+        setCvExpanded(true)
       }
       setIsGenerating(false)
       setIsCopied(false)
@@ -179,16 +187,27 @@ export function ResumeDialog({
         profileText = 'No profile data available. Generate a generic professional CV.'
       }
 
-      const result = await generateCV({
-        profile: profileText,
-        jobDescription,
-        provider: settings.provider,
-        apiKey: settings.apiKeys?.[settings.provider] || '',
-        model: settings.model,
-        baseUrl: settings.baseUrl,
-        language: cvLanguage
-      })
-      setGeneratedCV(result)
+      // Extract keywords and generate CV in parallel
+      const [cvResult, extractedKeywords] = await Promise.all([
+        generateCV({
+          profile: profileText,
+          jobDescription,
+          provider: settings.provider,
+          apiKey: settings.apiKeys?.[settings.provider] || '',
+          model: settings.model,
+          baseUrl: settings.baseUrl,
+          language: cvLanguage
+        }),
+        extractKeywordsFromJD({
+          jobDescription,
+          provider: settings.provider,
+          apiKey: settings.apiKeys?.[settings.provider] || '',
+          model: settings.model,
+          baseUrl: settings.baseUrl
+        })
+      ])
+      setGeneratedCV(cvResult)
+      setKeywords(extractedKeywords)
       toast.success(t('resumes.generate_success'))
     } catch (error) {
       console.error('Generation failed:', error)
@@ -196,6 +215,36 @@ export function ResumeDialog({
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  // Derive interview status from rounds
+  const deriveInterviewStatus = (rounds: InterviewRound[]): InterviewStatus => {
+    if (rounds.length === 0) return 'resume_sent'
+
+    // Sort by date
+    const sortedRounds = [...rounds].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+
+    // Find the latest round with a result
+    const latestRound = sortedRounds[sortedRounds.length - 1]
+
+    // If latest round failed, interview failed
+    if (latestRound.result === 'failed') {
+      return 'interview_failed'
+    }
+
+    // Map round type to status
+    const roundToStatus: Record<string, InterviewStatus> = {
+      first: 'first_interview',
+      second: 'second_interview',
+      third: 'third_interview',
+      fourth: 'fourth_interview',
+      fifth: 'fifth_interview',
+      hr: 'hr_interview'
+    }
+
+    return roundToStatus[latestRound.round] || 'resume_sent'
   }
 
   const handleCopy = async (): Promise<void> => {
@@ -319,41 +368,6 @@ export function ResumeDialog({
               onChange={(e): void => setTargetSalary(e.target.value)}
             />
           </div>
-          <div className="space-y-2 sm:col-span-2">
-            <label className="text-sm font-medium">{t('resumes.interview_status')}</label>
-            <Select
-              value={interviewStatus}
-              onValueChange={(value) => setInterviewStatus(value as InterviewStatus)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={t('resumes.interview_status_ph')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="resume_sent">{t('resumes.status_resume_sent')}</SelectItem>
-                <SelectItem value="first_interview">
-                  {t('resumes.status_first_interview')}
-                </SelectItem>
-                <SelectItem value="second_interview">
-                  {t('resumes.status_second_interview')}
-                </SelectItem>
-                <SelectItem value="third_interview">
-                  {t('resumes.status_third_interview')}
-                </SelectItem>
-                <SelectItem value="fourth_interview">
-                  {t('resumes.status_fourth_interview')}
-                </SelectItem>
-                <SelectItem value="fifth_interview">
-                  {t('resumes.status_fifth_interview')}
-                </SelectItem>
-                <SelectItem value="hr_interview">{t('resumes.status_hr_interview')}</SelectItem>
-                <SelectItem value="offer_accepted">{t('resumes.status_offer_accepted')}</SelectItem>
-                <SelectItem value="offer_rejected">{t('resumes.status_offer_rejected')}</SelectItem>
-                <SelectItem value="interview_failed">
-                  {t('resumes.status_interview_failed')}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
@@ -395,252 +409,292 @@ export function ResumeDialog({
           />
         </div>
 
-        {/* Keywords */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t('resumes.keywords')}</label>
-          <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[42px]">
-            {keywords.map((keyword, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-sm rounded-md"
-              >
-                {keyword}
-                <button
-                  type="button"
-                  onClick={() => setKeywords((prev) => prev.filter((_, i) => i !== index))}
-                  className="hover:bg-primary/20 rounded"
+        {/* Keywords - Auto-extracted from JD */}
+        {keywords.length > 0 && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t('resumes.keywords')}</label>
+            <div className="flex flex-wrap gap-2">
+              {keywords.map((keyword, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-primary/10 text-primary text-sm rounded-md"
                 >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-            <Input
-              placeholder={t('resumes.keywords_ph')}
-              value={keywordInput}
-              onChange={(e) => setKeywordInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && keywordInput.trim()) {
-                  e.preventDefault()
-                  if (!keywords.includes(keywordInput.trim())) {
-                    setKeywords((prev) => [...prev, keywordInput.trim()])
-                  }
-                  setKeywordInput('')
-                }
-              }}
-              className="flex-1 min-w-[120px] border-0 focus-visible:ring-0 px-0"
-            />
+                  {keyword}
+                </span>
+              ))}
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">{t('resumes.keywords_help')}</p>
+        )}
+
+        {/* Generated CV Section */}
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setCvExpanded(!cvExpanded)}
+            className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <span className="font-medium">{t('resumes.generated_cv')}</span>
+            <div className="flex items-center gap-2">
+              {/* Action buttons - only show when CV exists */}
+              {generatedCV && (
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCopy}
+                    title={t('resumes.copy')}
+                    className="h-7 w-7"
+                  >
+                    {isCopied ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleExport}
+                    title={t('resumes.export_md')}
+                    className="h-7 w-7"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                    title={t('resumes.generate_cv')}
+                    className="h-7 w-7"
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+              )}
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${cvExpanded ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </button>
+          {cvExpanded && (
+            <div className="p-4">
+              {generatedCV ? (
+                <MarkdownEditor
+                  value={generatedCV}
+                  onChange={setGeneratedCV}
+                  minHeight="200px"
+                  className="max-h-[400px] overflow-y-auto"
+                />
+              ) : (
+                <div className="text-center py-8 space-y-4">
+                  <p className="text-sm text-muted-foreground">{t('resumes.generated_cv_desc')}</p>
+                  <Button onClick={handleGenerate} disabled={isGenerating}>
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t('resumes.generating')}
+                      </>
+                    ) : (
+                      t('resumes.generate_cv')
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Generate button */}
-        <Button onClick={handleGenerate} disabled={isGenerating} className="w-full">
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('resumes.generating')}
-            </>
-          ) : (
-            t('resumes.generate_cv')
-          )}
-        </Button>
-
-        {/* Generated CV output */}
-        {generatedCV && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">{t('resumes.generated_cv')}</label>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="icon" onClick={handleCopy} title={t('resumes.copy')}>
-                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleExport}
-                  title={t('resumes.export_md')}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <MarkdownEditor
-              value={generatedCV}
-              onChange={setGeneratedCV}
-              minHeight="200px"
-              className="max-h-[400px] overflow-y-auto"
-            />
-          </div>
-        )}
-
         {/* Interview Rounds */}
-        {isEditMode && (
-          <div className="border rounded-lg overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setRoundsExpanded(!roundsExpanded)}
-              className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors"
-            >
-              <span className="font-medium">{t('resumes.interview_rounds')}</span>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${roundsExpanded ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {roundsExpanded && (
-              <div className="p-4">
-                {interviewRounds.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('resumes.no_rounds')}
-                  </p>
-                ) : (
-                  <div className="relative">
-                    {/* Timeline line */}
-                    <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-muted" />
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setRoundsExpanded(!roundsExpanded)}
+            className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <span className="font-medium">{t('resumes.interview_rounds')}</span>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${roundsExpanded ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {roundsExpanded && (
+            <div className="p-4 space-y-4">
+              {/* Interview Status - Auto-updates based on rounds */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('resumes.interview_status')}</label>
+                <Select
+                  value={interviewStatus}
+                  onValueChange={(value) => setInterviewStatus(value as InterviewStatus)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('resumes.interview_status_ph')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="resume_sent">{t('resumes.status_resume_sent')}</SelectItem>
+                    <SelectItem value="first_interview">
+                      {t('resumes.status_first_interview')}
+                    </SelectItem>
+                    <SelectItem value="second_interview">
+                      {t('resumes.status_second_interview')}
+                    </SelectItem>
+                    <SelectItem value="third_interview">
+                      {t('resumes.status_third_interview')}
+                    </SelectItem>
+                    <SelectItem value="fourth_interview">
+                      {t('resumes.status_fourth_interview')}
+                    </SelectItem>
+                    <SelectItem value="fifth_interview">
+                      {t('resumes.status_fifth_interview')}
+                    </SelectItem>
+                    <SelectItem value="hr_interview">{t('resumes.status_hr_interview')}</SelectItem>
+                    <SelectItem value="offer_accepted">
+                      {t('resumes.status_offer_accepted')}
+                    </SelectItem>
+                    <SelectItem value="offer_rejected">
+                      {t('resumes.status_offer_rejected')}
+                    </SelectItem>
+                    <SelectItem value="interview_failed">
+                      {t('resumes.status_interview_failed')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    {/* Timeline items */}
-                    <div className="space-y-0">
-                      {[...interviewRounds]
-                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                        .map((round, index) => {
-                          const dotColor =
-                            round.result === 'passed'
-                              ? 'bg-green-500 border-green-500'
-                              : round.result === 'failed'
-                                ? 'bg-red-500 border-red-500'
-                                : 'bg-yellow-400 border-yellow-400'
+              {interviewRounds.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {t('resumes.no_rounds')}
+                </p>
+              ) : (
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-muted" />
 
-                          return (
-                            <div key={round.id} className="relative flex gap-4 pb-6">
-                              {/* Timeline dot */}
-                              <div className="relative z-10">
-                                <div
-                                  className={`w-10 h-10 rounded-full border-4 border-background ${dotColor} flex items-center justify-center shadow-sm`}
-                                >
-                                  <span className="text-xs font-bold text-white">{index + 1}</span>
-                                </div>
-                              </div>
+                  {/* Timeline items */}
+                  <div className="space-y-0">
+                    {[...interviewRounds]
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .map((round, index) => {
+                        const dotColor =
+                          round.result === 'passed'
+                            ? 'bg-green-500 border-green-500'
+                            : round.result === 'failed'
+                              ? 'bg-red-500 border-red-500'
+                              : 'bg-yellow-400 border-yellow-400'
 
-                              {/* Content card */}
-                              <div className="flex-1 -mt-1">
-                                <div className="bg-muted/30 rounded-lg p-3 space-y-2">
-                                  {/* Header */}
-                                  <div className="flex items-start justify-between">
-                                    <div>
-                                      <h4 className="font-semibold text-sm">
-                                        {t(`resumes.round_${round.round}`)}
-                                      </h4>
-                                      <p className="text-xs text-muted-foreground">
-                                        {new Date(round.date).toLocaleDateString()} ·{' '}
-                                        {new Date(round.date).toLocaleTimeString([], {
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                        })}
-                                      </p>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <span
-                                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                          round.result === 'passed'
-                                            ? 'bg-green-100 text-green-700'
-                                            : round.result === 'failed'
-                                              ? 'bg-red-100 text-red-700'
-                                              : 'bg-yellow-100 text-yellow-700'
-                                        }`}
-                                      >
-                                        {t(`resumes.result_${round.result}`)}
-                                      </span>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => setEditingRound(round)}
-                                      >
-                                        <Edit2 className="h-3 w-3" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() =>
-                                          setInterviewRounds((prev) =>
-                                            prev.filter((r) => r.id !== round.id)
-                                          )
-                                        }
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-
-                                  {/* Questions & Answers */}
-                                  {(round.questions || round.answers || round.notes) && (
-                                    <div className="space-y-2 text-sm">
-                                      {round.questions && (
-                                        <div className="bg-background rounded p-2">
-                                          <p className="text-xs font-medium text-muted-foreground mb-1">
-                                            {t('resumes.questions')}
-                                          </p>
-                                          <p className="text-sm whitespace-pre-wrap">
-                                            {round.questions.length > 150
-                                              ? `${round.questions.substring(0, 150)}...`
-                                              : round.questions}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {round.answers && (
-                                        <div className="bg-green-50 rounded p-2 border border-green-100">
-                                          <p className="text-xs font-medium text-green-600 mb-1">
-                                            {t('resumes.answers')}
-                                          </p>
-                                          <p className="text-sm text-green-800 whitespace-pre-wrap">
-                                            {round.answers.length > 150
-                                              ? `${round.answers.substring(0, 150)}...`
-                                              : round.answers}
-                                          </p>
-                                        </div>
-                                      )}
-                                      {round.notes && (
-                                        <div className="bg-yellow-50 rounded p-2 border border-yellow-100">
-                                          <p className="text-xs font-medium text-yellow-600 mb-1">
-                                            {t('resumes.round_notes')}
-                                          </p>
-                                          <p className="text-sm text-yellow-800">{round.notes}</p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                        return (
+                          <div key={round.id} className="relative flex gap-4 pb-6">
+                            {/* Timeline dot */}
+                            <div className="relative z-10">
+                              <div
+                                className={`w-10 h-10 rounded-full border-4 border-background ${dotColor} flex items-center justify-center shadow-sm`}
+                              >
+                                <span className="text-xs font-bold text-white">{index + 1}</span>
                               </div>
                             </div>
-                          )
-                        })}
-                    </div>
-                  </div>
-                )}
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2"
-                  onClick={() =>
-                    setEditingRound({
-                      id: crypto.randomUUID(),
-                      round: 'first',
-                      date: new Date().toISOString().split('T')[0],
-                      questions: '',
-                      answers: '',
-                      notes: '',
-                      result: 'pending'
-                    })
-                  }
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  {t('resumes.add_round')}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+                            {/* Content card */}
+                            <div className="flex-1 -mt-1">
+                              <div className="bg-muted/30 rounded-lg p-3 space-y-2">
+                                {/* Header */}
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h4 className="font-semibold text-sm">
+                                      {t(`resumes.round_${round.round}`)}
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground">
+                                      {new Date(round.date).toLocaleDateString()} ·{' '}
+                                      {new Date(round.date).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <span
+                                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                        round.result === 'passed'
+                                          ? 'bg-green-100 text-green-700'
+                                          : round.result === 'failed'
+                                            ? 'bg-red-100 text-red-700'
+                                            : 'bg-yellow-100 text-yellow-700'
+                                      }`}
+                                    >
+                                      {t(`resumes.result_${round.result}`)}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => setEditingRound(round)}
+                                    >
+                                      <Edit2 className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7"
+                                      onClick={() => {
+                                        const updatedRounds = interviewRounds.filter(
+                                          (r) => r.id !== round.id
+                                        )
+                                        setInterviewRounds(updatedRounds)
+                                        // Auto-update interview status based on remaining rounds
+                                        setInterviewStatus(deriveInterviewStatus(updatedRounds))
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+
+                                {/* Interview Notes */}
+                                {round.notes && (
+                                  <div className="space-y-2 text-sm">
+                                    <div className="bg-muted/50 rounded p-2">
+                                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                                        {t('resumes.interview_notes')}
+                                      </p>
+                                      <p className="text-sm whitespace-pre-wrap">
+                                        {round.notes.length > 200
+                                          ? `${round.notes.substring(0, 200)}...`
+                                          : round.notes}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={() =>
+                  setEditingRound({
+                    id: crypto.randomUUID(),
+                    round: 'first',
+                    date: new Date().toISOString().split('T')[0],
+                    notes: '',
+                    result: 'pending'
+                  })
+                }
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {t('resumes.add_round')}
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Edit Round Dialog */}
         {editingRound && (
@@ -706,40 +760,13 @@ export function ResumeDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.questions')}</label>
-                  <Textarea
-                    placeholder={t('resumes.questions_ph')}
-                    value={editingRound.questions}
-                    onChange={(e) =>
-                      setEditingRound((prev) =>
-                        prev ? { ...prev, questions: e.target.value } : null
-                      )
-                    }
-                    className="min-h-[80px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.answers')}</label>
-                  <Textarea
-                    placeholder={t('resumes.answers_ph')}
-                    value={editingRound.answers}
-                    onChange={(e) =>
-                      setEditingRound((prev) =>
-                        prev ? { ...prev, answers: e.target.value } : null
-                      )
-                    }
-                    className="min-h-[80px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.round_notes')}</label>
-                  <Textarea
-                    placeholder={t('resumes.round_notes_ph')}
+                  <label className="text-sm font-medium">{t('resumes.interview_notes')}</label>
+                  <MarkdownEditor
                     value={editingRound.notes}
-                    onChange={(e) =>
-                      setEditingRound((prev) => (prev ? { ...prev, notes: e.target.value } : null))
+                    onChange={(value) =>
+                      setEditingRound((prev) => (prev ? { ...prev, notes: value } : null))
                     }
-                    className="min-h-[60px]"
+                    minHeight="150px"
                   />
                 </div>
               </div>
@@ -750,13 +777,18 @@ export function ResumeDialog({
                 <Button
                   onClick={() => {
                     if (editingRound) {
-                      setInterviewRounds((prev) => {
-                        const existing = prev.find((r) => r.id === editingRound.id)
+                      const updatedRounds = (() => {
+                        const existing = interviewRounds.find((r) => r.id === editingRound.id)
                         if (existing) {
-                          return prev.map((r) => (r.id === editingRound.id ? editingRound : r))
+                          return interviewRounds.map((r) =>
+                            r.id === editingRound.id ? editingRound : r
+                          )
                         }
-                        return [...prev, editingRound]
-                      })
+                        return [...interviewRounds, editingRound]
+                      })()
+                      setInterviewRounds(updatedRounds)
+                      // Auto-update interview status based on rounds
+                      setInterviewStatus(deriveInterviewStatus(updatedRounds))
                       setEditingRound(null)
                     }
                   }}

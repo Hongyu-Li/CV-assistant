@@ -219,6 +219,8 @@
     "answers_ph": "Enter your key answers...",
     "round_notes": "Notes",
     "round_notes_ph": "Any additional notes about this round...",
+    "interview_notes": "Interview Notes",
+    "interview_notes_ph": "Record interview questions, key answers, and any notes in Markdown format...",
     "stats_resume_sent": "Resume Sent",
     "stats_in_interview": "In Interview",
     "stats_hr_interview": "HR Interview",
