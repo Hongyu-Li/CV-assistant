@@ -159,7 +159,17 @@ Generate the CV now.${options.language ? ` Write the CV entirely in ${languageNa
     throw new Error(result.error)
   }
 
-  return result.content as string
+  // Strip markdown code block fences if present (e.g., ```markdown ... ```)
+  let content = result.content as string
+  content = content.trim()
+  if (content.startsWith('```')) {
+    // Remove opening fence (``` or ```markdown)
+    content = content.replace(/^```(?:markdown)?\s*\n?/, '')
+    // Remove closing fence
+    content = content.replace(/\n?```\s*$/, '')
+  }
+
+  return content
 }
 
 export interface ExtractProfileFromPdfOptions {
