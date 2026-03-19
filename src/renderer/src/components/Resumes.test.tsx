@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Resumes } from './Resumes'
+import type { CV } from './ResumeDialog'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { SettingsProvider } from '../context/SettingsContext'
 import { toast } from 'sonner'
@@ -15,6 +16,7 @@ vi.mock('sonner', () => ({
 // Mock provider module (required by ResumeDialog)
 vi.mock('../lib/provider', () => ({
   generateCV: vi.fn(),
+  extractKeywordsFromJD: vi.fn(),
   PROVIDER_CONFIGS: {
     openai: {
       label: 'OpenAI',
@@ -283,6 +285,345 @@ describe('Resumes Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('resumes.untitled')).toBeInTheDocument()
+    })
+  })
+
+  const richResumes: CV[] = [
+    {
+      id: '1',
+      filename: 'cv1.json',
+      jobTitle: 'React Developer',
+      companyName: 'Google',
+      interviewStatus: 'first_interview',
+      keywords: ['React', 'TypeScript', 'Node.js'],
+      targetSalary: '$150k',
+      lastModified: '2026-03-01'
+    },
+    {
+      id: '2',
+      filename: 'cv2.json',
+      jobTitle: 'Backend Engineer',
+      companyName: 'Meta',
+      interviewStatus: 'hr_interview',
+      keywords: ['Python', 'Django', 'PostgreSQL', 'Redis', 'Docker'],
+      targetSalary: '$180k',
+      lastModified: '2026-03-05'
+    },
+    {
+      id: '3',
+      filename: 'cv3.json',
+      jobTitle: 'Designer',
+      companyName: 'Apple',
+      interviewStatus: 'offer_accepted',
+      lastModified: '2026-03-10'
+    },
+    {
+      id: '4',
+      filename: 'cv4.json',
+      jobTitle: 'QA Engineer',
+      companyName: 'Amazon',
+      interviewStatus: 'interview_failed',
+      lastModified: '2026-03-08'
+    },
+    {
+      id: '5',
+      filename: 'cv5.json',
+      jobTitle: 'DevOps',
+      companyName: 'Netflix',
+      interviewStatus: 'offer_rejected',
+      lastModified: '2026-03-07'
+    }
+  ]
+
+  it('filters to Interview tab showing only interview-stage resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('React Developer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_interview'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('React Developer')).toBeInTheDocument()
+      expect(screen.queryByText('Backend Engineer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Designer')).not.toBeInTheDocument()
+      expect(screen.queryByText('QA Engineer')).not.toBeInTheDocument()
+      expect(screen.queryByText('DevOps')).not.toBeInTheDocument()
+    })
+  })
+
+  it('filters to HR tab showing only hr_interview resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Backend Engineer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_hr'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('Backend Engineer')).toBeInTheDocument()
+      expect(screen.queryByText('React Developer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Designer')).not.toBeInTheDocument()
+    })
+  })
+
+  it('filters to Offer tab showing only offer_accepted resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Designer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_offer'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('Designer')).toBeInTheDocument()
+      expect(screen.queryByText('React Developer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Backend Engineer')).not.toBeInTheDocument()
+    })
+  })
+
+  it('filters to Rejected tab showing failed and rejected resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('QA Engineer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_rejected'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('QA Engineer')).toBeInTheDocument()
+      expect(screen.getByText('DevOps')).toBeInTheDocument()
+      expect(screen.queryByText('React Developer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Designer')).not.toBeInTheDocument()
+    })
+  })
+
+  it('filters resumes by job title search', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('React Developer')).toBeInTheDocument()
+    })
+
+    const searchInput = screen.getByPlaceholderText('resumes.search_placeholder')
+    fireEvent.change(searchInput, { target: { value: 'React' } })
+
+    await waitFor((): void => {
+      expect(screen.getByText('React Developer')).toBeInTheDocument()
+      expect(screen.queryByText('Backend Engineer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Designer')).not.toBeInTheDocument()
+    })
+  })
+
+  it('filters resumes by company name search', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Meta')).toBeInTheDocument()
+    })
+
+    const searchInput = screen.getByPlaceholderText('resumes.search_placeholder')
+    fireEvent.change(searchInput, { target: { value: 'Meta' } })
+
+    await waitFor((): void => {
+      expect(screen.getByText('Backend Engineer')).toBeInTheDocument()
+      expect(screen.queryByText('React Developer')).not.toBeInTheDocument()
+    })
+  })
+
+  it('combines tab and search filters', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('QA Engineer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_rejected'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('QA Engineer')).toBeInTheDocument()
+      expect(screen.getByText('DevOps')).toBeInTheDocument()
+    })
+
+    const searchInput = screen.getByPlaceholderText('resumes.search_placeholder')
+    fireEvent.change(searchInput, { target: { value: 'QA' } })
+
+    await waitFor((): void => {
+      expect(screen.getByText('QA Engineer')).toBeInTheDocument()
+      expect(screen.queryByText('DevOps')).not.toBeInTheDocument()
+    })
+  })
+
+  it('shows no_search_results when search yields no matches', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('React Developer')).toBeInTheDocument()
+    })
+
+    const searchInput = screen.getByPlaceholderText('resumes.search_placeholder')
+    fireEvent.change(searchInput, { target: { value: 'nonexistent' } })
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.no_search_results')).toBeInTheDocument()
+      expect(screen.queryByText('resumes.empty_title')).not.toBeInTheDocument()
+    })
+  })
+
+  it('shows no_search_results when tab filter yields no matches', async (): Promise<void> => {
+    const noOfferResumes: CV[] = [
+      {
+        id: '1',
+        filename: 'cv1.json',
+        jobTitle: 'Dev',
+        companyName: 'Co',
+        interviewStatus: 'first_interview',
+        lastModified: '2026-03-01'
+      }
+    ]
+    mockInvoke.mockResolvedValue(noOfferResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Dev')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_offer'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.no_search_results')).toBeInTheDocument()
+      expect(screen.queryByText('resumes.empty_title')).not.toBeInTheDocument()
+    })
+  })
+
+  it('displays keyword tags for resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('React')).toBeInTheDocument()
+      expect(screen.getByText('TypeScript')).toBeInTheDocument()
+      expect(screen.getByText('Node.js')).toBeInTheDocument()
+    })
+  })
+
+  it('shows +N overflow badge when resume has more than 4 keywords', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      // Backend Engineer has 5 keywords, should show 4 + "+1"
+      expect(screen.getByText('Python')).toBeInTheDocument()
+      expect(screen.getByText('Django')).toBeInTheDocument()
+      expect(screen.getByText('PostgreSQL')).toBeInTheDocument()
+      expect(screen.getByText('Redis')).toBeInTheDocument()
+      expect(screen.getByText('+1')).toBeInTheDocument()
+      // Docker should NOT be shown (5th keyword, overflow)
+      expect(screen.queryByText('Docker')).not.toBeInTheDocument()
+    })
+  })
+
+  it('displays target salary for resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('$150k')).toBeInTheDocument()
+      expect(screen.getByText('$180k')).toBeInTheDocument()
+    })
+  })
+
+  it('displays interview status badges', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.status_first_interview')).toBeInTheDocument()
+      expect(screen.getByText('resumes.status_hr_interview')).toBeInTheDocument()
+      expect(screen.getByText('resumes.status_offer_accepted')).toBeInTheDocument()
+      expect(screen.getByText('resumes.status_interview_failed')).toBeInTheDocument()
+      expect(screen.getByText('resumes.status_offer_rejected')).toBeInTheDocument()
+    })
+  })
+
+  it('shows correct counts in tab badges', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      // All tab shows total count 5
+      const allTab = screen.getByText('resumes.tab_all').closest('button')
+      expect(allTab).toHaveTextContent('5')
+      // Interview tab: 1 (first_interview)
+      const interviewTab = screen.getByText('resumes.tab_interview').closest('button')
+      expect(interviewTab).toHaveTextContent('1')
+      // HR tab: 1 (hr_interview)
+      const hrTab = screen.getByText('resumes.tab_hr').closest('button')
+      expect(hrTab).toHaveTextContent('1')
+      // Offer tab: 1 (offer_accepted)
+      const offerTab = screen.getByText('resumes.tab_offer').closest('button')
+      expect(offerTab).toHaveTextContent('1')
+      // Rejected tab: 2 (interview_failed + offer_rejected)
+      const rejectedTab = screen.getByText('resumes.tab_rejected').closest('button')
+      expect(rejectedTab).toHaveTextContent('2')
+    })
+  })
+
+  it('opens dialog with resume data when cv:read succeeds', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'cv:list') return Promise.resolve(richResumes)
+      if (channel === 'cv:read')
+        return Promise.resolve({
+          success: true,
+          data: { jobTitle: 'React Developer', companyName: 'Google' }
+        })
+      if (channel === 'settings:load') return Promise.resolve({})
+      return Promise.resolve(undefined)
+    })
+
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Google')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Google'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_resume')).toBeInTheDocument()
+    })
+  })
+
+  it('shows load error toast when cv:read returns success false', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'cv:list') return Promise.resolve(richResumes)
+      if (channel === 'cv:read') return Promise.resolve({ success: false })
+      if (channel === 'settings:load') return Promise.resolve({})
+      return Promise.resolve(undefined)
+    })
+
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Google')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Google'))
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.load_error')
     })
   })
 })

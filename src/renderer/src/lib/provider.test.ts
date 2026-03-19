@@ -3,10 +3,12 @@ import {
   PROVIDER_CONFIGS,
   generateCV,
   extractProfileFromPdf,
+  extractKeywordsFromJD,
   parseJsonFromAiResponse,
   type AIProvider,
   type GenerateCVOptions,
-  type ExtractProfileFromPdfOptions
+  type ExtractProfileFromPdfOptions,
+  type ExtractKeywordsOptions
 } from './provider'
 
 // Mock window.electron for IPC calls
@@ -272,6 +274,41 @@ describe('generateCV', () => {
       })
     )
   })
+
+  describe('markdown fence stripping', (): void => {
+    it('strips ```markdown fences from response', async (): Promise<void> => {
+      mockInvoke.mockResolvedValue({
+        success: true,
+        content: '```markdown\n# CV Content\n```'
+      })
+
+      const result = await generateCV(baseOptions)
+
+      expect(result).toBe('# CV Content')
+    })
+
+    it('strips ``` fences without language tag from response', async (): Promise<void> => {
+      mockInvoke.mockResolvedValue({
+        success: true,
+        content: '```\n# CV Content\n```'
+      })
+
+      const result = await generateCV(baseOptions)
+
+      expect(result).toBe('# CV Content')
+    })
+
+    it('returns content as-is when no fences present', async (): Promise<void> => {
+      mockInvoke.mockResolvedValue({
+        success: true,
+        content: '  # CV Content  '
+      })
+
+      const result = await generateCV(baseOptions)
+
+      expect(result).toBe('# CV Content')
+    })
+  })
 })
 
 describe('extractProfileFromPdf', () => {
@@ -530,7 +567,123 @@ describe('extractProfileFromPdf', () => {
   })
 })
 
-describe('parseJsonFromAiResponse', () => {
+describe('extractKeywordsFromJD', (): void => {
+  const keywordOptions: ExtractKeywordsOptions = {
+    jobDescription: 'Looking for React developer with TypeScript experience',
+    provider: 'openai' as AIProvider,
+    apiKey: 'sk-test-123',
+    model: 'gpt-5.2',
+    baseUrl: 'https://api.openai.com/v1'
+  }
+
+  beforeEach((): void => {
+    mockInvoke.mockReset()
+  })
+
+  it('returns parsed keywords on success', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{"keywords":["React","TypeScript","Node.js"]}'
+    })
+
+    const result = await extractKeywordsFromJD(keywordOptions)
+
+    expect(result).toEqual(['React', 'TypeScript', 'Node.js'])
+  })
+
+  it('slices result to max 4 keywords', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{"keywords":["React","TypeScript","Node.js","Docker","AWS","Kubernetes"]}'
+    })
+
+    const result = await extractKeywordsFromJD(keywordOptions)
+
+    expect(result).toHaveLength(4)
+    expect(result).toEqual(['React', 'TypeScript', 'Node.js', 'Docker'])
+  })
+
+  it('returns empty array when keywords list is empty', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{"keywords":[]}'
+    })
+
+    const result = await extractKeywordsFromJD(keywordOptions)
+
+    expect(result).toEqual([])
+  })
+
+  it('returns empty array when keywords field is missing (schema default)', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{}'
+    })
+
+    const result = await extractKeywordsFromJD(keywordOptions)
+
+    expect(result).toEqual([])
+  })
+
+  it('throws when IPC returns failure', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: false, error: 'API key invalid' })
+
+    await expect(extractKeywordsFromJD(keywordOptions)).rejects.toThrow('API key invalid')
+  })
+
+  it('throws on invalid keywords data (non-array)', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{"keywords":"not-an-array"}'
+    })
+
+    await expect(extractKeywordsFromJD(keywordOptions)).rejects.toThrow('Invalid keywords data')
+  })
+
+  it('uses fallback baseUrl from config when empty string provided', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{"keywords":["React"]}'
+    })
+
+    const options: ExtractKeywordsOptions = {
+      ...keywordOptions,
+      baseUrl: ''
+    }
+
+    await extractKeywordsFromJD(options)
+
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'ai:chat',
+      expect.objectContaining({
+        baseUrl: 'https://api.openai.com/v1'
+      })
+    )
+  })
+
+  it('uses fallback model from config when empty string provided', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({
+      success: true,
+      content: '{"keywords":["React"]}'
+    })
+
+    const options: ExtractKeywordsOptions = {
+      ...keywordOptions,
+      model: ''
+    }
+
+    await extractKeywordsFromJD(options)
+
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'ai:chat',
+      expect.objectContaining({
+        model: 'gpt-5.2'
+      })
+    )
+  })
+})
+
+describe('parseJsonFromAiResponse', (): void => {
   it('parses valid JSON directly', (): void => {
     const result = parseJsonFromAiResponse('{"name":"John"}')
     expect(result).toEqual({ name: 'John' })

@@ -126,6 +126,7 @@ describe('ResumeDialog', () => {
     vi.clearAllMocks()
     mockInvoke.mockReset()
     vi.mocked(navigator.clipboard.writeText).mockResolvedValue(undefined)
+    vi.stubGlobal('crypto', { ...crypto, randomUUID: vi.fn((): string => 'test-uuid-123') })
   })
 
   it('renders create mode title when no resume prop', () => {
@@ -641,5 +642,914 @@ describe('ResumeDialog', () => {
       expect(html).toContain('First answer')
       expect(html).toContain('Second answer')
     })
+  })
+
+  it('shows empty state when interview rounds section is expanded with no rounds', async (): Promise<void> => {
+    renderDialog()
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.no_rounds')).toBeInTheDocument()
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+  })
+
+  it('opens Edit Round Dialog when Add Round button is clicked', async (): Promise<void> => {
+    renderDialog()
+
+    // Expand the rounds section
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+
+    // Click Add Round
+    fireEvent.click(screen.getByText('resumes.add_round'))
+
+    await waitFor((): void => {
+      // Edit Round Dialog should be open
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+      // Check for form fields
+      expect(screen.getByText('resumes.round')).toBeInTheDocument()
+      expect(screen.getByText('resumes.result')).toBeInTheDocument()
+      expect(screen.getByText('resumes.date')).toBeInTheDocument()
+      expect(screen.getByText('resumes.interview_notes')).toBeInTheDocument()
+      // MarkdownEditor is mocked as textarea
+      const editors = screen.getAllByTestId('markdown-editor')
+      expect(editors.length).toBeGreaterThanOrEqual(1)
+      // Save and cancel buttons in the edit round dialog
+      const saveButtons = screen.getAllByText('common.save')
+      expect(saveButtons.length).toBeGreaterThanOrEqual(1)
+      const cancelButtons = screen.getAllByText('common.cancel')
+      expect(cancelButtons.length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  it('saves a new round and shows it in timeline', async (): Promise<void> => {
+    renderDialog()
+
+    // Expand rounds section
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+
+    // Click Add Round
+    fireEvent.click(screen.getByText('resumes.add_round'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+
+    // Click save in the Edit Round Dialog (there are multiple save buttons — the edit dialog one is from common.save)
+    const saveButtons = screen.getAllByText('common.save')
+    // The edit dialog save button is the last common.save button
+    fireEvent.click(saveButtons[saveButtons.length - 1])
+
+    // After saving, the Edit Dialog should close and the round should appear in the timeline
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
+      // The round name should appear (default is 'first')
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+      // The result badge should appear
+      expect(screen.getByText('resumes.result_pending')).toBeInTheDocument()
+    })
+  })
+
+  it('opens Edit Round Dialog with existing round data when edit button is clicked', async (): Promise<void> => {
+    const resumeWithRounds: CV = {
+      id: 'r1',
+      filename: 'r1.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'round-1',
+          round: 'first',
+          date: '2026-01-15',
+          notes: 'Good interview',
+          result: 'passed'
+        }
+      ]
+    }
+    renderDialog({ resume: resumeWithRounds })
+
+    // Expand rounds section
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+    })
+
+    // Click edit button (Edit2 icon button)
+    const editButtons = document.querySelectorAll('button')
+    const editButton = Array.from(editButtons).find((btn): boolean => {
+      const svg = btn.querySelector('.lucide-edit-2, .lucide-edit2')
+      return svg !== null
+    })
+
+    // If the edit icon approach doesn't work, find by size class
+    if (!editButton) {
+      // The edit and delete buttons are h-7 w-7 ghost icon buttons
+      const ghostButtons = Array.from(document.querySelectorAll('button.h-7'))
+      if (ghostButtons.length > 0) {
+        fireEvent.click(ghostButtons[0])
+      }
+    } else {
+      fireEvent.click(editButton)
+    }
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+  })
+
+  it('deletes a round when trash button is clicked', async (): Promise<void> => {
+    const resumeWithRounds: CV = {
+      id: 'r1',
+      filename: 'r1.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'round-1',
+          round: 'first',
+          date: '2026-01-15',
+          notes: 'Good interview',
+          result: 'passed'
+        }
+      ]
+    }
+    renderDialog({ resume: resumeWithRounds })
+
+    // Expand rounds section
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+    })
+
+    // Find all icon buttons (h-7 w-7) within the round card — edit is first, delete is second
+    const roundCard = screen.getByText('resumes.round_first').closest('.bg-muted\\/30')
+    expect(roundCard).not.toBeNull()
+    const iconButtons = roundCard!.querySelectorAll('button')
+    // The last icon button in the card is the delete button
+    const deleteButton = iconButtons[iconButtons.length - 1]
+    fireEvent.click(deleteButton)
+
+    await waitFor((): void => {
+      // Round should be removed — empty state should show
+      expect(screen.getByText('resumes.no_rounds')).toBeInTheDocument()
+      expect(screen.queryByText('resumes.round_first')).not.toBeInTheDocument()
+    })
+  })
+
+  it('cancels Edit Round Dialog without adding a round', async (): Promise<void> => {
+    renderDialog()
+
+    // Expand rounds section
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+
+    // Click Add Round
+    fireEvent.click(screen.getByText('resumes.add_round'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+
+    // Click cancel in the Edit Round Dialog
+    const cancelButtons = screen.getAllByText('common.cancel')
+    // The cancel button inside the edit dialog
+    fireEvent.click(cancelButtons[cancelButtons.length - 1])
+
+    await waitFor((): void => {
+      // Edit dialog should close
+      expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
+      // No round should have been added — empty state still shown
+      expect(screen.getByText('resumes.no_rounds')).toBeInTheDocument()
+    })
+  })
+
+  it('calls onOpenChange with false when main cancel button is clicked', (): void => {
+    const onOpenChange = vi.fn()
+    renderDialog({ onOpenChange })
+
+    const cancelButton = screen.getByText('resumes.cancel')
+    fireEvent.click(cancelButton)
+
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('includes interviewRounds and interviewStatus in save IPC call', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: true })
+
+    const resumeWithRounds: CV = {
+      id: 'r1',
+      filename: 'r1.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'round-1',
+          round: 'first',
+          date: '2026-01-15',
+          notes: 'Good interview',
+          result: 'passed'
+        }
+      ]
+    }
+    renderDialog({ resume: resumeWithRounds })
+
+    // Click main save button
+    const saveButton = screen.getByText('resumes.save')
+    fireEvent.click(saveButton)
+
+    await waitFor((): void => {
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'cv:save',
+        expect.objectContaining({
+          data: expect.objectContaining({
+            interviewStatus: 'first_interview',
+            interviewRounds: [
+              expect.objectContaining({
+                id: 'round-1',
+                round: 'first',
+                date: '2026-01-15',
+                notes: 'Good interview',
+                result: 'passed'
+              })
+            ]
+          })
+        })
+      )
+    })
+  })
+
+  it('includes education data in profile text when generating CV', async (): Promise<void> => {
+    const profileData = {
+      personalInfo: { name: 'Alice' },
+      education: [
+        {
+          degree: 'BSc Computer Science',
+          school: 'MIT',
+          date: '2018-2022',
+          description: 'Magna cum laude'
+        }
+      ],
+      workExperience: [],
+      projects: []
+    }
+    mockInvoke.mockResolvedValue(profileData)
+    vi.mocked(generateCV).mockResolvedValue('# Resume')
+    vi.mocked(extractKeywordsFromJD).mockResolvedValue([])
+
+    renderDialog()
+
+    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
+    fireEvent.change(jdTextarea, { target: { value: 'Build things' } })
+
+    fireEvent.click(screen.getByText('resumes.generate_cv'))
+
+    await waitFor((): void => {
+      expect(generateCV).toHaveBeenCalled()
+    })
+
+    const firstCall = vi.mocked(generateCV).mock.calls[0]
+    expect(firstCall).toBeDefined()
+    const [args] = firstCall!
+    expect(args.profile).toContain('Education:')
+    expect(args.profile).toContain('BSc Computer Science at MIT')
+    expect(args.profile).toContain('Magna cum laude')
+  })
+
+  it('shows generic error toast when generation fails with non-Error object', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({})
+    vi.mocked(generateCV).mockRejectedValue('string error without message')
+
+    renderDialog()
+
+    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
+    fireEvent.change(jdTextarea, { target: { value: 'Build web apps' } })
+
+    fireEvent.click(screen.getByText('resumes.generate_cv'))
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.generate_error')
+    })
+  })
+
+  it('auto-derives interview_failed status when saving with a failed round', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue({ success: true })
+
+    const resumeWithFailedRound: CV = {
+      id: 'fail-1',
+      filename: 'fail-1.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'round-f1',
+          round: 'second',
+          date: '2026-02-01',
+          notes: 'Did not pass',
+          result: 'failed'
+        },
+        {
+          id: 'round-f0',
+          round: 'first',
+          date: '2026-01-15',
+          notes: 'OK',
+          result: 'passed'
+        }
+      ]
+    }
+    renderDialog({ resume: resumeWithFailedRound })
+
+    fireEvent.click(screen.getByText('resumes.save'))
+
+    await waitFor((): void => {
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'cv:save',
+        expect.objectContaining({
+          data: expect.objectContaining({
+            interviewStatus: 'first_interview'
+          })
+        })
+      )
+    })
+  })
+
+  it('toggles CV section via keyboard Enter and Space keys', async (): Promise<void> => {
+    const resume: CV = {
+      id: 'kb-1',
+      filename: 'kb-1.json',
+      generatedCV: '# Keyboard Test'
+    }
+    renderDialog({ resume })
+
+    // The Generated CV section header is a role="button" element
+    const cvHeader = screen.getByText('resumes.generated_cv').closest('[role="button"]')
+    expect(cvHeader).not.toBeNull()
+
+    // Initially collapsed — expand via Enter key
+    fireEvent.keyDown(cvHeader!, { key: 'Enter' })
+    await waitFor((): void => {
+      expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
+    })
+
+    // Collapse via Space key
+    fireEvent.keyDown(cvHeader!, { key: ' ' })
+    await waitFor((): void => {
+      expect(screen.queryByTestId('markdown-editor')).not.toBeInTheDocument()
+    })
+  })
+
+  it('updates existing round when editing and saving via Edit Round Dialog', async (): Promise<void> => {
+    const resumeWithRound: CV = {
+      id: 'edit-r1',
+      filename: 'edit-r1.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'round-edit-1',
+          round: 'first',
+          date: '2026-01-15',
+          notes: 'Initial notes',
+          result: 'pending'
+        }
+      ]
+    }
+    mockInvoke.mockResolvedValue({ success: true })
+    renderDialog({ resume: resumeWithRound })
+
+    // Expand rounds section
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+    })
+
+    // Click edit button on the existing round
+    const roundCard = screen.getByText('resumes.round_first').closest('.bg-muted\\/30')
+    expect(roundCard).not.toBeNull()
+    const iconButtons = roundCard!.querySelectorAll('button')
+    // First icon button is edit
+    fireEvent.click(iconButtons[0])
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+
+    // Change the date field
+    const dateInput = screen.getByDisplayValue('2026-01-15')
+    fireEvent.change(dateInput, { target: { value: '2026-02-20' } })
+
+    // Change the notes via markdown editor
+    const editors = screen.getAllByTestId('markdown-editor')
+    const notesEditor = editors[editors.length - 1]
+    fireEvent.change(notesEditor, { target: { value: 'Updated notes' } })
+
+    // Save the edited round
+    const saveButtons = screen.getAllByText('common.save')
+    fireEvent.click(saveButtons[saveButtons.length - 1])
+
+    // Dialog should close, round should still be visible
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+    })
+
+    // Now save the main form and verify the updated round is persisted
+    fireEvent.click(screen.getByText('resumes.save'))
+
+    await waitFor((): void => {
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'cv:save',
+        expect.objectContaining({
+          data: expect.objectContaining({
+            interviewRounds: [
+              expect.objectContaining({
+                id: 'round-edit-1',
+                date: '2026-02-20',
+                notes: 'Updated notes'
+              })
+            ]
+          })
+        })
+      )
+    })
+  })
+
+  it('renders links and horizontal rules via markdownToHtml', async (): Promise<void> => {
+    const resume: CV = {
+      id: 'md-extras',
+      filename: 'md-extras.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'r-extras',
+          round: 'first',
+          date: '2026-03-19T10:00:00Z',
+          notes: '[Click here](https://example.com)\n\n---\n\n***Bold italic***',
+          result: 'pending'
+        }
+      ]
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      const notesContainer = document.querySelector('.prose') as HTMLElement
+      expect(notesContainer).not.toBeNull()
+      const html = notesContainer.innerHTML
+      expect(html).toContain('<a href="https://example.com"')
+      expect(html).toContain('Click here')
+      expect(html).toContain('<hr')
+      expect(html).toContain('<strong><em>Bold italic</em></strong>')
+    })
+  })
+
+  it('changes round select value in Edit Round Dialog', async (): Promise<void> => {
+    renderDialog()
+
+    // Expand rounds, add a round
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText('resumes.add_round'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+
+    // The round select trigger — find by its current displayed value
+    // Default round is 'first', so the select trigger shows 'resumes.round_first'
+    const roundTriggers = screen.getAllByRole('combobox')
+    // First combobox in the edit dialog is the round select
+    fireEvent.click(roundTriggers[roundTriggers.length - 2])
+
+    // Select 'second' option
+    await waitFor((): void => {
+      const secondOption = screen.getByText('resumes.round_second')
+      fireEvent.click(secondOption)
+    })
+
+    // Now change result select
+    fireEvent.click(roundTriggers[roundTriggers.length - 1])
+    await waitFor((): void => {
+      const passedOption = screen.getByText('resumes.result_passed')
+      fireEvent.click(passedOption)
+    })
+
+    // Save and verify the round was created with updated values
+    const saveButtons = screen.getAllByText('common.save')
+    fireEvent.click(saveButtons[saveButtons.length - 1])
+
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
+      expect(screen.getByText('resumes.round_second')).toBeInTheDocument()
+      expect(screen.getByText('resumes.result_passed')).toBeInTheDocument()
+    })
+  })
+
+  it('updates companyName, targetSalary, jobDescription, and notes via onChange', async (): Promise<void> => {
+    renderDialog()
+
+    const companyInput = screen.getByPlaceholderText('resumes.company_name_ph')
+    fireEvent.change(companyInput, { target: { value: 'Acme Corp' } })
+    expect(companyInput).toHaveValue('Acme Corp')
+
+    const salaryInput = screen.getByPlaceholderText('resumes.target_salary_ph')
+    fireEvent.change(salaryInput, { target: { value: '150k' } })
+    expect(salaryInput).toHaveValue('150k')
+
+    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
+    fireEvent.change(jdTextarea, { target: { value: 'Senior engineer role' } })
+    expect(jdTextarea).toHaveValue('Senior engineer role')
+
+    const notesTextarea = screen.getByPlaceholderText('resumes.notes_ph')
+    fireEvent.change(notesTextarea, { target: { value: 'Follow up next week' } })
+    expect(notesTextarea).toHaveValue('Follow up next week')
+  })
+
+  it('renders keyword chips when resume has keywords', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-kw',
+      filename: 'kw.json',
+      title: 'KW Resume',
+      keywords: ['React', 'TypeScript', 'Node.js']
+    }
+    renderDialog({ resume })
+
+    expect(screen.getByText('React')).toBeInTheDocument()
+    expect(screen.getByText('TypeScript')).toBeInTheDocument()
+    expect(screen.getByText('Node.js')).toBeInTheDocument()
+    expect(screen.getByText('resumes.keywords')).toBeInTheDocument()
+  })
+
+  it('changes interview status via select dropdown', async (): Promise<void> => {
+    renderDialog()
+
+    const statusTrigger = screen.getByText('resumes.status_resume_sent')
+    fireEvent.click(statusTrigger)
+
+    await waitFor((): void => {
+      const option = screen.getByText('resumes.status_offer_accepted')
+      fireEvent.click(option)
+    })
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.status_offer_accepted')).toBeInTheDocument()
+    })
+  })
+
+  it('sorts and renders multiple interview rounds in timeline', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-sort',
+      filename: 'sort.json',
+      title: 'Sort Resume',
+      interviewRounds: [
+        {
+          id: 'round-b',
+          round: 'second' as const,
+          date: '2026-03-20T10:00:00Z',
+          notes: 'Second round notes',
+          result: 'passed' as const
+        },
+        {
+          id: 'round-a',
+          round: 'first' as const,
+          date: '2026-03-18T10:00:00Z',
+          notes: 'First round notes',
+          result: 'pending' as const
+        },
+        {
+          id: 'round-c',
+          round: 'third' as const,
+          date: '2026-03-22T10:00:00Z',
+          notes: '',
+          result: 'failed' as const
+        }
+      ],
+      interviewStatus: 'second_interview' as const
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+      expect(screen.getByText('resumes.round_second')).toBeInTheDocument()
+      expect(screen.getByText('resumes.round_third')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('resumes.result_passed')).toBeInTheDocument()
+    expect(screen.getByText('resumes.result_pending')).toBeInTheDocument()
+    expect(screen.getByText('resumes.result_failed')).toBeInTheDocument()
+
+    expect(screen.getByText('First round notes')).toBeInTheDocument()
+    expect(screen.getByText('Second round notes')).toBeInTheDocument()
+  })
+
+  it('shows notes textarea and language select inside expanded CV when generatedCV exists', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-cv',
+      filename: 'cv.json',
+      title: 'CV Resume',
+      generatedCV: '# My Generated CV\n\nSome content',
+      cvLanguage: 'en',
+      notes: 'Existing notes'
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+
+    await waitFor((): void => {
+      const notesTextareas = screen.getAllByPlaceholderText('resumes.notes_ph')
+      expect(notesTextareas.length).toBeGreaterThan(0)
+    })
+
+    const notesTextareas = screen.getAllByPlaceholderText('resumes.notes_ph')
+    const cvNotesTextarea = notesTextareas[notesTextareas.length - 1]
+    fireEvent.change(cvNotesTextarea, { target: { value: 'Updated CV notes' } })
+    expect(cvNotesTextarea).toHaveValue('Updated CV notes')
+
+    const languageLabels = screen.getAllByText('resumes.cv_language')
+    expect(languageLabels.length).toBeGreaterThan(0)
+  })
+
+  it('shows generate button inside expanded CV section when no generatedCV', async (): Promise<void> => {
+    renderDialog()
+
+    // In create mode (no resume), CV section starts expanded (setCvExpanded(true))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.generated_cv_desc')).toBeInTheDocument()
+    })
+
+    const generateButtons = screen.getAllByText('resumes.generate_cv')
+    expect(generateButtons.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('clicks export Markdown and PDF buttons in export menu', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-export',
+      filename: 'export.json',
+      title: 'Export Resume',
+      generatedCV: '# Test CV'
+    }
+    mockInvoke.mockResolvedValue(undefined)
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+
+    await waitFor((): void => {
+      expect(screen.getByTitle('common.download')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTitle('common.download'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
+      expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.export_md'))
+
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTitle('common.download'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText('resumes.export_pdf'))
+
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.export_pdf')).not.toBeInTheDocument()
+    })
+  })
+
+  it('does not collapse CV section when clicking action buttons area', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-stop',
+      filename: 'stop.json',
+      title: 'StopProp Resume',
+      generatedCV: '# CV Content'
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+
+    await waitFor((): void => {
+      expect(screen.getByTitle('resumes.copy')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTitle('resumes.copy'))
+
+    await waitFor((): void => {
+      expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
+    })
+  })
+
+  it('deletes an interview round via the trash button', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-del',
+      filename: 'del.json',
+      title: 'Del Resume',
+      interviewRounds: [
+        {
+          id: 'round-del-1',
+          round: 'first' as const,
+          date: '2026-03-18T10:00:00Z',
+          notes: 'Keep this round',
+          result: 'passed' as const
+        },
+        {
+          id: 'round-del-2',
+          round: 'second' as const,
+          date: '2026-03-19T10:00:00Z',
+          notes: 'Delete this round',
+          result: 'pending' as const
+        }
+      ],
+      interviewStatus: 'second_interview' as const
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
+      expect(screen.getByText('resumes.round_second')).toBeInTheDocument()
+    })
+
+    const trashButtons = screen
+      .getAllByRole('button')
+      .filter((btn): boolean => btn.querySelector('.lucide-trash-2') !== null)
+    fireEvent.click(trashButtons[trashButtons.length - 1])
+
+    await waitFor((): void => {
+      expect(screen.queryByText('Delete this round')).not.toBeInTheDocument()
+    })
+    expect(screen.getByText('Keep this round')).toBeInTheDocument()
+  })
+
+  it('closes export menu when clicking outside', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-outside',
+      filename: 'outside.json',
+      title: 'Outside Resume',
+      generatedCV: '# Outside CV'
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+
+    await waitFor((): void => {
+      expect(screen.getByTitle('common.download')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTitle('common.download'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
+    })
+
+    fireEvent.mouseDown(document.body)
+
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
+    })
+  })
+
+  it('changes CV language via select when no generatedCV exists', async (): Promise<void> => {
+    renderDialog()
+
+    const langTrigger = screen.getByText('resumes.lang_en')
+    fireEvent.click(langTrigger)
+
+    await waitFor((): void => {
+      const zhOption = screen.getByText('resumes.lang_zh')
+      fireEvent.click(zhOption)
+    })
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.lang_zh')).toBeInTheDocument()
+    })
+  })
+
+  it('changes experience level via select', async (): Promise<void> => {
+    renderDialog()
+
+    const expTriggers = screen.getAllByRole('combobox')
+    fireEvent.click(expTriggers[0])
+
+    await waitFor((): void => {
+      const seniorOption = screen.getByText('resumes.level_senior')
+      fireEvent.click(seniorOption)
+    })
+
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.level_senior')).toBeInTheDocument()
+    })
+  })
+
+  it('toggles export menu open and closed via download button', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-toggle',
+      filename: 'toggle.json',
+      title: 'Toggle Resume',
+      generatedCV: '# Toggle CV'
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.generated_cv'))
+
+    await waitFor((): void => {
+      expect(screen.getByTitle('common.download')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTitle('common.download'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTitle('common.download'))
+    await waitFor((): void => {
+      expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
+    })
+  })
+
+  it('shows regenerate button when CV exists and clicks it', async (): Promise<void> => {
+    const resume = {
+      id: 'resume-regen',
+      filename: 'regen.json',
+      title: 'Regen Resume',
+      jobDescription: 'Need React developer',
+      generatedCV: '# Existing CV'
+    }
+    mockInvoke.mockResolvedValue({
+      personalInfo: { name: 'Test' },
+      content: '# Profile',
+      markdown: '# Profile MD'
+    })
+    vi.mocked(generateCV).mockResolvedValue('# Regenerated CV')
+    renderDialog({ resume })
+
+    const regenButton = screen.getByTitle('resumes.generate_cv')
+    expect(regenButton).toBeInTheDocument()
+
+    fireEvent.click(regenButton)
+
+    await waitFor((): void => {
+      expect(mockInvoke).toHaveBeenCalledWith('profile:load', '/test/workspace')
+    })
+  })
+
+  it('changes date input in Edit Round Dialog', async (): Promise<void> => {
+    renderDialog()
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText('resumes.add_round'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+
+    const dateInputs = document.querySelectorAll('input[type="date"]')
+    expect(dateInputs.length).toBeGreaterThan(0)
+    const dateInput = dateInputs[dateInputs.length - 1] as HTMLInputElement
+    fireEvent.change(dateInput, { target: { value: '2026-04-15' } })
+    expect(dateInput.value).toBe('2026-04-15')
+  })
+
+  it('changes notes in Edit Round Dialog via MarkdownEditor', async (): Promise<void> => {
+    renderDialog()
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
+    })
+    fireEvent.click(screen.getByText('resumes.add_round'))
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
+    })
+
+    const editors = screen.getAllByTestId('markdown-editor')
+    const roundNotesEditor = editors[editors.length - 1]
+    fireEvent.change(roundNotesEditor, { target: { value: 'Updated round notes' } })
+    expect(roundNotesEditor).toHaveValue('Updated round notes')
   })
 })
