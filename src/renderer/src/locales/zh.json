@@ -202,6 +202,7 @@
     "no_rounds": "暂无面试记录",
     "add_round": "添加面试轮次",
     "edit_round": "编辑面试记录",
+    "edit_round_description": "更新本轮面试的详细信息和结果。",
     "round": "轮次",
     "round_first": "一面",
     "round_second": "二面",

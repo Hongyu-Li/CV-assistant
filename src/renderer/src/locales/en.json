@@ -202,6 +202,7 @@
     "no_rounds": "No interview rounds recorded yet",
     "add_round": "Add Interview Round",
     "edit_round": "Edit Interview Round",
+    "edit_round_description": "Update the details and result of this interview round.",
     "round": "Round",
     "round_first": "1st Round",
     "round_second": "2nd Round",
