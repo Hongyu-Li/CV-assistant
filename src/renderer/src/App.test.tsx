@@ -1,24 +1,28 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import App from './App'
 import { SettingsProvider } from './context/SettingsContext'
 
 describe('App', () => {
-  it('renders without crashing', () => {
-    render(
-      <SettingsProvider>
-        <App />
-      </SettingsProvider>
-    )
+  it('renders without crashing', async () => {
+    await act(async () => {
+      render(
+        <SettingsProvider>
+          <App />
+        </SettingsProvider>
+      )
+    })
     expect(screen.getByText('app.title')).toBeInTheDocument()
   })
 
-  it('sets document.title from i18n app.title', () => {
-    render(
-      <SettingsProvider>
-        <App />
-      </SettingsProvider>
-    )
+  it('sets document.title from i18n app.title', async () => {
+    await act(async () => {
+      render(
+        <SettingsProvider>
+          <App />
+        </SettingsProvider>
+      )
+    })
     expect(document.title).toBe('app.title')
   })
 })
@@ -37,18 +41,20 @@ vi.mock('./components/ui/sonner', () => ({
   Toaster: (): React.JSX.Element => <div data-testid="toaster" />
 }))
 
-function renderApp(): void {
-  render(
-    <SettingsProvider>
-      <App />
-    </SettingsProvider>
-  )
+async function renderApp(): Promise<void> {
+  await act(async () => {
+    render(
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
+    )
+  })
 }
 
 describe('App navigation', () => {
   describe('default view', () => {
-    it('renders Resumes view by default', (): void => {
-      renderApp()
+    it('renders Resumes view by default', async (): Promise<void> => {
+      await renderApp()
       expect(screen.getByTestId('resumes-view')).toBeInTheDocument()
       expect(screen.queryByTestId('profile-view')).not.toBeInTheDocument()
       expect(screen.queryByTestId('settings-view')).not.toBeInTheDocument()
@@ -56,24 +62,24 @@ describe('App navigation', () => {
   })
 
   describe('view switching', () => {
-    it('switches to Profile view when Profile button is clicked', (): void => {
-      renderApp()
+    it('switches to Profile view when Profile button is clicked', async (): Promise<void> => {
+      await renderApp()
       fireEvent.click(screen.getByText('app.profile'))
       expect(screen.getByTestId('profile-view')).toBeInTheDocument()
       expect(screen.queryByTestId('resumes-view')).not.toBeInTheDocument()
       expect(screen.queryByTestId('settings-view')).not.toBeInTheDocument()
     })
 
-    it('switches to Settings view when Settings button is clicked', (): void => {
-      renderApp()
+    it('switches to Settings view when Settings button is clicked', async (): Promise<void> => {
+      await renderApp()
       fireEvent.click(screen.getByText('app.settings'))
       expect(screen.getByTestId('settings-view')).toBeInTheDocument()
       expect(screen.queryByTestId('resumes-view')).not.toBeInTheDocument()
       expect(screen.queryByTestId('profile-view')).not.toBeInTheDocument()
     })
 
-    it('switches back to Resumes view from another view', (): void => {
-      renderApp()
+    it('switches back to Resumes view from another view', async (): Promise<void> => {
+      await renderApp()
       fireEvent.click(screen.getByText('app.settings'))
       expect(screen.getByTestId('settings-view')).toBeInTheDocument()
 
@@ -84,8 +90,8 @@ describe('App navigation', () => {
   })
 
   describe('button styling', () => {
-    it('applies active styling to the active button and no active styling to inactive buttons', (): void => {
-      renderApp()
+    it('applies active styling to the active button and no active styling to inactive buttons', async (): Promise<void> => {
+      await renderApp()
       const resumesBtn = screen.getByText('app.resumes')
       const profileBtn = screen.getByText('app.profile')
       const settingsBtn = screen.getByText('app.settings')
@@ -96,8 +102,8 @@ describe('App navigation', () => {
       expect(settingsBtn.closest('button')).not.toHaveClass('bg-primary/10')
     })
 
-    it('updates button styling when switching views', (): void => {
-      renderApp()
+    it('updates button styling when switching views', async (): Promise<void> => {
+      await renderApp()
       fireEvent.click(screen.getByText('app.profile'))
 
       const resumesBtn = screen.getByText('app.resumes')

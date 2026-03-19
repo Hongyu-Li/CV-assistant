@@ -118,47 +118,63 @@ describe('Settings Component', () => {
     )
   })
 
-  it('renders settings page', () => {
-    render(<Settings />)
+  it('renders settings page', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.title')).toBeInTheDocument()
     expect(screen.getByText('settings.ai_provider')).toBeInTheDocument()
   })
 
-  it('shows provider selector with current provider', () => {
-    render(<Settings />)
+  it('shows provider selector with current provider', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.provider')).toBeInTheDocument()
   })
 
-  it('shows API key field when provider requires it', () => {
-    render(<Settings />)
+  it('shows API key field when provider requires it', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.api_key')).toBeInTheDocument()
   })
 
-  it('shows model field with current model value', () => {
-    render(<Settings />)
+  it('shows model field with current model value', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.model')).toBeInTheDocument()
     expect(screen.getByDisplayValue('gpt-5.2')).toBeInTheDocument()
   })
 
-  it('calls updateSettings when model is changed', () => {
-    render(<Settings />)
+  it('calls updateSettings when model is changed', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     const input = screen.getByDisplayValue('gpt-5.2')
     fireEvent.change(input, { target: { value: 'gpt-4-turbo' } })
     expect(mockUpdateSettings).toHaveBeenCalledWith({ model: 'gpt-4-turbo' })
   })
 
-  it('shows base URL field', () => {
-    render(<Settings />)
+  it('shows base URL field', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.base_url')).toBeInTheDocument()
   })
 
-  it('shows test connection button', () => {
-    render(<Settings />)
+  it('shows test connection button', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.test_connection')).toBeInTheDocument()
   })
 
-  it('calls updateSettings when API key is changed', () => {
-    render(<Settings />)
+  it('calls updateSettings when API key is changed', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     // Find the password input (API key)
     const apiKeyInput = document.querySelector('input[type="password"]')
     expect(apiKeyInput).not.toBeNull()
@@ -166,8 +182,10 @@ describe('Settings Component', () => {
     expect(mockUpdateSettings).toHaveBeenCalledWith({ apiKeys: { openai: 'sk-test-key' } })
   })
 
-  it('toggles API key visibility when eye button is clicked', () => {
-    render(<Settings />)
+  it('toggles API key visibility when eye button is clicked', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     // Initially password field
     const apiKeyInput = document.querySelector('input[type="password"]')
     expect(apiKeyInput).not.toBeNull()
@@ -181,36 +199,44 @@ describe('Settings Component', () => {
     expect(visibleInput).not.toBeNull()
   })
 
-  it('shows per-provider API key value', () => {
+  it('shows per-provider API key value', async () => {
     ;(useSettings as Mock).mockReturnValue({
       settings: { ...defaultSettings, apiKeys: { openai: 'sk-stored-key' } },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const apiKeyInput = document.querySelector('input[type="password"]') as HTMLInputElement
     expect(apiKeyInput.value).toBe('sk-stored-key')
   })
 
-  it('shows change directory button', () => {
-    render(<Settings />)
+  it('shows change directory button', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.change_dir')).toBeInTheDocument()
   })
 
-  it('shows workspace directory input', () => {
-    render(<Settings />)
+  it('shows workspace directory input', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.workspace_dir')).toBeInTheDocument()
   })
 
-  it('shows current workspace path in input', () => {
+  it('shows current workspace path in input', async () => {
     ;(useSettings as Mock).mockReturnValue({
       settings: { ...defaultSettings, workspacePath: '/custom/path' },
       updateSettings: mockUpdateSettings,
       isLoading: false,
       error: null
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByDisplayValue('/custom/path')).toBeInTheDocument()
   })
 })
@@ -243,8 +269,10 @@ describe('Settings - Provider/Theme/Language Changes', () => {
     )
   })
 
-  it('calls updateSettings with new provider, default model, and baseUrl when provider changes', (): void => {
-    render(<Settings />)
+  it('calls updateSettings with new provider, default model, and baseUrl when provider changes', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     // Use data-current-value to find the provider select (value='openai')
     const providerSelect = document.querySelector(
       'select[data-current-value="openai"]'
@@ -258,8 +286,10 @@ describe('Settings - Provider/Theme/Language Changes', () => {
     })
   })
 
-  it('calls updateSettings with new theme when theme changes', (): void => {
-    render(<Settings />)
+  it('calls updateSettings with new theme when theme changes', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     // Use data-current-value to find the theme select (value='system')
     const themeSelect = document.querySelector(
       'select[data-current-value="system"]'
@@ -269,8 +299,10 @@ describe('Settings - Provider/Theme/Language Changes', () => {
     expect(mockUpdateSettings).toHaveBeenCalledWith({ theme: 'dark' })
   })
 
-  it('calls updateSettings with new language when language changes', (): void => {
-    render(<Settings />)
+  it('calls updateSettings with new language when language changes', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     // Use data-current-value to find the language select (value='en')
     const languageSelect = document.querySelector(
       'select[data-current-value="en"]'
@@ -280,8 +312,10 @@ describe('Settings - Provider/Theme/Language Changes', () => {
     expect(mockUpdateSettings).toHaveBeenCalledWith({ language: 'zh' })
   })
 
-  it('calls updateSettings when base URL is changed', (): void => {
-    render(<Settings />)
+  it('calls updateSettings when base URL is changed', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     // baseUrl is an input with empty value
     const baseUrlInput = screen.getByPlaceholderText('settings.base_url_ph')
     fireEvent.change(baseUrlInput, { target: { value: 'https://custom.api.com/v1' } })
@@ -322,7 +356,9 @@ describe('Settings - Test Connection', () => {
       if (channel === 'ai:test') return Promise.resolve({ success: true })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const testBtn = screen.getByText('settings.test_connection')
     await act(async (): Promise<void> => {
       fireEvent.click(testBtn)
@@ -340,7 +376,9 @@ describe('Settings - Test Connection', () => {
         return Promise.resolve({ success: false, error: 'Invalid API key' })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const testBtn = screen.getByText('settings.test_connection')
     await act(async (): Promise<void> => {
       fireEvent.click(testBtn)
@@ -357,7 +395,9 @@ describe('Settings - Test Connection', () => {
       if (channel === 'ai:test') return Promise.reject(new Error('Network error'))
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const testBtn = screen.getByText('settings.test_connection')
     await act(async (): Promise<void> => {
       fireEvent.click(testBtn)
@@ -398,7 +438,9 @@ describe('Settings - Workspace Directory', () => {
 
   it('calls shell:openPath when open folder button is clicked', async (): Promise<void> => {
     mockInvoke.mockResolvedValue(undefined)
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const openBtn = screen.getByText('settings.open_folder')
     await act(async (): Promise<void> => {
       fireEvent.click(openBtn)
@@ -412,7 +454,9 @@ describe('Settings - Workspace Directory', () => {
       if (channel === 'dialog:openDirectory') return Promise.resolve(null)
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -431,7 +475,9 @@ describe('Settings - Workspace Directory', () => {
       if (channel === 'app:getDefaultWorkspacePath') return Promise.resolve('/default/path')
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const openBtn = screen.getByText('settings.open_folder')
     await act(async (): Promise<void> => {
       fireEvent.click(openBtn)
@@ -474,7 +520,9 @@ describe('Settings - Migration Flow', () => {
       if (channel === 'dialog:openDirectory') return Promise.resolve('/old/workspace')
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -492,7 +540,9 @@ describe('Settings - Migration Flow', () => {
         return Promise.resolve({ success: false, error: 'Permission denied' })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -510,7 +560,9 @@ describe('Settings - Migration Flow', () => {
         return Promise.resolve({ success: true, fileCount: 0, conflicts: [] })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -530,7 +582,9 @@ describe('Settings - Migration Flow', () => {
         return Promise.resolve({ success: true, migrated: ['a', 'b', 'c'], errors: [] })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -558,7 +612,9 @@ describe('Settings - Migration Flow', () => {
         return Promise.resolve({ success: true, migrated: ['a', 'b', 'c', 'd', 'e'], errors: [] })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -579,7 +635,9 @@ describe('Settings - Migration Flow', () => {
         return Promise.resolve({ success: true, fileCount: 3, conflicts: [] })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -606,7 +664,9 @@ describe('Settings - Migration Flow', () => {
         })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -634,7 +694,9 @@ describe('Settings - Migration Flow', () => {
         })
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -653,7 +715,9 @@ describe('Settings - Migration Flow', () => {
       if (channel === 'workspace:precheck') return Promise.reject(new Error('IPC failed'))
       return Promise.resolve(undefined)
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     const changeBtn = screen.getByText('settings.change_dir')
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
@@ -678,7 +742,7 @@ describe('Settings - API Key Visibility by Provider', () => {
     )
   })
 
-  it('hides API key field when provider does not require it (ollama)', (): void => {
+  it('hides API key field when provider does not require it (ollama)', async (): Promise<void> => {
     ;(useSettings as Mock).mockReturnValue({
       settings: {
         provider: 'ollama',
@@ -693,12 +757,14 @@ describe('Settings - API Key Visibility by Provider', () => {
       isLoading: false,
       error: null
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     // API key label should NOT be present when requiresApiKey is false
     expect(screen.queryByText('settings.api_key')).not.toBeInTheDocument()
   })
 
-  it('shows API key field when provider requires it (openai)', (): void => {
+  it('shows API key field when provider requires it (openai)', async (): Promise<void> => {
     ;(useSettings as Mock).mockReturnValue({
       settings: {
         provider: 'openai',
@@ -714,7 +780,9 @@ describe('Settings - API Key Visibility by Provider', () => {
       isLoading: false,
       error: null
     })
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.api_key')).toBeInTheDocument()
   })
 })
@@ -748,14 +816,20 @@ describe('Settings - First-Run Migration Listener', () => {
     )
   })
 
-  it('registers IPC listener for workspace:first-run-migration on mount', (): void => {
-    render(<Settings />)
+  it('registers IPC listener for workspace:first-run-migration on mount', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(mockOn).toHaveBeenCalledWith('workspace:first-run-migration', expect.any(Function))
   })
 
-  it('removes IPC listener on unmount', (): void => {
-    const { unmount } = render(<Settings />)
-    unmount()
+  it('removes IPC listener on unmount', async (): Promise<void> => {
+    let unmount: () => void
+    await act(async () => {
+      const result = render(<Settings />)
+      unmount = result.unmount
+    })
+    unmount!()
     expect(mockRemoveListener).toHaveBeenCalledWith(
       'workspace:first-run-migration',
       expect.any(Function)
@@ -763,7 +837,9 @@ describe('Settings - First-Run Migration Listener', () => {
   })
 
   it('shows info toast when first-run migration event fires', async (): Promise<void> => {
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     // Get the handler that was registered
     const onCall = mockOn.mock.calls.find(
       (call: unknown[]) => call[0] === 'workspace:first-run-migration'
@@ -808,20 +884,26 @@ describe('Settings - Version Display', () => {
     })
   })
 
-  it('renders version section with title', (): void => {
-    render(<Settings />)
+  it('renders version section with title', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.getByText('settings.version')).toBeInTheDocument()
   })
 
   it('displays app version from IPC', async (): Promise<void> => {
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
     await waitFor((): void => {
       expect(screen.getByText(/1\.0\.2/)).toBeInTheDocument()
     })
   })
 
-  it('does not render auto-update controls', (): void => {
-    render(<Settings />)
+  it('does not render auto-update controls', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
     expect(screen.queryByText('settings.auto_update_check')).not.toBeInTheDocument()
     expect(screen.queryByTestId('auto-update-switch')).not.toBeInTheDocument()
   })
