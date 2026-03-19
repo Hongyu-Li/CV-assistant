@@ -88,7 +88,7 @@ describe('Profile Component', () => {
     expect(screen.getByDisplayValue('A test summary')).toBeInTheDocument()
   })
 
-  it('can update personal info and save', async () => {
+  it('can update personal info and auto-saves', async () => {
     renderWithProvider(<Profile />)
     await waitFor(() => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
@@ -98,9 +98,6 @@ describe('Profile Component', () => {
     fireEvent.change(nameInput, { target: { value: 'Updated Name' } })
 
     expect(screen.getByDisplayValue('Updated Name')).toBeInTheDocument()
-
-    const saveButton = screen.getByText('profile.save_changes')
-    fireEvent.click(saveButton)
 
     await waitFor(() => {
       expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith(
@@ -193,7 +190,7 @@ describe('Profile - Save Error Paths', () => {
       }
     )
   })
-  it('shows error toast when save returns success: false', async (): Promise<void> => {
+  it('shows error toast when auto-save returns success: false', async (): Promise<void> => {
     ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
       async (channel: string) => {
         if (channel === 'profile:load') {
@@ -219,14 +216,15 @@ describe('Profile - Save Error Paths', () => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('profile.save_changes'))
+    const nameInput = screen.getByPlaceholderText('profile.name_ph')
+    fireEvent.change(nameInput, { target: { value: 'trigger save' } })
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('profile.save_error'))
     })
   })
 
-  it('shows error toast when save throws an exception', async (): Promise<void> => {
+  it('shows error toast when auto-save throws an exception', async (): Promise<void> => {
     ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
       async (channel: string) => {
         if (channel === 'profile:load') {
@@ -252,7 +250,8 @@ describe('Profile - Save Error Paths', () => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('profile.save_changes'))
+    const nameInput = screen.getByPlaceholderText('profile.name_ph')
+    fireEvent.change(nameInput, { target: { value: 'trigger save' } })
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('profile.save_error')
@@ -740,21 +739,21 @@ describe('Profile - Edge Cases', () => {
     expect(screen.getByText('profile.no_projects')).toBeInTheDocument()
   })
 
-  it('save with empty required fields still calls IPC', async (): Promise<void> => {
+  it('auto-saves when a field changes even with empty required fields', async (): Promise<void> => {
     renderWithProvider(<Profile />)
     await waitFor(() => {
       expect(screen.getByText('profile.title')).toBeInTheDocument()
     })
 
-    // All fields are empty by default from our mock
-    fireEvent.click(screen.getByText('profile.save_changes'))
+    const nameInput = screen.getByPlaceholderText('profile.name_ph')
+    fireEvent.change(nameInput, { target: { value: 'X' } })
 
     await waitFor(() => {
       expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith(
         'profile:save',
         expect.objectContaining({
           personalInfo: expect.objectContaining({
-            name: '',
+            name: 'X',
             email: '',
             phone: ''
           })
@@ -762,8 +761,6 @@ describe('Profile - Edge Cases', () => {
         expect.anything()
       )
     })
-
-    expect(toast.success).toHaveBeenCalledWith('profile.save_success')
   })
 
   it('hides empty state message after adding work experience', async (): Promise<void> => {
@@ -961,7 +958,7 @@ describe('Profile - PDF Import', () => {
     })
   })
 
-  it('successfully imports PDF and populates fields', async (): Promise<void> => {
+  it('successfully imports PDF, populates fields, and auto-saves', async (): Promise<void> => {
     vi.mocked(extractProfileFromPdf).mockResolvedValue({
       personalInfo: {
         name: 'Jane Smith',
@@ -997,6 +994,19 @@ describe('Profile - PDF Import', () => {
     expect(screen.getByDisplayValue('jane@test.com')).toBeInTheDocument()
     expect(screen.getByDisplayValue('MIT')).toBeInTheDocument()
     expect(toast.success).toHaveBeenCalledWith('profile.import_success')
+
+    // Auto-save should be triggered after PDF import populates fields
+    await waitFor(() => {
+      expect(window.electron.ipcRenderer.invoke).toHaveBeenCalledWith(
+        'profile:save',
+        expect.objectContaining({
+          personalInfo: expect.objectContaining({
+            name: 'Jane Smith'
+          })
+        }),
+        expect.anything()
+      )
+    })
   })
 
   it('shows error when extractProfileFromPdf throws', async (): Promise<void> => {

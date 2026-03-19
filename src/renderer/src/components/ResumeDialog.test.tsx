@@ -331,7 +331,7 @@ describe('ResumeDialog', () => {
     fireEvent.click(screen.getByText('resumes.generate_cv'))
 
     await waitFor((): void => {
-      expect(toast.error).toHaveBeenCalledWith('resumes.generate_error')
+      expect(toast.error).toHaveBeenCalledWith('resumes.generate_error\nAPI error')
     })
   })
 

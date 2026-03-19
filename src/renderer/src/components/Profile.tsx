@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
@@ -63,6 +63,28 @@ export function Profile(): React.JSX.Element {
   const [importing, setImporting] = useState(false)
   const { t } = useTranslation()
   const { settings } = useSettings()
+  const loadedRef = useRef(false)
+  const skipNextSaveRef = useRef(false)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const autoSave = useCallback(
+    async (data: ProfileData): Promise<void> => {
+      try {
+        const result = await window.electron.ipcRenderer.invoke(
+          'profile:save',
+          data,
+          settings.workspacePath
+        )
+        if (!result.success) {
+          toast.error(t('profile.save_error') + result.error)
+        }
+      } catch (error) {
+        console.error('Failed to save profile:', error)
+        toast.error(t('profile.save_error'))
+      }
+    },
+    [settings.workspacePath, t]
+  )
 
   useEffect(() => {
     const loadProfile = async (): Promise<void> => {
@@ -72,6 +94,8 @@ export function Profile(): React.JSX.Element {
           settings.workspacePath
         )
         if (data && Object.keys(data).length > 0) {
+          // Mark that the next profile change comes from loading, not user input
+          skipNextSaveRef.current = true
           setProfile(data)
         }
       } catch (error) {
@@ -79,28 +103,34 @@ export function Profile(): React.JSX.Element {
         toast.error(t('profile.load_error'))
       } finally {
         setLoading(false)
+        loadedRef.current = true
       }
     }
     loadProfile()
   }, [t, settings.workspacePath])
 
-  const handleSave = async (): Promise<void> => {
-    try {
-      const result = await window.electron.ipcRenderer.invoke(
-        'profile:save',
-        profile,
-        settings.workspacePath
-      )
-      if (result.success) {
-        toast.success(t('profile.save_success'))
-      } else {
-        toast.error(t('profile.save_error') + result.error)
-      }
-    } catch (error) {
-      console.error('Failed to save profile:', error)
-      toast.error(t('profile.save_error'))
+  // Debounced auto-save: triggers 500ms after any profile state change, skips initial load
+  useEffect(() => {
+    if (!loadedRef.current) return
+
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false
+      return
     }
-  }
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      void autoSave(profile)
+    }, 500)
+
+    return (): void => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [profile, autoSave])
 
   const updatePersonalInfo = (field: keyof ProfileData['personalInfo'], value: string): void => {
     setProfile((prev) => ({
@@ -256,7 +286,6 @@ export function Profile(): React.JSX.Element {
             {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {importing ? t('profile.importing') : t('profile.import_pdf')}
           </Button>
-          <Button onClick={handleSave}>{t('profile.save_changes')}</Button>
         </div>
       </div>
 

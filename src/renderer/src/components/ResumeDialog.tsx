@@ -214,7 +214,12 @@ export function ResumeDialog({
       toast.success(t('resumes.generate_success'))
     } catch (error) {
       console.error('Generation failed:', error)
-      toast.error(t('resumes.generate_error'))
+      const message = error instanceof Error ? error.message : ''
+      if (message) {
+        toast.error(`${t('resumes.generate_error')}\n${message}`)
+      } else {
+        toast.error(t('resumes.generate_error'))
+      }
     } finally {
       setIsGenerating(false)
     }

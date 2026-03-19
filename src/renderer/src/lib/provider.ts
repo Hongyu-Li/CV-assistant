@@ -105,6 +105,7 @@ export interface GenerateCVOptions {
   model: string
   baseUrl: string
   language?: string
+  timeoutMs?: number
 }
 
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -152,7 +153,8 @@ Generate the CV now.${options.language ? ` Write the CV entirely in ${languageNa
     apiKey: options.apiKey,
     model,
     messages,
-    baseUrl
+    baseUrl,
+    timeoutMs: options.timeoutMs ?? 60_000
   })
 
   if (!result.success) {
