@@ -301,25 +301,65 @@ export function ResumeDialog({
   }
 
   const markdownToHtml = (md: string): string => {
-    let html = md
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    if (!md) return ''
+
+    return md
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(
+        /^###### (.*$)/gim,
+        '<h6 style="font-size:12px;font-weight:600;margin:8px 0 4px;">$1</h6>'
+      )
+      .replace(
+        /^##### (.*$)/gim,
+        '<h5 style="font-size:13px;font-weight:600;margin:10px 0 4px;">$1</h5>'
+      )
+      .replace(
+        /^#### (.*$)/gim,
+        '<h4 style="font-size:14px;font-weight:600;margin:12px 0 4px;">$1</h4>'
+      )
+      .replace(
+        /^### (.*$)/gim,
+        '<h3 style="font-size:16px;font-weight:600;margin:14px 0 6px;">$1</h3>'
+      )
+      .replace(
+        /^## (.*$)/gim,
+        '<h2 style="font-size:18px;font-weight:700;margin:16px 0 8px;">$1</h2>'
+      )
+      .replace(
+        /^# (.*$)/gim,
+        '<h1 style="font-size:22px;font-weight:700;margin:20px 0 10px;">$1</h1>'
+      )
       .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(
         /`([^`]+)`/g,
-        '<code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>'
+        '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-family:monospace;font-size:13px;">$1</code>'
       )
-      .replace(/^\s*[-*+]\s+(.*$)/gim, '<li>$1</li>')
+      .replace(/```[\s\S]*?```/g, (match) => {
+        const code = match.slice(3, -3).trim()
+        return `<pre style="background:#f5f5f5;padding:12px;border-radius:6px;overflow-x:auto;margin:12px 0;"><code style="font-size:13px;font-family:monospace;">${code}</code></pre>`
+      })
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" style="color:#2563eb;text-decoration:underline;">$1</a>'
+      )
+      .replace(
+        /^>\s*(.*$)/gim,
+        '<blockquote style="border-left:4px solid #d1d5db;padding-left:16px;font-style:italic;margin:12px 0;color:#6b7280;">$1</blockquote>'
+      )
+      .replace(/^---$/gim, '<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;" />')
+      .replace(/^\s*\d+\.\s+(.*$)/gim, '<li style="margin-left:16px;margin-bottom:4px;">$1</li>')
+      .replace(/^\s*[-*+]\s+(.*$)/gim, '<li style="margin-left:16px;margin-bottom:4px;">$1</li>')
+      .replace(
+        /(<li[^>]*>.*<\/li>)/g,
+        '<ul style="margin:8px 0;padding-left:20px;list-style:disc;">$1</ul>'
+      )
+      .replace(/<\/ul>\s*<ul[^>]*>/g, '')
+      .replace(/\n\n/g, '<div style="margin-bottom:8px;"></div>')
       .replace(/\n/g, '<br/>')
-    html = html.replace(
-      /(<li>.*<\/li>)(<br\/>)?/g,
-      '<ul style="margin: 8px 0; padding-left: 20px;">$1</ul>'
-    )
-    html = html.replace(/<\/ul><ul[^>]*>/g, '')
-    return html
   }
 
   const handleExportPdf = async (): Promise<void> => {
@@ -349,25 +389,32 @@ export function ResumeDialog({
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = pdf.internal.pageSize.getHeight()
-      const imgWidth = canvas.width
-      const imgHeight = canvas.height
-      const ratio = (pdfWidth - 20) / imgWidth
+      const margin = 10
+      const contentWidth = pdfWidth - margin * 2
+      const pageContentHeight = pdfHeight - margin * 2
 
-      const imgData = canvas.toDataURL('image/png')
+      const scale = contentWidth / canvas.width
+      const pageCanvasHeight = Math.floor(pageContentHeight / scale)
+      const totalPages = Math.ceil(canvas.height / pageCanvasHeight)
 
-      const scaledHeight = (imgHeight * ratio * (pdfWidth - 20)) / (imgWidth * ratio)
-      const pageHeight = pdfHeight - 20
-      let heightLeft = scaledHeight
-      let position = 0
+      for (let page = 0; page < totalPages; page++) {
+        if (page > 0) pdf.addPage()
 
-      pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, scaledHeight)
-      heightLeft -= pageHeight
+        const srcY = page * pageCanvasHeight
+        const srcH = Math.min(pageCanvasHeight, canvas.height - srcY)
 
-      while (heightLeft > 0) {
-        position = heightLeft - scaledHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 10, position + 10, pdfWidth - 20, scaledHeight)
-        heightLeft -= pageHeight
+        const pageCanvas = document.createElement('canvas')
+        pageCanvas.width = canvas.width
+        pageCanvas.height = srcH
+        const ctx = pageCanvas.getContext('2d')
+        if (!ctx) continue
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
+        ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH)
+
+        const pageImgData = pageCanvas.toDataURL('image/png')
+        const sliceHeight = srcH * scale
+        pdf.addImage(pageImgData, 'PNG', margin, margin, contentWidth, sliceHeight)
       }
 
       const filename = jobTitle || t('resumes.default_filename')
@@ -579,10 +626,10 @@ export function ResumeDialog({
                       )}
                     </Button>
                     {exportMenuOpen && (
-                      <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-md border bg-popover p-1 shadow-md">
+                      <div className="absolute right-0 top-full mt-1 z-50 w-max rounded-md border bg-popover p-1 shadow-md">
                         <button
                           type="button"
-                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                          className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
                           onClick={() => {
                             handleExportMarkdown()
                             setExportMenuOpen(false)
@@ -593,7 +640,7 @@ export function ResumeDialog({
                         </button>
                         <button
                           type="button"
-                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                          className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
                           onClick={() => {
                             handleExportPdf()
                             setExportMenuOpen(false)
