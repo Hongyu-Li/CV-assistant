@@ -394,8 +394,11 @@ describe('ResumeDialog', () => {
       .spyOn(document.body, 'removeChild')
       .mockImplementation((node: Node): Node => node)
 
-    const exportButton = screen.getByTitle('resumes.export_md')
-    fireEvent.click(exportButton)
+    // Open the download dropdown first, then click the markdown export item
+    const downloadButton = screen.getByTitle('common.download')
+    fireEvent.click(downloadButton)
+    const exportMdButton = screen.getByText('resumes.export_md')
+    fireEvent.click(exportMdButton)
 
     expect(mockCreateObjectURL).toHaveBeenCalled()
     expect(clickSpy).toHaveBeenCalled()
@@ -415,9 +418,9 @@ describe('ResumeDialog', () => {
     }
     renderDialog({ resume })
 
-    expect(screen.getByText('resumes.generated_cv')).toBeInTheDocument()
-    // CV section starts collapsed when there's a generated CV, need to expand it
-    fireEvent.click(screen.getByText('resumes.generated_cv'))
+    const generatedCvElements = screen.getAllByText('resumes.generated_cv')
+    expect(generatedCvElements[0]).toBeInTheDocument()
+    fireEvent.click(generatedCvElements[0])
     await waitFor(() => {
       expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
     })

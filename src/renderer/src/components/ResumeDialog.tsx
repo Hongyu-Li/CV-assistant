@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Copy,
@@ -103,6 +103,8 @@ export function ResumeDialog({
   const [keywords, setKeywords] = useState<string[]>([])
   const [cvExpanded, setCvExpanded] = useState(false)
   const [isExportingPdf, setIsExportingPdf] = useState(false)
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
@@ -141,6 +143,21 @@ export function ResumeDialog({
       setIsCopied(false)
     }
   }, [resume, open])
+
+  // Close export menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent): void => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false)
+      }
+    }
+    if (exportMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return (): void => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [exportMenuOpen])
 
   const handleGenerate = async (): Promise<void> => {
     if (!jobDescription.trim()) {
@@ -546,29 +563,48 @@ export function ResumeDialog({
                       <Copy className="h-3.5 w-3.5" />
                     )}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleExportMarkdown}
-                    title={t('resumes.export_md')}
-                    className="h-7 w-7"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleExportPdf}
-                    disabled={isExportingPdf}
-                    title={t('resumes.export_pdf')}
-                    className="h-7 w-7"
-                  >
-                    {isExportingPdf ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5" />
+                  <div className="relative" ref={exportMenuRef}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setExportMenuOpen(!exportMenuOpen)}
+                      disabled={isExportingPdf}
+                      title={t('common.download')}
+                      className="h-7 w-7"
+                    >
+                      {isExportingPdf ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                    {exportMenuOpen && (
+                      <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-md border bg-popover p-1 shadow-md">
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                          onClick={() => {
+                            handleExportMarkdown()
+                            setExportMenuOpen(false)
+                          }}
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          {t('resumes.export_md')}
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                          onClick={() => {
+                            handleExportPdf()
+                            setExportMenuOpen(false)
+                          }}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          {t('resumes.export_pdf')}
+                        </button>
+                      </div>
                     )}
-                  </Button>
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
