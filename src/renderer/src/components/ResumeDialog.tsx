@@ -734,6 +734,37 @@ export function ResumeDialog({
           )}
         </div>
 
+        {/* Interview Status - Auto-updates based on rounds */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t('resumes.interview_status')}</label>
+          <Select
+            value={interviewStatus}
+            onValueChange={(value) => setInterviewStatus(value as InterviewStatus)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('resumes.interview_status_ph')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="resume_sent">{t('resumes.status_resume_sent')}</SelectItem>
+              <SelectItem value="first_interview">{t('resumes.status_first_interview')}</SelectItem>
+              <SelectItem value="second_interview">
+                {t('resumes.status_second_interview')}
+              </SelectItem>
+              <SelectItem value="third_interview">{t('resumes.status_third_interview')}</SelectItem>
+              <SelectItem value="fourth_interview">
+                {t('resumes.status_fourth_interview')}
+              </SelectItem>
+              <SelectItem value="fifth_interview">{t('resumes.status_fifth_interview')}</SelectItem>
+              <SelectItem value="hr_interview">{t('resumes.status_hr_interview')}</SelectItem>
+              <SelectItem value="offer_accepted">{t('resumes.status_offer_accepted')}</SelectItem>
+              <SelectItem value="offer_rejected">{t('resumes.status_offer_rejected')}</SelectItem>
+              <SelectItem value="interview_failed">
+                {t('resumes.status_interview_failed')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Interview Rounds */}
         <div className="border rounded-lg overflow-hidden">
           <button
@@ -748,47 +779,6 @@ export function ResumeDialog({
           </button>
           {roundsExpanded && (
             <div className="p-4 space-y-4">
-              {/* Interview Status - Auto-updates based on rounds */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t('resumes.interview_status')}</label>
-                <Select
-                  value={interviewStatus}
-                  onValueChange={(value) => setInterviewStatus(value as InterviewStatus)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('resumes.interview_status_ph')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="resume_sent">{t('resumes.status_resume_sent')}</SelectItem>
-                    <SelectItem value="first_interview">
-                      {t('resumes.status_first_interview')}
-                    </SelectItem>
-                    <SelectItem value="second_interview">
-                      {t('resumes.status_second_interview')}
-                    </SelectItem>
-                    <SelectItem value="third_interview">
-                      {t('resumes.status_third_interview')}
-                    </SelectItem>
-                    <SelectItem value="fourth_interview">
-                      {t('resumes.status_fourth_interview')}
-                    </SelectItem>
-                    <SelectItem value="fifth_interview">
-                      {t('resumes.status_fifth_interview')}
-                    </SelectItem>
-                    <SelectItem value="hr_interview">{t('resumes.status_hr_interview')}</SelectItem>
-                    <SelectItem value="offer_accepted">
-                      {t('resumes.status_offer_accepted')}
-                    </SelectItem>
-                    <SelectItem value="offer_rejected">
-                      {t('resumes.status_offer_rejected')}
-                    </SelectItem>
-                    <SelectItem value="interview_failed">
-                      {t('resumes.status_interview_failed')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               {interviewRounds.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   {t('resumes.no_rounds')}
@@ -884,16 +874,9 @@ export function ResumeDialog({
                                         {t('resumes.interview_notes')}
                                       </p>
                                       <div
-                                        className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
+                                        className="text-sm prose prose-sm dark:prose-invert max-w-none max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
                                         dangerouslySetInnerHTML={{
-                                          __html: round.notes
-                                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                                            .replace(
-                                              /`([^`]+)`/g,
-                                              '<code class="bg-muted px-1 rounded text-xs">$1</code>'
-                                            )
-                                            .replace(/\n/g, '<br/>')
+                                          __html: markdownToHtml(round.notes)
                                         }}
                                       />
                                     </div>

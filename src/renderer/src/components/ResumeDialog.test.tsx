@@ -575,4 +575,71 @@ describe('ResumeDialog', () => {
     expect(mockSave).not.toHaveBeenCalled()
     expect(toast.success).not.toHaveBeenCalled()
   })
+
+  it('renders interview notes as HTML via markdownToHtml, not raw markdown', async () => {
+    const resume: CV = {
+      id: 'notes-md',
+      filename: 'notes-md.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'r1',
+          round: 'first',
+          date: '2026-03-19T10:00:00Z',
+          notes: '* Item one\n* Item two\n* **Bold item**',
+          result: 'passed'
+        }
+      ]
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor(() => {
+      const notesContainer = document.querySelector('.prose') as HTMLElement
+      expect(notesContainer).not.toBeNull()
+      const html = notesContainer.innerHTML
+      expect(html).toContain('<li')
+      expect(html).toContain('Item one')
+      expect(html).toContain('Item two')
+      expect(html).toContain('<strong>')
+      expect(html).toContain('Bold item')
+      expect(html).not.toContain('* Item one')
+    })
+  })
+
+  it('renders interview notes with headings and code via markdownToHtml', async () => {
+    const resume: CV = {
+      id: 'notes-md2',
+      filename: 'notes-md2.json',
+      jobTitle: 'Engineer',
+      interviewStatus: 'first_interview',
+      interviewRounds: [
+        {
+          id: 'r2',
+          round: 'first',
+          date: '2026-03-19T10:00:00Z',
+          notes: '## Questions\n\nDescribe `useState` hook.\n\n1. First answer\n2. Second answer',
+          result: 'pending'
+        }
+      ]
+    }
+    renderDialog({ resume })
+
+    fireEvent.click(screen.getByText('resumes.interview_rounds'))
+
+    await waitFor(() => {
+      const notesContainer = document.querySelector('.prose') as HTMLElement
+      expect(notesContainer).not.toBeNull()
+      const html = notesContainer.innerHTML
+      expect(html).toContain('<h2')
+      expect(html).toContain('Questions')
+      expect(html).toContain('<code')
+      expect(html).toContain('useState')
+      expect(html).toContain('<li')
+      expect(html).toContain('First answer')
+      expect(html).toContain('Second answer')
+    })
+  })
 })
