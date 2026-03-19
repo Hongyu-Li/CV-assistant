@@ -587,10 +587,17 @@ export function ResumeDialog({
 
         {/* Generated CV Section */}
         <div className="border rounded-lg">
-          <button
-            type="button"
+          <div
+            role="button"
+            tabIndex={0}
             onClick={() => setCvExpanded(!cvExpanded)}
-            className={`w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors ${cvExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setCvExpanded(!cvExpanded)
+              }
+            }}
+            className={`w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors cursor-pointer ${cvExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
           >
             <span className="font-medium">{t('resumes.generated_cv')}</span>
             <div className="flex items-center gap-2">
@@ -672,7 +679,7 @@ export function ResumeDialog({
                 className={`h-4 w-4 transition-transform ${cvExpanded ? 'rotate-180' : ''}`}
               />
             </div>
-          </button>
+          </div>
           {cvExpanded && (
             <div className="p-4 space-y-4">
               {/* CV Language and Notes - shown when CV exists */}
