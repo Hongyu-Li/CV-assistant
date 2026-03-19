@@ -196,4 +196,67 @@ test.describe('Profile View', () => {
     const nameInput = window.locator('input[placeholder="John Doe"]')
     await expect(nameInput).toHaveValue(testValue, { timeout: 10000 })
   })
+
+  test('should show empty education state', async ({ window }) => {
+    await expect(window.getByText('Education', { exact: true })).toBeVisible()
+    const addBtn = window.locator('button', { hasText: 'Add Education' })
+    await expect(addBtn).toBeVisible()
+
+    const educationEntries = window.locator('.border.rounded-lg').filter({
+      has: window.locator('input[placeholder="University or institution name"]')
+    })
+    const count = await educationEntries.count()
+    if (count === 0) {
+      await expect(window.locator('text=No education added yet.')).toBeVisible()
+    }
+  })
+
+  test('should add and fill education entry', async ({ window }) => {
+    const addEduBtn = window.locator('button', { hasText: 'Add Education' })
+    await addEduBtn.click()
+
+    const schoolInput = window.locator('input[placeholder="University or institution name"]').last()
+    await expect(schoolInput).toBeVisible({ timeout: 5000 })
+
+    await schoolInput.fill('MIT')
+    await expect(schoolInput).toHaveValue('MIT')
+
+    const degreeInput = window.locator('input[placeholder="e.g. B.S. Computer Science"]').last()
+    await degreeInput.fill('B.S. Computer Science')
+    await expect(degreeInput).toHaveValue('B.S. Computer Science')
+
+    const dateInput = window.locator('input[placeholder="e.g. Jan 2020 - Present"]').last()
+    await dateInput.fill('Sep 2018 - Jun 2022')
+    await expect(dateInput).toHaveValue('Sep 2018 - Jun 2022')
+  })
+
+  test('should remove education entry', async ({ window }) => {
+    const addEduBtn = window.locator('button', { hasText: 'Add Education' })
+    await addEduBtn.click()
+
+    const schoolInput = window.locator('input[placeholder="University or institution name"]').last()
+    await expect(schoolInput).toBeVisible({ timeout: 5000 })
+
+    const schoolInputs = window.locator('input[placeholder="University or institution name"]')
+    const entriesBefore = await schoolInputs.count()
+
+    const educationCards = window.locator('.border.rounded-lg').filter({
+      has: window.locator('input[placeholder="University or institution name"]')
+    })
+    const removeBtn = educationCards.last().locator('button', { hasText: 'Remove' })
+    await removeBtn.click()
+
+    await expect(schoolInputs).toHaveCount(entriesBefore - 1, { timeout: 5000 })
+  })
+
+  test('should display professional summary section', async ({ window }) => {
+    await expect(window.getByText('Professional Summary', { exact: true })).toBeVisible()
+    const editorContainer = window.locator('.ProseMirror, [contenteditable]')
+    await expect(editorContainer.first()).toBeVisible({ timeout: 5000 })
+  })
+
+  test('should show import PDF button', async ({ window }) => {
+    const importBtn = window.locator('button', { hasText: 'Import PDF' })
+    await expect(importBtn).toBeVisible({ timeout: 5000 })
+  })
 })
