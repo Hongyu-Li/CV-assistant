@@ -4,16 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.26](https://github.com/tc9011/CV-assistant/compare/v1.0.25...v1.0.26) (2026-03-19)
 
-### Added
+### Features
 
 - Merge export buttons into single download dropdown with PDF and Markdown options
 - Direct PDF export replacing in-app PDF preview
 - Comprehensive E2E tests for full user flow, profile, and resume management
 - Unit and E2E tests for export dropdown, PDF export, and auto-save
+- Set up release-please for automated changelog and version management
 
-### Fixed
+### Bug Fixes
 
 - Resolve resume generation timeout and implement profile auto-save
 - Improve markdown-to-HTML converter, multi-page PDF slicing, and dropdown styling
@@ -22,10 +23,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Move Interview Status outside Interview Rounds and render notes as proper HTML
 - Add missing DialogDescription to Edit Round dialog to resolve Radix a11y warning
 - Repair 3 failing e2e profile tests
-
-### Changed
-
 - Fix act() warnings in Settings and App test suites
+
+### Miscellaneous
+
 - Improve coverage for provider, ResumeDialog, and Resumes
 
 ## [1.0.25] - 2026-03-18
@@ -277,7 +278,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Playwright E2E test setup
 - GitHub Actions CI/CD for cross-platform builds
 
-[Unreleased]: https://github.com/tc9011/CV-assistant/compare/v1.0.25...HEAD
+[1.0.26]: https://github.com/tc9011/CV-assistant/compare/v1.0.25...v1.0.26
 [1.0.25]: https://github.com/tc9011/CV-assistant/compare/v1.0.24...v1.0.25
 [1.0.24]: https://github.com/tc9011/CV-assistant/compare/v1.0.23...v1.0.24
 [1.0.23]: https://github.com/tc9011/CV-assistant/compare/v1.0.22...v1.0.23

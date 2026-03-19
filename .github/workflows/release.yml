@@ -30,41 +30,28 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-  # ── Version Bump ────────────────────────────────────────
-  version:
+  # ── Release Please ──────────────────────────────────────
+  release-please:
     needs: test
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    # Skip if the last commit was a version bump (prevent infinite loop)
-    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip ci]')
-    outputs:
-      version: ${{ steps.bump.outputs.version }}
-      tag: ${{ steps.bump.outputs.tag }}
     permissions:
       contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: googleapis/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Bump patch version
-        id: bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          NEW_VERSION=$(npm version patch -m "chore(release): v%s [skip ci]")
-          echo "version=${NEW_VERSION#v}" >> "$GITHUB_OUTPUT"
-          echo "tag=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Push version bump and tag
-        run: git push --follow-tags
-
   # ── Build & Publish ────────────────────────────────────
   build:
-    needs: version
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v${{ needs.version.outputs.version }}
+          ref: ${{ needs.release-please.outputs.tag_name }}
 
       - uses: actions/setup-node@v4
         with:
