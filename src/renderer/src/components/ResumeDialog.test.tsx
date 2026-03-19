@@ -59,6 +59,42 @@ vi.mock('./MarkdownEditor', () => ({
   )
 }))
 
+// Mock jspdf — must use function() for new jsPDF() constructor
+const mockSave = vi.fn()
+const mockAddImage = vi.fn()
+const mockAddPage = vi.fn()
+vi.mock('jspdf', () => ({
+  default: vi.fn().mockImplementation(function (this: Record<string, unknown>): void {
+    this.internal = {
+      pageSize: {
+        getWidth: function (): number {
+          return 210
+        },
+        getHeight: function (): number {
+          return 297
+        }
+      }
+    }
+    this.addImage = mockAddImage
+    this.addPage = mockAddPage
+    this.save = mockSave
+  })
+}))
+
+// Mock html2canvas-pro (dynamically imported in component)
+vi.mock('html2canvas-pro', () => ({
+  default: vi.fn().mockResolvedValue({
+    width: 800,
+    height: 400,
+    toDataURL: vi.fn((): string => 'data:image/png;base64,test'),
+    getContext: vi.fn((): object => ({
+      fillStyle: '',
+      fillRect: vi.fn(),
+      drawImage: vi.fn()
+    }))
+  })
+}))
+
 // Mock electron ipcRenderer
 const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
 
@@ -424,5 +460,119 @@ describe('ResumeDialog', () => {
     await waitFor(() => {
       expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
     })
+  })
+
+  it('opens download dropdown showing export options on click', () => {
+    const resume: CV = {
+      id: '1',
+      filename: 'test.json',
+      generatedCV: '# Resume'
+    }
+    renderDialog({ resume })
+
+    const downloadButton = screen.getByTitle('common.download')
+    fireEvent.click(downloadButton)
+
+    expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
+    expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
+  })
+
+  it('closes download dropdown on outside mousedown', () => {
+    const resume: CV = {
+      id: '1',
+      filename: 'test.json',
+      generatedCV: '# Resume'
+    }
+    renderDialog({ resume })
+
+    const downloadButton = screen.getByTitle('common.download')
+    fireEvent.click(downloadButton)
+    expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
+
+    fireEvent.mouseDown(document)
+
+    expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
+  })
+
+  it('exports PDF via jsPDF and shows success toast', async (): Promise<void> => {
+    const resume: CV = {
+      id: '1',
+      filename: 'test.json',
+      jobTitle: 'Engineer',
+      generatedCV: '# Resume'
+    }
+
+    renderDialog({ resume })
+
+    // Spy after render so Radix portal is already in the DOM
+    const originalAppendChild = document.body.appendChild.bind(document.body)
+    const appendChildSpy = vi
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation(<T extends Node>(node: T): T => originalAppendChild(node))
+    const originalRemoveChild = document.body.removeChild.bind(document.body)
+    const removeChildSpy = vi
+      .spyOn(document.body, 'removeChild')
+      .mockImplementation(<T extends Node>(node: T): T => originalRemoveChild(node))
+
+    const downloadButton = screen.getByTitle('common.download')
+    fireEvent.click(downloadButton)
+    const exportPdfButton = screen.getByText('resumes.export_pdf')
+    fireEvent.click(exportPdfButton)
+
+    await waitFor((): void => {
+      expect(mockSave).toHaveBeenCalledWith('Engineer.pdf')
+      expect(toast.success).toHaveBeenCalledWith('resumes.exported')
+    })
+
+    appendChildSpy.mockRestore()
+    removeChildSpy.mockRestore()
+  })
+
+  it('shows error toast when PDF export fails', async (): Promise<void> => {
+    const html2canvasMod = await import('html2canvas-pro')
+    vi.mocked(html2canvasMod.default).mockRejectedValueOnce(new Error('canvas error'))
+
+    const resume: CV = {
+      id: '1',
+      filename: 'test.json',
+      generatedCV: '# Resume'
+    }
+
+    renderDialog({ resume })
+
+    const originalAppendChild = document.body.appendChild.bind(document.body)
+    const appendChildSpy = vi
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation(<T extends Node>(node: T): T => originalAppendChild(node))
+
+    const downloadButton = screen.getByTitle('common.download')
+    fireEvent.click(downloadButton)
+    const exportPdfButton = screen.getByText('resumes.export_pdf')
+    fireEvent.click(exportPdfButton)
+
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('resumes.export_error')
+    })
+
+    appendChildSpy.mockRestore()
+  })
+
+  it('export markdown does nothing when no CV exists', () => {
+    renderDialog()
+
+    const mockCreateObjectURL = vi.fn((): string => 'blob:test-url')
+    global.URL.createObjectURL = mockCreateObjectURL
+
+    expect(screen.queryByTitle('common.download')).not.toBeInTheDocument()
+    expect(mockCreateObjectURL).not.toHaveBeenCalled()
+    expect(toast.success).not.toHaveBeenCalled()
+  })
+
+  it('export PDF does nothing when no CV exists', async (): Promise<void> => {
+    renderDialog()
+
+    expect(screen.queryByTitle('common.download')).not.toBeInTheDocument()
+    expect(mockSave).not.toHaveBeenCalled()
+    expect(toast.success).not.toHaveBeenCalled()
   })
 })

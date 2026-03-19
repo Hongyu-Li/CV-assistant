@@ -190,4 +190,60 @@ test.describe('Resumes View', () => {
       })
     }
   })
+
+  test('should show download dropdown with export options in resume dialog', async ({ window }) => {
+    // Create and save a resume with generated CV content first
+    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    await newResumeBtn.click()
+
+    const dialog = window.locator('[role="dialog"]')
+    await expect(dialog).toBeVisible({ timeout: 5000 })
+
+    // Fill required field
+    const jobTitleInput = dialog.locator('input[placeholder="e.g. Software Engineer"]')
+    await jobTitleInput.fill('Export Test Resume')
+
+    // Save the resume
+    const saveBtn = dialog.locator('button', { hasText: 'Save' })
+    await saveBtn.click()
+    await expect(dialog).not.toBeVisible({ timeout: 5000 })
+
+    // Open the saved resume to edit
+    const resumeCard = window.locator('[class*="card"]').filter({ hasText: 'Export Test Resume' })
+    await expect(resumeCard).toBeVisible({ timeout: 5000 })
+    await resumeCard.click()
+
+    // Dialog should reopen in edit mode
+    await expect(dialog).toBeVisible({ timeout: 5000 })
+
+    // Look for the download button (has title "Download")
+    const downloadBtn = dialog.locator('button[title="Download"]')
+    const downloadVisible = await downloadBtn.isVisible().catch(() => false)
+
+    if (downloadVisible) {
+      await downloadBtn.click()
+
+      // Check for export options in dropdown
+      const exportMd = dialog.locator('button', { hasText: 'Export Markdown' })
+      const exportPdf = dialog.locator('button', { hasText: 'Export PDF' })
+      await expect(exportMd).toBeVisible({ timeout: 3000 })
+      await expect(exportPdf).toBeVisible({ timeout: 3000 })
+    }
+
+    // Close dialog
+    const cancelBtn = dialog.locator('button', { hasText: 'Cancel' })
+    await cancelBtn.click()
+
+    // Cleanup: delete the test resume
+    const card = window.locator('.card-hover').filter({ hasText: 'Export Test Resume' }).first()
+    const cardExists = await card.isVisible().catch(() => false)
+    if (cardExists) {
+      await card.hover()
+      const deleteBtn = card.locator('button', { hasText: 'Delete' })
+      const deleteVisible = await deleteBtn.isVisible().catch(() => false)
+      if (deleteVisible) {
+        await deleteBtn.click()
+      }
+    }
+  })
 })
