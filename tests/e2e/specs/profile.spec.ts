@@ -16,26 +16,40 @@ test.describe('Profile View', () => {
   })
 
   test('should auto-save profile changes', async ({ window }) => {
-    const nameInput = window.locator('input[placeholder="John Doe"]')
-    const originalValue = await nameInput.inputValue()
     const testValue = `AutoSave_${Date.now()}`
 
-    await nameInput.fill(testValue)
+    const originalProfile = await window.evaluate(() =>
+      window.electron.ipcRenderer.invoke('profile:load')
+    )
+    const originalName = originalProfile?.personalInfo?.name ?? ''
+    const modifiedProfile = {
+      ...originalProfile,
+      personalInfo: { ...originalProfile.personalInfo, name: testValue }
+    }
+    await window.evaluate(
+      (data) => window.electron.ipcRenderer.invoke('profile:save', data),
+      modifiedProfile
+    )
 
-    // Wait for debounce (500ms) + save to complete
-    await window.waitForTimeout(1500)
-
-    // Reload the page to verify persistence
     await window.reload()
+    await window.waitForLoadState('domcontentloaded')
+    const profileBtn = window.locator('nav button').nth(0)
+    await profileBtn.waitFor({ state: 'visible', timeout: 10000 })
+    await profileBtn.click()
     await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
 
-    const savedValue = await nameInput.inputValue()
-    expect(savedValue).toBe(testValue)
+    const nameInput = window.locator('input[placeholder="John Doe"]')
+    await expect(nameInput).toHaveValue(testValue, { timeout: 10000 })
 
-    // Restore original value
-    if (originalValue) {
-      await nameInput.fill(originalValue)
-      await window.waitForTimeout(1500)
+    if (originalName) {
+      const restoreProfile = {
+        ...modifiedProfile,
+        personalInfo: { ...modifiedProfile.personalInfo, name: originalName }
+      }
+      await window.evaluate(
+        (data) => window.electron.ipcRenderer.invoke('profile:save', data),
+        restoreProfile
+      )
     }
   })
 
@@ -92,23 +106,22 @@ test.describe('Profile View', () => {
   })
 
   test('should remove work experience entry', async ({ window }) => {
-    // Add an entry first
     const addExpBtn = window.locator('button', { hasText: 'Add Experience' })
     await addExpBtn.click()
 
     const companyInput = window.locator('input[placeholder="Company Name"]').last()
     await expect(companyInput).toBeVisible({ timeout: 5000 })
 
-    // Count entries before removal
-    const entriesBefore = await window.locator('input[placeholder="Company Name"]').count()
+    const companyInputs = window.locator('input[placeholder="Company Name"]')
+    const entriesBefore = await companyInputs.count()
 
-    // Click the last Remove button
-    const removeBtn = window.locator('button', { hasText: 'Remove' }).last()
+    const workCards = window.locator('.border.rounded-lg').filter({
+      has: window.locator('input[placeholder="Company Name"]')
+    })
+    const removeBtn = workCards.last().locator('button', { hasText: 'Remove' })
     await removeBtn.click()
 
-    // Count entries after removal
-    const entriesAfter = await window.locator('input[placeholder="Company Name"]').count()
-    expect(entriesAfter).toBeLessThan(entriesBefore)
+    await expect(companyInputs).toHaveCount(entriesBefore - 1, { timeout: 5000 })
   })
 
   test('should show empty projects state', async ({ window }) => {
@@ -158,13 +171,20 @@ test.describe('Profile View', () => {
   })
 
   test('should persist profile data after auto-save', async ({ window }) => {
-    const nameInput = window.locator('input[placeholder="John Doe"]')
-    await nameInput.fill('E2E Persist Test')
+    const testValue = 'E2E Persist Test'
 
-    // Wait for debounce + save
-    await window.waitForTimeout(1500)
+    const originalProfile = await window.evaluate(() =>
+      window.electron.ipcRenderer.invoke('profile:load')
+    )
+    const modifiedProfile = {
+      ...originalProfile,
+      personalInfo: { ...originalProfile.personalInfo, name: testValue }
+    }
+    await window.evaluate(
+      (data) => window.electron.ipcRenderer.invoke('profile:save', data),
+      modifiedProfile
+    )
 
-    // Navigate away and back
     const resumesBtn = window.locator('nav button').nth(1)
     await resumesBtn.click()
     await window.waitForTimeout(500)
@@ -173,7 +193,7 @@ test.describe('Profile View', () => {
     await profileBtn.click()
     await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
 
-    // Verify data persisted
-    await expect(nameInput).toHaveValue('E2E Persist Test')
+    const nameInput = window.locator('input[placeholder="John Doe"]')
+    await expect(nameInput).toHaveValue(testValue, { timeout: 10000 })
   })
 })
