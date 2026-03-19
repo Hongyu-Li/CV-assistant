@@ -586,11 +586,11 @@ export function ResumeDialog({
         )}
 
         {/* Generated CV Section */}
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg">
           <button
             type="button"
             onClick={() => setCvExpanded(!cvExpanded)}
-            className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors"
+            className={`w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors ${cvExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
           >
             <span className="font-medium">{t('resumes.generated_cv')}</span>
             <div className="flex items-center gap-2">
