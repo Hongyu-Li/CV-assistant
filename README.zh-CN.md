@@ -15,16 +15,47 @@
 
 ## 功能特性
 
+### AI 简历生成
+
 - 基于 AI 的简历生成：输入个人资料 + 目标职位描述，自动生成匹配的简历
 - 支持 12 家 AI 服务商（OpenAI、Anthropic、Google Gemini、DeepSeek、Ollama、OpenRouter、Groq、Mistral、通义千问、智谱、Kimi、自定义）
-- 富文本 Markdown 编辑器（基于 Tiptap，类似 Typora 的所见即所得实时渲染）
-- 个人资料管理，支持 Markdown 格式描述
 - 多语言简历生成（英文、中文、日文、韩文、法文、德文、西班牙文）
-- 双语界面（English / 中文）
-- 亮色 / 暗色 / 跟随系统主题切换
+- 自动从职位描述中提取关键词，与简历生成同步进行
+
+### 个人资料管理
+
+- 富文本 Markdown 编辑器（基于 Tiptap，类似 Typora 的所见即所得实时渲染）
+- 从已有 PDF 简历导入个人资料（AI 智能提取）
+- 自动保存（500ms 防抖），无需手动点击保存按钮
+
+### 求职跟踪器
+
+- 记录每次求职的公司名称、职位、经验等级、目标薪资和备注
+- 10 种面试状态（已投递 → 一面至五面 → HR 面 → Offer 已接受/已拒绝/面试未通过）
+- 面试轮次追踪，带垂直时间线 — 记录每轮日期、结果和 Markdown 备注
+- 按面试阶段筛选求职记录，标签页实时显示数量
+- 按公司名称或职位搜索求职记录
+
+### 导出与分享
+
+- 导出生成的简历为 PDF（带样式、多页）
+- 导出生成的简历为 Markdown
+- 一键复制生成的简历到剪贴板
+
+### 设置与配置
+
+- AI 连接测试按钮，验证服务商配置是否正确
+- API 密钥显示/隐藏切换
 - 可配置的本地工作目录，支持数据迁移
+- 在设置中直接打开工作目录（Finder / 资源管理器）
+- 自动更新开关（Mac App Store 版本中已禁用）
+
+### 通用
+
+- 双语界面（English / 中文），macOS 原生菜单随语言切换
+- 亮色 / 暗色 / 跟随系统主题切换
 - 100% 本地存储，数据绝不上传服务器
-- 安全加固（CSP、API 密钥脱敏、请求超时保护）
+- 安全加固（CSP、API 密钥脱敏、频率限制检测、请求超时保护）
 - 已代码签名、已公证，已上架 Mac App Store
 - 跨平台支持（Windows、macOS、Linux）
 
@@ -54,7 +85,7 @@ xattr -cr /Applications/CV-Assistant.app
 | 国际化   | i18next、react-i18next                                       |
 | 测试     | Vitest、Testing Library、Playwright                          |
 | 代码规范 | ESLint 9、Prettier                                           |
-| CI/DX    | Husky、lint-staged、GitHub Actions                           |
+| CI/DX    | Husky、lint-staged、GitHub Actions、release-please           |
 
 ## 环境要求
 
@@ -125,12 +156,15 @@ src/
 
 ## 参与贡献
 
-欢迎贡献代码！请 fork 本仓库并创建新分支，提交更改后发起 Pull Request 进行审核。
+本项目使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范和 [release-please](https://github.com/googleapis/release-please) 实现自动化发布。
 
-本项目使用了以下 Git hooks：
+1. Fork 本仓库并创建新分支
+2. 使用约定式提交格式：`feat: ...`、`fix: ...`、`docs: ...`
+3. 提交 Pull Request 进行审核
+4. 合并到 master 后，release-please 会自动创建 Release PR，更新版本号和 CHANGELOG
+5. 合并 Release PR 后，自动触发跨平台构建
 
-- **pre-commit**：自动运行 lint-staged（ESLint 修复 + Prettier 格式化）
-- **pre-push**：自动运行测试并输出覆盖率报告
+Pre-commit hooks 自动运行 lint-staged（ESLint + Prettier）。Pre-push hooks 自动运行测试并输出覆盖率报告。
 
 ## 开源协议
 

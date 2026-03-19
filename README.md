@@ -15,16 +15,47 @@ AI-powered resume/CV assistant desktop app — generate tailored resumes from yo
 
 ## Features
 
-- AI-powered CV generation from personal profile + job description
+### AI-Powered CV Generation
+
+- Generate tailored resumes from personal profile + job description
 - 12 AI provider support (OpenAI, Anthropic, Google Gemini, DeepSeek, Ollama, OpenRouter, Groq, Mistral, Qwen, Zhipu, Kimi, Custom)
-- Rich Markdown editor (Tiptap-based, Typora-like live rendering)
-- Profile management with Markdown description support
 - Multi-language CV generation (English, Chinese, Japanese, Korean, French, German, Spanish)
-- i18n interface (English / 中文)
-- Light/Dark/System theme support
+- Auto-extract keywords from job description alongside CV generation
+
+### Profile Management
+
+- Rich Markdown editor (Tiptap-based, Typora-like live rendering)
+- Import profile from existing PDF resume (AI-powered extraction)
+- Auto-save with 500ms debounce — no save button needed
+
+### Job Application Tracker
+
+- Track company name, job title, experience level, target salary, and notes per application
+- 10-state interview status (Resume Sent → 1st–5th Interview → HR Interview → Offer Accepted/Rejected/Failed)
+- Interview round tracking with vertical timeline — log date, result, and Markdown notes per round
+- Filter applications by interview stage with live count tabs
+- Search applications by company name or job title
+
+### Export & Share
+
+- Export generated CV as PDF (styled, multi-page)
+- Export generated CV as Markdown
+- Copy generated CV to clipboard with one click
+
+### Settings & Configuration
+
+- AI connection test button to verify provider setup
+- API key show/hide toggle
 - Configurable local workspace directory with data migration
+- Open workspace folder in Finder/Explorer from Settings
+- Auto-update with on/off toggle (disabled on Mac App Store builds)
+
+### General
+
+- i18n interface (English / 中文) with localized macOS native menu
+- Light/Dark/System theme support
 - 100% local data storage — no server uploads
-- Security hardened (CSP, API key redaction, request timeouts)
+- Security hardened (CSP, API key redaction, rate-limit detection, request timeouts)
 - Code-signed, notarized, and available on Mac App Store
 - Cross-platform (Windows, macOS, Linux)
 
@@ -54,7 +85,7 @@ Then try opening the app again.
 | i18n     | i18next, react-i18next                                       |
 | Testing  | Vitest, Testing Library, Playwright                          |
 | Linting  | ESLint 9, Prettier                                           |
-| CI/DX    | Husky, lint-staged, GitHub Actions                           |
+| CI/DX    | Husky, lint-staged, GitHub Actions, release-please           |
 
 ## Prerequisites
 
@@ -125,7 +156,15 @@ src/
 
 ## Contributing
 
-To contribute, please fork the repository and create a new branch. Commit your changes and submit a pull request for review. The project uses pre-commit hooks to run lint-staged (ESLint and Prettier) and pre-push hooks to run tests with coverage reporting.
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) and [release-please](https://github.com/googleapis/release-please) for automated releases.
+
+1. Fork the repository and create a new branch
+2. Commit with conventional format: `feat: ...`, `fix: ...`, `docs: ...`
+3. Submit a Pull Request for review
+4. On merge to master, release-please automatically creates a Release PR that bumps version and updates CHANGELOG
+5. When the Release PR is merged, cross-platform builds are triggered automatically
+
+Pre-commit hooks run lint-staged (ESLint + Prettier). Pre-push hooks run tests with coverage.
 
 ## License
 

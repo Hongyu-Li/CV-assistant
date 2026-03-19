@@ -62,11 +62,21 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 - Test files: colocated as `*.test.tsx` or `*.test.ts` next to source.
 - Main process tests: `src/main/__tests__/`.
 - Setup file: `src/renderer/src/test/setup.ts`.
-- Coverage: ~91% statements, tracked on pre-push.
+- Coverage: ~95% statements, tracked on pre-push.
 - Mock patterns: Mock `window.electron.ipcRenderer.invoke` for IPC calls, use `vi.mock` for context providers.
 - **E2E tests**: Playwright, config in `playwright.config.ts`, tests in `tests/`.
 - Pre-commit: lint-staged (ESLint --fix and Prettier).
 - Pre-push: `npm run test:coverage`.
+
+## CI / Release
+
+- Automated with [release-please](https://github.com/googleapis/release-please) GitHub Action.
+- Config: `release-please-config.json`, `.release-please-manifest.json`.
+- Workflow: `.github/workflows/release.yml`.
+- Conventional commits required: `feat:`, `fix:`, `perf:`, `deps:`, `revert:` generate visible changelog entries. `docs:`, `style:`, `chore:`, `refactor:`, `test:`, `build:`, `ci:` are hidden.
+- On push to master: release-please creates/updates a Release PR with version bump and CHANGELOG update.
+- When Release PR is merged: GitHub Release + tag created automatically, triggering cross-platform electron-builder builds (macOS, Windows, Linux).
+- CHANGELOG.md is managed by release-please — do not edit manually.
 
 ## i18n
 
