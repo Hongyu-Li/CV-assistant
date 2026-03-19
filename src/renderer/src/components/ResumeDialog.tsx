@@ -28,7 +28,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 import { useSettings } from '../context/SettingsContext'
 import { generateCV, extractKeywordsFromJD } from '../lib/provider'
 import { toast } from 'sonner'
-import { PdfPreviewDialog } from './PdfPreviewDialog'
+import jsPDF from 'jspdf'
 
 export type InterviewStatus =
   | 'resume_sent'
@@ -102,7 +102,7 @@ export function ResumeDialog({
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null)
   const [keywords, setKeywords] = useState<string[]>([])
   const [cvExpanded, setCvExpanded] = useState(false)
-  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  const [isExportingPdf, setIsExportingPdf] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -269,7 +269,7 @@ export function ResumeDialog({
     }
   }
 
-  const handleExport = (): void => {
+  const handleExportMarkdown = (): void => {
     if (!generatedCV) return
     const blob = new Blob([generatedCV], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
@@ -281,6 +281,88 @@ export function ResumeDialog({
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     toast.success(t('resumes.exported'))
+  }
+
+  const markdownToHtml = (md: string): string => {
+    let html = md
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(
+        /`([^`]+)`/g,
+        '<code style="background: #f0f0f0; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>'
+      )
+      .replace(/^\s*[-*+]\s+(.*$)/gim, '<li>$1</li>')
+      .replace(/\n/g, '<br/>')
+    html = html.replace(
+      /(<li>.*<\/li>)(<br\/>)?/g,
+      '<ul style="margin: 8px 0; padding-left: 20px;">$1</ul>'
+    )
+    html = html.replace(/<\/ul><ul[^>]*>/g, '')
+    return html
+  }
+
+  const handleExportPdf = async (): Promise<void> => {
+    if (!generatedCV) return
+    setIsExportingPdf(true)
+
+    try {
+      const container = document.createElement('div')
+      container.innerHTML = `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 40px; max-width: 800px; margin: 0 auto;">
+          ${markdownToHtml(generatedCV)}
+        </div>
+      `
+      container.style.position = 'absolute'
+      container.style.left = '-9999px'
+      container.style.width = '800px'
+      document.body.appendChild(container)
+
+      const { default: html2canvas } = await import('html2canvas-pro')
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      })
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+      const ratio = (pdfWidth - 20) / imgWidth
+
+      const imgData = canvas.toDataURL('image/png')
+
+      const scaledHeight = (imgHeight * ratio * (pdfWidth - 20)) / (imgWidth * ratio)
+      const pageHeight = pdfHeight - 20
+      let heightLeft = scaledHeight
+      let position = 0
+
+      pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth - 20, scaledHeight)
+      heightLeft -= pageHeight
+
+      while (heightLeft > 0) {
+        position = heightLeft - scaledHeight
+        pdf.addPage()
+        pdf.addImage(imgData, 'PNG', 10, position + 10, pdfWidth - 20, scaledHeight)
+        heightLeft -= pageHeight
+      }
+
+      const filename = jobTitle || t('resumes.default_filename')
+      pdf.save(`${filename}.pdf`)
+      document.body.removeChild(container)
+      toast.success(t('resumes.exported'))
+    } catch (error) {
+      console.error('Failed to export PDF:', error)
+      toast.error(t('resumes.export_error'))
+    } finally {
+      setIsExportingPdf(false)
+    }
   }
 
   const handleSave = async (): Promise<void> => {
@@ -467,7 +549,7 @@ export function ResumeDialog({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handleExport}
+                    onClick={handleExportMarkdown}
                     title={t('resumes.export_md')}
                     className="h-7 w-7"
                   >
@@ -476,11 +558,16 @@ export function ResumeDialog({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setPdfPreviewOpen(true)}
-                    title={t('resumes.preview_pdf')}
+                    onClick={handleExportPdf}
+                    disabled={isExportingPdf}
+                    title={t('resumes.export_pdf')}
                     className="h-7 w-7"
                   >
-                    <FileText className="h-3.5 w-3.5" />
+                    {isExportingPdf ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5" />
+                    )}
                   </Button>
                   <Button
                     variant="ghost"
@@ -871,14 +958,6 @@ export function ResumeDialog({
           <Button onClick={handleSave}>{t('resumes.save')}</Button>
         </DialogFooter>
       </DialogContent>
-
-      {/* PDF Preview Dialog */}
-      <PdfPreviewDialog
-        open={pdfPreviewOpen}
-        onOpenChange={setPdfPreviewOpen}
-        markdown={generatedCV}
-        filename={jobTitle || t('resumes.default_filename')}
-      />
     </Dialog>
   )
 }
