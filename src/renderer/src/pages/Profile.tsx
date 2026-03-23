@@ -388,7 +388,10 @@ export function Profile(): React.JSX.Element {
         </CardHeader>
         <CardContent className="space-y-6">
           {profile.education.map((edu) => (
-            <div key={edu.id} className="grid gap-4 p-4 border rounded-lg relative bg-muted/20">
+            <div
+              key={edu.id}
+              className="grid gap-4 p-4 pt-8 border rounded-lg relative bg-muted/20"
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -455,7 +458,10 @@ export function Profile(): React.JSX.Element {
         </CardHeader>
         <CardContent className="space-y-6">
           {profile.workExperience.map((exp) => (
-            <div key={exp.id} className="grid gap-4 p-4 border rounded-lg relative bg-muted/20">
+            <div
+              key={exp.id}
+              className="grid gap-4 p-4 pt-8 border rounded-lg relative bg-muted/20"
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -522,7 +528,10 @@ export function Profile(): React.JSX.Element {
         </CardHeader>
         <CardContent className="space-y-6">
           {profile.projects.map((proj) => (
-            <div key={proj.id} className="grid gap-4 p-4 border rounded-lg relative bg-muted/20">
+            <div
+              key={proj.id}
+              className="grid gap-4 p-4 pt-8 border rounded-lg relative bg-muted/20"
+            >
               <Button
                 variant="ghost"
                 size="sm"
