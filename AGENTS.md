@@ -107,6 +107,7 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 - Never suppress TypeScript errors with `as any`, `@ts-ignore`, or `@ts-expect-error`.
 - Never use empty catch blocks.
 - When modifying code, add or update relevant tests.
+- Non-test source files must not exceed 600 lines; split into smaller modules when approaching the limit.
 - Follow existing component patterns in `src/renderer/src/components/`.
 - Follow existing context patterns in `src/renderer/src/context/`.
 
