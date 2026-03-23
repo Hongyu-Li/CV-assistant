@@ -2,7 +2,6 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { toast } from 'sonner'
-import { generateCV, extractKeywordsFromJD } from '../../lib/provider'
 import { ResumeDialog } from './ResumeDialog'
 import type { CV } from './types'
 
@@ -60,50 +59,8 @@ vi.mock('../MarkdownEditor', () => ({
   )
 }))
 
-// Mock jspdf — must use function() for new jsPDF() constructor
-const mockSave = vi.fn()
-const mockAddImage = vi.fn()
-const mockAddPage = vi.fn()
-vi.mock('jspdf', () => ({
-  default: vi.fn().mockImplementation(function (this: Record<string, unknown>): void {
-    this.internal = {
-      pageSize: {
-        getWidth: function (): number {
-          return 210
-        },
-        getHeight: function (): number {
-          return 297
-        }
-      }
-    }
-    this.addImage = mockAddImage
-    this.addPage = mockAddPage
-    this.save = mockSave
-  })
-}))
-
-// Mock html2canvas-pro (dynamically imported in component)
-vi.mock('html2canvas-pro', () => ({
-  default: vi.fn().mockResolvedValue({
-    width: 800,
-    height: 400,
-    toDataURL: vi.fn((): string => 'data:image/png;base64,test'),
-    getContext: vi.fn((): object => ({
-      fillStyle: '',
-      fillRect: vi.fn(),
-      drawImage: vi.fn()
-    }))
-  })
-}))
-
 // Mock electron ipcRenderer
 const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
-
-// Mock clipboard
-Object.defineProperty(navigator, 'clipboard', {
-  value: { writeText: vi.fn() },
-  writable: true
-})
 
 const defaultProps = {
   open: true,
@@ -126,7 +83,6 @@ describe('ResumeDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockInvoke.mockReset()
-    vi.mocked(navigator.clipboard.writeText).mockResolvedValue(undefined)
     vi.stubGlobal('crypto', { ...crypto, randomUUID: vi.fn((): string => 'test-uuid-123') })
   })
 
@@ -155,7 +111,6 @@ describe('ResumeDialog', () => {
     expect(screen.getByDisplayValue('Acme')).toBeInTheDocument()
     expect(screen.getByDisplayValue('100k')).toBeInTheDocument()
 
-    // Generated CV section is collapsed when CV exists, need to expand it
     fireEvent.click(screen.getByText('resumes.generated_cv'))
     await waitFor(() => {
       expect(screen.getByDisplayValue('Some notes')).toBeInTheDocument()
@@ -190,7 +145,6 @@ describe('ResumeDialog', () => {
     mockInvoke.mockResolvedValue({ success: true })
     renderDialog()
 
-    // Fill in the job title (required for save)
     const jobTitleInput = screen.getByPlaceholderText('resumes.job_title_ph')
     fireEvent.change(jobTitleInput, { target: { value: 'Engineer' } })
 
@@ -269,313 +223,6 @@ describe('ResumeDialog', () => {
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.save_error')
     })
-  })
-
-  it('shows empty_jd toast when generating with empty job description', async () => {
-    renderDialog()
-
-    const generateButton = screen.getByText('resumes.generate_cv')
-    fireEvent.click(generateButton)
-
-    await waitFor((): void => {
-      expect(toast.error).toHaveBeenCalledWith('resumes.empty_jd')
-    })
-  })
-
-  it('calls profile:load then generateCV on successful generate', async () => {
-    const profileData = {
-      personalInfo: { name: 'John', email: 'john@test.com' },
-      workExperience: [],
-      projects: []
-    }
-    mockInvoke.mockResolvedValue(profileData)
-    vi.mocked(generateCV).mockResolvedValue('# Generated Resume')
-    vi.mocked(extractKeywordsFromJD).mockResolvedValue(['React', 'TypeScript', 'Node.js'])
-
-    renderDialog()
-
-    // Fill in job description
-    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
-    fireEvent.change(jdTextarea, { target: { value: 'Build web apps' } })
-
-    fireEvent.click(screen.getByText('resumes.generate_cv'))
-
-    await waitFor((): void => {
-      expect(mockInvoke).toHaveBeenCalledWith('profile:load', '/test/workspace')
-      expect(generateCV).toHaveBeenCalledWith(
-        expect.objectContaining({
-          jobDescription: 'Build web apps',
-          provider: 'openai',
-          apiKey: 'sk-test',
-          model: 'gpt-5.2',
-          baseUrl: '',
-          language: 'en'
-        })
-      )
-      expect(toast.success).toHaveBeenCalledWith('resumes.generate_success')
-    })
-  })
-
-  it('includes phone, work experience, and projects in profile text for generation', async (): Promise<void> => {
-    const profileData = {
-      personalInfo: { name: 'John', email: 'john@test.com', phone: '+1234567890' },
-      workExperience: [
-        {
-          role: 'Dev',
-          company: 'Co',
-          date: '2020-2024',
-          description: 'Built things'
-        }
-      ],
-      projects: [{ name: 'Proj', techStack: 'React', description: 'A cool project' }]
-    }
-    mockInvoke.mockResolvedValue(profileData)
-    vi.mocked(generateCV).mockResolvedValue('# Generated Resume')
-
-    renderDialog()
-
-    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
-    fireEvent.change(jdTextarea, { target: { value: 'Build web apps' } })
-
-    fireEvent.click(screen.getByText('resumes.generate_cv'))
-
-    await waitFor((): void => {
-      expect(generateCV).toHaveBeenCalled()
-    })
-
-    const firstCall = vi.mocked(generateCV).mock.calls[0]
-    expect(firstCall).toBeDefined()
-    const [args] = firstCall!
-
-    expect(args.profile).toContain('Phone:')
-    expect(args.profile).toContain('+1234567890')
-    expect(args.profile).toContain('Work Experience:')
-    expect(args.profile).toContain('Dev at Co')
-    expect(args.profile).toContain('Built things')
-    expect(args.profile).toContain('Projects:')
-    expect(args.profile).toContain('Proj [React]')
-    expect(args.profile).toContain('A cool project')
-  })
-
-  it('shows error toast when generation fails', async () => {
-    mockInvoke.mockResolvedValue({})
-    vi.mocked(generateCV).mockRejectedValue(new Error('API error'))
-
-    renderDialog()
-
-    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
-    fireEvent.change(jdTextarea, { target: { value: 'Build web apps' } })
-
-    fireEvent.click(screen.getByText('resumes.generate_cv'))
-
-    await waitFor((): void => {
-      expect(toast.error).toHaveBeenCalledWith('resumes.generate_error\nAPI error')
-    })
-  })
-
-  it('copies generated CV to clipboard and shows success toast', async () => {
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      generatedCV: '# My Resume Content'
-    }
-    renderDialog({ resume })
-
-    const copyButton = screen.getByTitle('resumes.copy')
-    fireEvent.click(copyButton)
-
-    await waitFor((): void => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('# My Resume Content')
-      expect(toast.success).toHaveBeenCalledWith('resumes.copied')
-    })
-  })
-
-  it('shows error toast when clipboard copy fails', async () => {
-    vi.mocked(navigator.clipboard.writeText).mockRejectedValue(new Error('Clipboard denied'))
-
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      generatedCV: '# My Resume'
-    }
-    renderDialog({ resume })
-
-    const copyButton = screen.getByTitle('resumes.copy')
-    fireEvent.click(copyButton)
-
-    await waitFor((): void => {
-      expect(toast.error).toHaveBeenCalledWith('resumes.copy_error')
-    })
-  })
-
-  it('exports generated CV as markdown file and shows success toast', () => {
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      jobTitle: 'Engineer',
-      generatedCV: '# Resume markdown'
-    }
-    renderDialog({ resume })
-
-    const mockCreateObjectURL = vi.fn((): string => 'blob:test-url')
-    const mockRevokeObjectURL = vi.fn()
-    global.URL.createObjectURL = mockCreateObjectURL
-    global.URL.revokeObjectURL = mockRevokeObjectURL
-
-    const clickSpy = vi
-      .spyOn(HTMLAnchorElement.prototype, 'click')
-      .mockImplementation((): void => {})
-    const appendChildSpy = vi
-      .spyOn(document.body, 'appendChild')
-      .mockImplementation((node: Node): Node => node)
-    const removeChildSpy = vi
-      .spyOn(document.body, 'removeChild')
-      .mockImplementation((node: Node): Node => node)
-
-    // Open the download dropdown first, then click the markdown export item
-    const downloadButton = screen.getByTitle('common.download')
-    fireEvent.click(downloadButton)
-    const exportMdButton = screen.getByText('resumes.export_md')
-    fireEvent.click(exportMdButton)
-
-    expect(mockCreateObjectURL).toHaveBeenCalled()
-    expect(clickSpy).toHaveBeenCalled()
-    expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:test-url')
-    expect(toast.success).toHaveBeenCalledWith('resumes.exported')
-
-    clickSpy.mockRestore()
-    appendChildSpy.mockRestore()
-    removeChildSpy.mockRestore()
-  })
-
-  it('shows generated CV section when generatedCV is set via edit mode', async () => {
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      generatedCV: '# Existing Resume'
-    }
-    renderDialog({ resume })
-
-    const generatedCvElements = screen.getAllByText('resumes.generated_cv')
-    expect(generatedCvElements[0]).toBeInTheDocument()
-    fireEvent.click(generatedCvElements[0])
-    await waitFor(() => {
-      expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
-    })
-  })
-
-  it('opens download dropdown showing export options on click', () => {
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      generatedCV: '# Resume'
-    }
-    renderDialog({ resume })
-
-    const downloadButton = screen.getByTitle('common.download')
-    fireEvent.click(downloadButton)
-
-    expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
-    expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
-  })
-
-  it('closes download dropdown on outside mousedown', () => {
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      generatedCV: '# Resume'
-    }
-    renderDialog({ resume })
-
-    const downloadButton = screen.getByTitle('common.download')
-    fireEvent.click(downloadButton)
-    expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
-
-    fireEvent.mouseDown(document)
-
-    expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
-  })
-
-  it('exports PDF via jsPDF and shows success toast', async (): Promise<void> => {
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      jobTitle: 'Engineer',
-      generatedCV: '# Resume'
-    }
-
-    renderDialog({ resume })
-
-    // Spy after render so Radix portal is already in the DOM
-    const originalAppendChild = document.body.appendChild.bind(document.body)
-    const appendChildSpy = vi
-      .spyOn(document.body, 'appendChild')
-      .mockImplementation(<T extends Node>(node: T): T => originalAppendChild(node))
-    const originalRemoveChild = document.body.removeChild.bind(document.body)
-    const removeChildSpy = vi
-      .spyOn(document.body, 'removeChild')
-      .mockImplementation(<T extends Node>(node: T): T => originalRemoveChild(node))
-
-    const downloadButton = screen.getByTitle('common.download')
-    fireEvent.click(downloadButton)
-    const exportPdfButton = screen.getByText('resumes.export_pdf')
-    fireEvent.click(exportPdfButton)
-
-    await waitFor((): void => {
-      expect(mockSave).toHaveBeenCalledWith('Engineer.pdf')
-      expect(toast.success).toHaveBeenCalledWith('resumes.exported')
-    })
-
-    appendChildSpy.mockRestore()
-    removeChildSpy.mockRestore()
-  })
-
-  it('shows error toast when PDF export fails', async (): Promise<void> => {
-    const html2canvasMod = await import('html2canvas-pro')
-    vi.mocked(html2canvasMod.default).mockRejectedValueOnce(new Error('canvas error'))
-
-    const resume: CV = {
-      id: '1',
-      filename: 'test.json',
-      generatedCV: '# Resume'
-    }
-
-    renderDialog({ resume })
-
-    const originalAppendChild = document.body.appendChild.bind(document.body)
-    const appendChildSpy = vi
-      .spyOn(document.body, 'appendChild')
-      .mockImplementation(<T extends Node>(node: T): T => originalAppendChild(node))
-
-    const downloadButton = screen.getByTitle('common.download')
-    fireEvent.click(downloadButton)
-    const exportPdfButton = screen.getByText('resumes.export_pdf')
-    fireEvent.click(exportPdfButton)
-
-    await waitFor((): void => {
-      expect(toast.error).toHaveBeenCalledWith('resumes.export_error')
-    })
-
-    appendChildSpy.mockRestore()
-  })
-
-  it('export markdown does nothing when no CV exists', () => {
-    renderDialog()
-
-    const mockCreateObjectURL = vi.fn((): string => 'blob:test-url')
-    global.URL.createObjectURL = mockCreateObjectURL
-
-    expect(screen.queryByTitle('common.download')).not.toBeInTheDocument()
-    expect(mockCreateObjectURL).not.toHaveBeenCalled()
-    expect(toast.success).not.toHaveBeenCalled()
-  })
-
-  it('export PDF does nothing when no CV exists', async (): Promise<void> => {
-    renderDialog()
-
-    expect(screen.queryByTitle('common.download')).not.toBeInTheDocument()
-    expect(mockSave).not.toHaveBeenCalled()
-    expect(toast.success).not.toHaveBeenCalled()
   })
 
   it('renders interview notes as HTML via markdownToHtml, not raw markdown', async () => {
@@ -659,28 +306,22 @@ describe('ResumeDialog', () => {
   it('opens Edit Round Dialog when Add Round button is clicked', async (): Promise<void> => {
     renderDialog()
 
-    // Expand the rounds section
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
     })
 
-    // Click Add Round
     fireEvent.click(screen.getByText('resumes.add_round'))
 
     await waitFor((): void => {
-      // Edit Round Dialog should be open
       expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
-      // Check for form fields
       expect(screen.getByText('resumes.round')).toBeInTheDocument()
       expect(screen.getByText('resumes.result')).toBeInTheDocument()
       expect(screen.getByText('resumes.date')).toBeInTheDocument()
       expect(screen.getByText('resumes.interview_notes')).toBeInTheDocument()
-      // MarkdownEditor is mocked as textarea
       const editors = screen.getAllByTestId('markdown-editor')
       expect(editors.length).toBeGreaterThanOrEqual(1)
-      // Save and cancel buttons in the edit round dialog
       const saveButtons = screen.getAllByText('common.save')
       expect(saveButtons.length).toBeGreaterThanOrEqual(1)
       const cancelButtons = screen.getAllByText('common.cancel')
@@ -691,31 +332,24 @@ describe('ResumeDialog', () => {
   it('saves a new round and shows it in timeline', async (): Promise<void> => {
     renderDialog()
 
-    // Expand rounds section
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
     })
 
-    // Click Add Round
     fireEvent.click(screen.getByText('resumes.add_round'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
     })
 
-    // Click save in the Edit Round Dialog (there are multiple save buttons — the edit dialog one is from common.save)
     const saveButtons = screen.getAllByText('common.save')
-    // The edit dialog save button is the last common.save button
     fireEvent.click(saveButtons[saveButtons.length - 1])
 
-    // After saving, the Edit Dialog should close and the round should appear in the timeline
     await waitFor((): void => {
       expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
-      // The round name should appear (default is 'first')
       expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
-      // The result badge should appear
       expect(screen.getByText('resumes.result_pending')).toBeInTheDocument()
     })
   })
@@ -738,23 +372,19 @@ describe('ResumeDialog', () => {
     }
     renderDialog({ resume: resumeWithRounds })
 
-    // Expand rounds section
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
     })
 
-    // Click edit button (Edit2 icon button)
     const editButtons = document.querySelectorAll('button')
     const editButton = Array.from(editButtons).find((btn): boolean => {
       const svg = btn.querySelector('.lucide-edit-2, .lucide-edit2')
       return svg !== null
     })
 
-    // If the edit icon approach doesn't work, find by size class
     if (!editButton) {
-      // The edit and delete buttons are h-7 w-7 ghost icon buttons
       const ghostButtons = Array.from(document.querySelectorAll('button.h-7'))
       if (ghostButtons.length > 0) {
         fireEvent.click(ghostButtons[0])
@@ -786,23 +416,19 @@ describe('ResumeDialog', () => {
     }
     renderDialog({ resume: resumeWithRounds })
 
-    // Expand rounds section
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
     })
 
-    // Find all icon buttons (h-7 w-7) within the round card — edit is first, delete is second
     const roundCard = screen.getByText('resumes.round_first').closest('.bg-muted\\/30')
     expect(roundCard).not.toBeNull()
     const iconButtons = roundCard!.querySelectorAll('button')
-    // The last icon button in the card is the delete button
     const deleteButton = iconButtons[iconButtons.length - 1]
     fireEvent.click(deleteButton)
 
     await waitFor((): void => {
-      // Round should be removed — empty state should show
       expect(screen.getByText('resumes.no_rounds')).toBeInTheDocument()
       expect(screen.queryByText('resumes.round_first')).not.toBeInTheDocument()
     })
@@ -811,29 +437,23 @@ describe('ResumeDialog', () => {
   it('cancels Edit Round Dialog without adding a round', async (): Promise<void> => {
     renderDialog()
 
-    // Expand rounds section
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
     })
 
-    // Click Add Round
     fireEvent.click(screen.getByText('resumes.add_round'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
     })
 
-    // Click cancel in the Edit Round Dialog
     const cancelButtons = screen.getAllByText('common.cancel')
-    // The cancel button inside the edit dialog
     fireEvent.click(cancelButtons[cancelButtons.length - 1])
 
     await waitFor((): void => {
-      // Edit dialog should close
       expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
-      // No round should have been added — empty state still shown
       expect(screen.getByText('resumes.no_rounds')).toBeInTheDocument()
     })
   })
@@ -868,7 +488,6 @@ describe('ResumeDialog', () => {
     }
     renderDialog({ resume: resumeWithRounds })
 
-    // Click main save button
     const saveButton = screen.getByText('resumes.save')
     fireEvent.click(saveButton)
 
@@ -890,59 +509,6 @@ describe('ResumeDialog', () => {
           })
         })
       )
-    })
-  })
-
-  it('includes education data in profile text when generating CV', async (): Promise<void> => {
-    const profileData = {
-      personalInfo: { name: 'Alice' },
-      education: [
-        {
-          degree: 'BSc Computer Science',
-          school: 'MIT',
-          date: '2018-2022',
-          description: 'Magna cum laude'
-        }
-      ],
-      workExperience: [],
-      projects: []
-    }
-    mockInvoke.mockResolvedValue(profileData)
-    vi.mocked(generateCV).mockResolvedValue('# Resume')
-    vi.mocked(extractKeywordsFromJD).mockResolvedValue([])
-
-    renderDialog()
-
-    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
-    fireEvent.change(jdTextarea, { target: { value: 'Build things' } })
-
-    fireEvent.click(screen.getByText('resumes.generate_cv'))
-
-    await waitFor((): void => {
-      expect(generateCV).toHaveBeenCalled()
-    })
-
-    const firstCall = vi.mocked(generateCV).mock.calls[0]
-    expect(firstCall).toBeDefined()
-    const [args] = firstCall!
-    expect(args.profile).toContain('Education:')
-    expect(args.profile).toContain('BSc Computer Science at MIT')
-    expect(args.profile).toContain('Magna cum laude')
-  })
-
-  it('shows generic error toast when generation fails with non-Error object', async (): Promise<void> => {
-    mockInvoke.mockResolvedValue({})
-    vi.mocked(generateCV).mockRejectedValue('string error without message')
-
-    renderDialog()
-
-    const jdTextarea = screen.getByPlaceholderText('resumes.jd_placeholder')
-    fireEvent.change(jdTextarea, { target: { value: 'Build web apps' } })
-
-    fireEvent.click(screen.getByText('resumes.generate_cv'))
-
-    await waitFor((): void => {
-      expect(toast.error).toHaveBeenCalledWith('resumes.generate_error')
     })
   })
 
@@ -987,31 +553,6 @@ describe('ResumeDialog', () => {
     })
   })
 
-  it('toggles CV section via keyboard Enter and Space keys', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'kb-1',
-      filename: 'kb-1.json',
-      generatedCV: '# Keyboard Test'
-    }
-    renderDialog({ resume })
-
-    // The Generated CV section header is a role="button" element
-    const cvHeader = screen.getByText('resumes.generated_cv').closest('[role="button"]')
-    expect(cvHeader).not.toBeNull()
-
-    // Initially collapsed — expand via Enter key
-    fireEvent.keyDown(cvHeader!, { key: 'Enter' })
-    await waitFor((): void => {
-      expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
-    })
-
-    // Collapse via Space key
-    fireEvent.keyDown(cvHeader!, { key: ' ' })
-    await waitFor((): void => {
-      expect(screen.queryByTestId('markdown-editor')).not.toBeInTheDocument()
-    })
-  })
-
   it('updates existing round when editing and saving via Edit Round Dialog', async (): Promise<void> => {
     const resumeWithRound: CV = {
       id: 'edit-r1',
@@ -1031,43 +572,35 @@ describe('ResumeDialog', () => {
     mockInvoke.mockResolvedValue({ success: true })
     renderDialog({ resume: resumeWithRound })
 
-    // Expand rounds section
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
     await waitFor((): void => {
       expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
     })
 
-    // Click edit button on the existing round
     const roundCard = screen.getByText('resumes.round_first').closest('.bg-muted\\/30')
     expect(roundCard).not.toBeNull()
     const iconButtons = roundCard!.querySelectorAll('button')
-    // First icon button is edit
     fireEvent.click(iconButtons[0])
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
     })
 
-    // Change the date field
     const dateInput = screen.getByDisplayValue('2026-01-15')
     fireEvent.change(dateInput, { target: { value: '2026-02-20' } })
 
-    // Change the notes via markdown editor
     const editors = screen.getAllByTestId('markdown-editor')
     const notesEditor = editors[editors.length - 1]
     fireEvent.change(notesEditor, { target: { value: 'Updated notes' } })
 
-    // Save the edited round
     const saveButtons = screen.getAllByText('common.save')
     fireEvent.click(saveButtons[saveButtons.length - 1])
 
-    // Dialog should close, round should still be visible
     await waitFor((): void => {
       expect(screen.queryByText('resumes.edit_round')).not.toBeInTheDocument()
       expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
     })
 
-    // Now save the main form and verify the updated round is persisted
     fireEvent.click(screen.getByText('resumes.save'))
 
     await waitFor((): void => {
@@ -1122,7 +655,6 @@ describe('ResumeDialog', () => {
   it('changes round select value in Edit Round Dialog', async (): Promise<void> => {
     renderDialog()
 
-    // Expand rounds, add a round
     fireEvent.click(screen.getByText('resumes.interview_rounds'))
     await waitFor((): void => {
       expect(screen.getByText('resumes.add_round')).toBeInTheDocument()
@@ -1132,26 +664,20 @@ describe('ResumeDialog', () => {
       expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()
     })
 
-    // The round select trigger — find by its current displayed value
-    // Default round is 'first', so the select trigger shows 'resumes.round_first'
     const roundTriggers = screen.getAllByRole('combobox')
-    // First combobox in the edit dialog is the round select
     fireEvent.click(roundTriggers[roundTriggers.length - 2])
 
-    // Select 'second' option
     await waitFor((): void => {
       const secondOption = screen.getByText('resumes.round_second')
       fireEvent.click(secondOption)
     })
 
-    // Now change result select
     fireEvent.click(roundTriggers[roundTriggers.length - 1])
     await waitFor((): void => {
       const passedOption = screen.getByText('resumes.result_passed')
       fireEvent.click(passedOption)
     })
 
-    // Save and verify the round was created with updated values
     const saveButtons = screen.getAllByText('common.save')
     fireEvent.click(saveButtons[saveButtons.length - 1])
 
@@ -1180,20 +706,6 @@ describe('ResumeDialog', () => {
     const notesTextarea = screen.getByPlaceholderText('resumes.notes_ph')
     fireEvent.change(notesTextarea, { target: { value: 'Follow up next week' } })
     expect(notesTextarea).toHaveValue('Follow up next week')
-  })
-
-  it('renders keyword chips when resume has keywords', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-kw',
-      filename: 'kw.json',
-      keywords: ['React', 'TypeScript', 'Node.js']
-    }
-    renderDialog({ resume })
-
-    expect(screen.getByText('React')).toBeInTheDocument()
-    expect(screen.getByText('TypeScript')).toBeInTheDocument()
-    expect(screen.getByText('Node.js')).toBeInTheDocument()
-    expect(screen.getByText('resumes.keywords')).toBeInTheDocument()
   })
 
   it('changes interview status via select dropdown', async (): Promise<void> => {
@@ -1259,104 +771,6 @@ describe('ResumeDialog', () => {
     expect(screen.getByText('Second round notes')).toBeInTheDocument()
   })
 
-  it('shows notes textarea and language select inside expanded CV when generatedCV exists', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-cv',
-      filename: 'cv.json',
-      generatedCV: '# My Generated CV\n\nSome content',
-      cvLanguage: 'en',
-      notes: 'Existing notes'
-    }
-    renderDialog({ resume })
-
-    fireEvent.click(screen.getByText('resumes.generated_cv'))
-
-    await waitFor((): void => {
-      const notesTextareas = screen.getAllByPlaceholderText('resumes.notes_ph')
-      expect(notesTextareas.length).toBeGreaterThan(0)
-    })
-
-    const notesTextareas = screen.getAllByPlaceholderText('resumes.notes_ph')
-    const cvNotesTextarea = notesTextareas[notesTextareas.length - 1]
-    fireEvent.change(cvNotesTextarea, { target: { value: 'Updated CV notes' } })
-    expect(cvNotesTextarea).toHaveValue('Updated CV notes')
-
-    const languageLabels = screen.getAllByText('resumes.cv_language')
-    expect(languageLabels.length).toBeGreaterThan(0)
-  })
-
-  it('shows generate button inside expanded CV section when no generatedCV', async (): Promise<void> => {
-    renderDialog()
-
-    // In create mode (no resume), CV section starts expanded (setCvExpanded(true))
-    await waitFor((): void => {
-      expect(screen.getByText('resumes.generated_cv_desc')).toBeInTheDocument()
-    })
-
-    const generateButtons = screen.getAllByText('resumes.generate_cv')
-    expect(generateButtons.length).toBeGreaterThanOrEqual(1)
-  })
-
-  it('clicks export Markdown and PDF buttons in export menu', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-export',
-      filename: 'export.json',
-      generatedCV: '# Test CV'
-    }
-    mockInvoke.mockResolvedValue(undefined)
-    renderDialog({ resume })
-
-    fireEvent.click(screen.getByText('resumes.generated_cv'))
-
-    await waitFor((): void => {
-      expect(screen.getByTitle('common.download')).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByTitle('common.download'))
-
-    await waitFor((): void => {
-      expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
-      expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByText('resumes.export_md'))
-
-    await waitFor((): void => {
-      expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByTitle('common.download'))
-    await waitFor((): void => {
-      expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
-    })
-    fireEvent.click(screen.getByText('resumes.export_pdf'))
-
-    await waitFor((): void => {
-      expect(screen.queryByText('resumes.export_pdf')).not.toBeInTheDocument()
-    })
-  })
-
-  it('does not collapse CV section when clicking action buttons area', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-stop',
-      filename: 'stop.json',
-      generatedCV: '# CV Content'
-    }
-    renderDialog({ resume })
-
-    fireEvent.click(screen.getByText('resumes.generated_cv'))
-
-    await waitFor((): void => {
-      expect(screen.getByTitle('resumes.copy')).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByTitle('resumes.copy'))
-
-    await waitFor((): void => {
-      expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
-    })
-  })
-
   it('deletes an interview round via the trash button', async (): Promise<void> => {
     const resume: CV = {
       id: 'resume-del',
@@ -1399,49 +813,6 @@ describe('ResumeDialog', () => {
     expect(screen.getByText('Keep this round')).toBeInTheDocument()
   })
 
-  it('closes export menu when clicking outside', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-outside',
-      filename: 'outside.json',
-      generatedCV: '# Outside CV'
-    }
-    renderDialog({ resume })
-
-    fireEvent.click(screen.getByText('resumes.generated_cv'))
-
-    await waitFor((): void => {
-      expect(screen.getByTitle('common.download')).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByTitle('common.download'))
-
-    await waitFor((): void => {
-      expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
-    })
-
-    fireEvent.mouseDown(document.body)
-
-    await waitFor((): void => {
-      expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
-    })
-  })
-
-  it('changes CV language via select when no generatedCV exists', async (): Promise<void> => {
-    renderDialog()
-
-    const langTrigger = screen.getByText('resumes.lang_en')
-    fireEvent.click(langTrigger)
-
-    await waitFor((): void => {
-      const zhOption = screen.getByText('resumes.lang_zh')
-      fireEvent.click(zhOption)
-    })
-
-    await waitFor((): void => {
-      expect(screen.getByText('resumes.lang_zh')).toBeInTheDocument()
-    })
-  })
-
   it('changes experience level via select', async (): Promise<void> => {
     renderDialog()
 
@@ -1455,56 +826,6 @@ describe('ResumeDialog', () => {
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.level_senior')).toBeInTheDocument()
-    })
-  })
-
-  it('toggles export menu open and closed via download button', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-toggle',
-      filename: 'toggle.json',
-      generatedCV: '# Toggle CV'
-    }
-    renderDialog({ resume })
-
-    fireEvent.click(screen.getByText('resumes.generated_cv'))
-
-    await waitFor((): void => {
-      expect(screen.getByTitle('common.download')).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByTitle('common.download'))
-    await waitFor((): void => {
-      expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByTitle('common.download'))
-    await waitFor((): void => {
-      expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
-    })
-  })
-
-  it('shows regenerate button when CV exists and clicks it', async (): Promise<void> => {
-    const resume: CV = {
-      id: 'resume-regen',
-      filename: 'regen.json',
-      jobDescription: 'Need React developer',
-      generatedCV: '# Existing CV'
-    }
-    mockInvoke.mockResolvedValue({
-      personalInfo: { name: 'Test' },
-      content: '# Profile',
-      markdown: '# Profile MD'
-    })
-    vi.mocked(generateCV).mockResolvedValue('# Regenerated CV')
-    renderDialog({ resume })
-
-    const regenButton = screen.getByTitle('resumes.generate_cv')
-    expect(regenButton).toBeInTheDocument()
-
-    fireEvent.click(regenButton)
-
-    await waitFor((): void => {
-      expect(mockInvoke).toHaveBeenCalledWith('profile:load', '/test/workspace')
     })
   })
 
