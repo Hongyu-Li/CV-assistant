@@ -118,7 +118,9 @@
     "importing": "导入中...",
     "import_success": "已成功从 PDF 导入个人资料",
     "import_error": "导入 PDF 失败：",
-    "import_no_ai": "请先在设置中配置 AI 服务商，然后再导入 PDF"
+    "import_no_ai": "请先在设置中配置 AI 服务商，然后再导入 PDF",
+    "delete_confirm_title": "删除条目",
+    "delete_confirm_desc": "确定要删除这个条目吗？此操作无法撤销。"
   },
   "common": {
     "delete": "删除",
@@ -243,6 +245,10 @@
     "unknown_company": "未知公司",
     "keywords": "关键技能/标签",
     "keywords_ph": "输入后按回车...",
-    "keywords_help": "添加3-4个从JD中提取的关键词（如：React、Node.js、系统设计）"
+    "keywords_help": "添加3-4个从JD中提取的关键词（如：React、Node.js、系统设计）",
+    "delete_confirm_title": "删除简历",
+    "delete_confirm_desc": "确定要删除这份简历吗？此操作无法撤销。",
+    "delete_round_confirm_title": "删除面试轮次",
+    "delete_round_confirm_desc": "确定要删除这轮面试记录吗？"
   }
 }

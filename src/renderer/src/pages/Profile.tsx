@@ -10,6 +10,7 @@ import { useSettings } from '../context/SettingsContext'
 import { extractProfileFromPdf } from '../lib/provider'
 import { PROVIDER_CONFIGS } from '../lib/provider'
 import { toErrorMessage } from '../lib/utils'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 
 interface WorkExperience {
   id: string
@@ -67,6 +68,12 @@ export function Profile(): React.JSX.Element {
   const loadedRef = useRef(false)
   const skipNextSaveRef = useRef(false)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: 'education' | 'workExperience' | 'project'
+    id: string
+  } | null>(null)
 
   const autoSave = useCallback(
     async (data: ProfileData): Promise<void> => {
@@ -171,10 +178,46 @@ export function Profile(): React.JSX.Element {
   }
 
   const removeWorkExperience = (id: string): void => {
-    setProfile((prev) => ({
-      ...prev,
-      workExperience: prev.workExperience.filter((exp) => exp.id !== id)
-    }))
+    setItemToDelete({ type: 'workExperience', id })
+    setConfirmDeleteOpen(true)
+  }
+
+  const removeProject = (id: string): void => {
+    setItemToDelete({ type: 'project', id })
+    setConfirmDeleteOpen(true)
+  }
+
+  const removeEducation = (id: string): void => {
+    setItemToDelete({ type: 'education', id })
+    setConfirmDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = (): void => {
+    if (!itemToDelete) return
+
+    const { type, id } = itemToDelete
+    switch (type) {
+      case 'workExperience':
+        setProfile((prev) => ({
+          ...prev,
+          workExperience: prev.workExperience.filter((exp) => exp.id !== id)
+        }))
+        break
+      case 'project':
+        setProfile((prev) => ({
+          ...prev,
+          projects: prev.projects.filter((proj) => proj.id !== id)
+        }))
+        break
+      case 'education':
+        setProfile((prev) => ({
+          ...prev,
+          education: prev.education.filter((edu) => edu.id !== id)
+        }))
+        break
+    }
+    setConfirmDeleteOpen(false)
+    setItemToDelete(null)
   }
 
   const addProject = (): void => {
@@ -194,13 +237,6 @@ export function Profile(): React.JSX.Element {
     }))
   }
 
-  const removeProject = (id: string): void => {
-    setProfile((prev) => ({
-      ...prev,
-      projects: prev.projects.filter((proj) => proj.id !== id)
-    }))
-  }
-
   const addEducation = (): void => {
     setProfile((prev) => ({
       ...prev,
@@ -215,13 +251,6 @@ export function Profile(): React.JSX.Element {
     setProfile((prev) => ({
       ...prev,
       education: prev.education.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu))
-    }))
-  }
-
-  const removeEducation = (id: string): void => {
-    setProfile((prev) => ({
-      ...prev,
-      education: prev.education.filter((edu) => edu.id !== id)
     }))
   }
 
@@ -536,6 +565,15 @@ export function Profile(): React.JSX.Element {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('profile.delete_confirm_title')}
+        description={t('profile.delete_confirm_desc')}
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
+      />
     </div>
   )
 }

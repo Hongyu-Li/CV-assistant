@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input'
 import { toast } from 'sonner'
 import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
 import { ResumeDialog } from '../components/resume-dialog'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { CV, InterviewStatus } from '../components/resume-dialog'
 import { INTERVIEW_STATUSES, REJECTED_STATUSES, MAX_VISIBLE_KEYWORDS } from '../lib/constants'
 
@@ -45,6 +46,8 @@ export function Resumes(): React.JSX.Element {
   const [editingResume, setEditingResume] = useState<CV | null>(null)
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [resumeToDelete, setResumeToDelete] = useState<string | null>(null)
   const loadIdRef = useRef(0)
 
   const loadResumes = React.useCallback(async (): Promise<void> => {
@@ -80,11 +83,17 @@ export function Resumes(): React.JSX.Element {
     loadResumes()
   }, [loadResumes])
 
-  const handleDelete = async (e: React.MouseEvent, filename: string): Promise<void> => {
+  const handleDeleteClick = (e: React.MouseEvent, filename: string): void => {
     e.stopPropagation()
+    setResumeToDelete(filename)
+    setConfirmDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!resumeToDelete) return
     try {
       const result = await window.electron.ipcRenderer.invoke('cv:delete', {
-        filename,
+        filename: resumeToDelete,
         workspacePath: settings.workspacePath
       })
       if (result.success) {
@@ -96,6 +105,9 @@ export function Resumes(): React.JSX.Element {
     } catch (error) {
       console.error('Failed to delete resume:', error)
       toast.error(t('resumes.delete_error'))
+    } finally {
+      setConfirmDeleteOpen(false)
+      setResumeToDelete(null)
     }
   }
 
@@ -372,7 +384,7 @@ export function Resumes(): React.JSX.Element {
                     aria-label={t('common.delete')}
                     className="h-7 w-7 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
                     onClick={(e: React.MouseEvent): void => {
-                      handleDelete(e, resume.filename)
+                      handleDeleteClick(e, resume.filename)
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -389,6 +401,15 @@ export function Resumes(): React.JSX.Element {
         onOpenChange={setDialogOpen}
         resume={editingResume}
         onSaved={loadResumes}
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('resumes.delete_confirm_title')}
+        description={t('resumes.delete_confirm_desc')}
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
       />
     </div>
   )

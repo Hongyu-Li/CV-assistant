@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { InterviewTimeline } from './InterviewTimeline'
 import type { InterviewRound } from './types'
@@ -468,6 +468,17 @@ describe('InterviewTimeline — delete round', () => {
       fireEvent.click(emptyBtns[1])
     })
 
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_round_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    await act(async (): Promise<void> => {
+      fireEvent.click(confirmBtn)
+    })
+
     expect(onRoundsChange).toHaveBeenCalledWith([])
   })
 
@@ -490,6 +501,17 @@ describe('InterviewTimeline — delete round', () => {
     const emptyBtns = screen.getAllByRole('button').filter((btn) => btn.textContent === '')
     await act(async (): Promise<void> => {
       fireEvent.click(emptyBtns[1])
+    })
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_round_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    await act(async (): Promise<void> => {
+      fireEvent.click(confirmBtn)
     })
 
     expect(onStatusChange).toHaveBeenCalledWith('draft')
@@ -515,6 +537,17 @@ describe('InterviewTimeline — delete round', () => {
     const emptyBtns = screen.getAllByRole('button').filter((btn) => btn.textContent === '')
     await act(async (): Promise<void> => {
       fireEvent.click(emptyBtns[1])
+    })
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_round_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    await act(async (): Promise<void> => {
+      fireEvent.click(confirmBtn)
     })
 
     expect(onRoundsChange).toHaveBeenCalledWith([round2])
@@ -546,6 +579,18 @@ describe('InterviewTimeline — deriveInterviewStatus (via callbacks)', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(emptyBtns[1])
     })
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_round_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    await act(async (): Promise<void> => {
+      fireEvent.click(confirmBtn)
+    })
+
     expect(onStatusChange).toHaveBeenCalledWith('draft')
   })
 

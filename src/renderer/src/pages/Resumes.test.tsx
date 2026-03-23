@@ -190,6 +190,15 @@ describe('Resumes Component', () => {
     const deleteButton = screen.getByLabelText('common.delete')
     fireEvent.click(deleteButton)
 
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('resumes.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
+
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('cv:delete', {
         filename: 'cv1.json',
@@ -217,6 +226,15 @@ describe('Resumes Component', () => {
     const deleteButton = screen.getByLabelText('common.delete')
     fireEvent.click(deleteButton)
 
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
+
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
     })
@@ -240,6 +258,15 @@ describe('Resumes Component', () => {
     // Find delete button by aria-label
     const deleteButton = screen.getByLabelText('common.delete')
     fireEvent.click(deleteButton)
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
