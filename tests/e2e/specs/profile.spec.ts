@@ -124,6 +124,13 @@ test.describe('Profile View', () => {
     const removeBtn = workCards.last().locator('button', { hasText: 'Remove' })
     await removeBtn.click()
 
+    // Confirm dialog should appear
+    await expect(window.getByText('Delete Entry')).toBeVisible({ timeout: 5000 })
+
+    // Click confirm button
+    const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
+    await confirmBtn.click()
+
     await expect(companyInputs).toHaveCount(entriesBefore - 1, { timeout: 5000 })
   })
 

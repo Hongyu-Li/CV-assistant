@@ -188,6 +188,13 @@ test.describe('Resumes View', () => {
       await expect(deleteBtn).toBeVisible({ timeout: 3000 })
       await deleteBtn.click()
 
+      // Confirm dialog should appear
+      await expect(window.getByText('Delete Resume')).toBeVisible({ timeout: 5000 })
+
+      // Click confirm button
+      const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
+      await confirmBtn.click()
+
       // Success toast
       await expect(window.locator('text=Resume deleted successfully')).toBeVisible({
         timeout: 5000
@@ -250,6 +257,17 @@ test.describe('Resumes View', () => {
       const deleteVisible = await deleteBtn.isVisible().catch(() => false)
       if (deleteVisible) {
         await deleteBtn.click()
+
+        // Confirm dialog should appear
+        const confirmVisible = await window
+          .getByText('Delete Resume')
+          .isVisible()
+          .catch(() => false)
+        if (confirmVisible) {
+          // Click confirm button
+          const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
+          await confirmBtn.click()
+        }
       }
     }
   })
