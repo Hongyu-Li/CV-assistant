@@ -1,4 +1,5 @@
 export type InterviewStatus =
+  | 'draft'
   | 'resume_sent'
   | 'first_interview'
   | 'second_interview'

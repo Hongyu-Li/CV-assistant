@@ -711,7 +711,7 @@ describe('ResumeDialog', () => {
   it('changes interview status via select dropdown', async (): Promise<void> => {
     renderDialog()
 
-    const statusTrigger = screen.getByText('resumes.status_resume_sent')
+    const statusTrigger = screen.getByText('resumes.status_draft')
     fireEvent.click(statusTrigger)
 
     await waitFor((): void => {

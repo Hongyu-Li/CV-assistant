@@ -42,7 +42,7 @@ function ResumeDialogForm({
   const [isGenerating, setIsGenerating] = useState(false)
   const [cvLanguage, setCvLanguage] = useState(resume?.cvLanguage ?? 'en')
   const [interviewStatus, setInterviewStatus] = useState<InterviewStatus>(
-    resume?.interviewStatus ?? 'resume_sent'
+    resume?.interviewStatus ?? 'draft'
   )
   const [interviewRounds, setInterviewRounds] = useState<InterviewRound[]>(
     resume?.interviewRounds ?? []
@@ -182,6 +182,7 @@ function ResumeDialogForm({
               <SelectValue placeholder={t('resumes.interview_status_ph')} />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="draft">{t('resumes.status_draft')}</SelectItem>
               <SelectItem value="resume_sent">{t('resumes.status_resume_sent')}</SelectItem>
               <SelectItem value="first_interview">{t('resumes.status_first_interview')}</SelectItem>
               <SelectItem value="second_interview">

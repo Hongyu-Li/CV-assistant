@@ -492,7 +492,7 @@ describe('InterviewTimeline — delete round', () => {
       fireEvent.click(emptyBtns[1])
     })
 
-    expect(onStatusChange).toHaveBeenCalledWith('resume_sent')
+    expect(onStatusChange).toHaveBeenCalledWith('draft')
   })
 
   it('deleting one of two rounds keeps the other and recalculates status', async (): Promise<void> => {
@@ -527,7 +527,7 @@ describe('InterviewTimeline — deriveInterviewStatus (via callbacks)', () => {
     vi.clearAllMocks()
   })
 
-  it('empty rounds → status is "resume_sent"', async (): Promise<void> => {
+  it('empty rounds → status is "draft"', async (): Promise<void> => {
     const onRoundsChange = vi.fn()
     const onStatusChange = vi.fn()
     const round = makeRound({ id: 'r1' })
@@ -546,7 +546,7 @@ describe('InterviewTimeline — deriveInterviewStatus (via callbacks)', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(emptyBtns[1])
     })
-    expect(onStatusChange).toHaveBeenCalledWith('resume_sent')
+    expect(onStatusChange).toHaveBeenCalledWith('draft')
   })
 
   it('latest round with result "failed" → "interview_failed"', async (): Promise<void> => {

@@ -14,6 +14,8 @@ type FilterTab = 'all' | 'interview' | 'hr' | 'offer' | 'rejected'
 
 function getInterviewStatusColor(status: InterviewStatus): string {
   switch (status) {
+    case 'draft':
+      return 'bg-slate-100 text-slate-600 border-slate-200'
     case 'resume_sent':
       return 'bg-gray-100 text-gray-700 border-gray-200'
     case 'first_interview':
@@ -140,8 +142,10 @@ export function Resumes(): React.JSX.Element {
 
   // Calculate statistics
   const stats = {
-    resumeSent: resumes.filter((r) => !r.interviewStatus || r.interviewStatus === 'resume_sent')
-      .length,
+    draft: resumes.filter(
+      (r) =>
+        !r.interviewStatus || r.interviewStatus === 'draft' || r.interviewStatus === 'resume_sent'
+    ).length,
     inInterview: resumes.filter((r) =>
       INTERVIEW_STATUSES.includes(r.interviewStatus as InterviewStatus)
     ).length,
@@ -155,7 +159,7 @@ export function Resumes(): React.JSX.Element {
   // Filter resumes by tab and search
   const filteredResumes = resumes.filter((resume) => {
     // Tab filter
-    const status = resume.interviewStatus || 'resume_sent'
+    const status = resume.interviewStatus || 'draft'
     let matchesTab = true
     switch (activeTab) {
       case 'interview':

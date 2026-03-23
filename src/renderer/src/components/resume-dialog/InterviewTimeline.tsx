@@ -26,13 +26,13 @@ const ROUND_TO_STATUS: Record<string, InterviewStatus> = {
 }
 
 function deriveInterviewStatus(rounds: InterviewRound[]): InterviewStatus {
-  if (rounds.length === 0) return 'resume_sent'
+  if (rounds.length === 0) return 'draft'
   const sortedRounds = [...rounds].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   )
   const latestRound = sortedRounds[sortedRounds.length - 1]
   if (latestRound.result === 'failed') return 'interview_failed'
-  return ROUND_TO_STATUS[latestRound.round] || 'resume_sent'
+  return ROUND_TO_STATUS[latestRound.round] || 'draft'
 }
 
 interface InterviewTimelineProps {
