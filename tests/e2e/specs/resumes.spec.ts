@@ -159,8 +159,8 @@ test.describe('Resumes View', () => {
     // Success toast
     await expect(window.locator('text=Resume saved successfully')).toBeVisible({ timeout: 5000 })
 
-    // Resume card should appear in the list
-    await expect(window.locator('text=E2E Test Resume')).toBeVisible({ timeout: 5000 })
+    // Resume card should appear in the list (use first() in case of duplicates from previous runs)
+    await expect(window.locator('text=E2E Test Resume').first()).toBeVisible({ timeout: 5000 })
   })
 
   test('should show default interview status badge for saved resume', async ({ window }) => {
@@ -212,8 +212,11 @@ test.describe('Resumes View', () => {
     await saveBtn.click()
     await expect(dialog).not.toBeVisible({ timeout: 5000 })
 
-    // Open the saved resume to edit
-    const resumeCard = window.locator('[class*="card"]').filter({ hasText: 'Export Test Resume' })
+    // Open the saved resume to edit (use first() in case of duplicates from previous runs)
+    const resumeCard = window
+      .locator('[class*="card"]')
+      .filter({ hasText: 'Export Test Resume' })
+      .first()
     await expect(resumeCard).toBeVisible({ timeout: 5000 })
     await resumeCard.click()
 
