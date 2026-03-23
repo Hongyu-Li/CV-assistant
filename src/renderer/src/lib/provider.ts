@@ -321,10 +321,6 @@ export interface ExtractKeywordsOptions {
   baseUrl: string
 }
 
-export interface ExtractedKeywords {
-  keywords: string[]
-}
-
 const ExtractedKeywordsSchema = z
   .object({
     keywords: z
