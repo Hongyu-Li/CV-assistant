@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.2.0...cv-assistant-v1.3.0) (2026-03-23)
+
+
+### Features
+
+* add confirmation dialogs for all delete buttons ([7d7378d](https://github.com/tc9011/CV-assistant/commit/7d7378d7763705b37d25f044d870f73a69a86fad))
+* add draft tab filter and remove salary icon ([745f449](https://github.com/tc9011/CV-assistant/commit/745f44981f162ad0997be03769187e3d92b9224a))
+* improve resume card UI layout and typography ([1b67216](https://github.com/tc9011/CV-assistant/commit/1b672160701ac5d4f1c6681c4bca740b6c20ba71))
+
+
+### Bug Fixes
+
+* add spacing to profile cards and red styling to interview delete button ([41dbd28](https://github.com/tc9011/CV-assistant/commit/41dbd2881eda6244629f443075a972922c92f6d7))
+* remove opacity transition from delete button ([b48dfc4](https://github.com/tc9011/CV-assistant/commit/b48dfc4bac89d487b3c50d0ef546029563cef4a3))
+
 ## [1.2.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.1.0...cv-assistant-v1.2.0) (2026-03-23)
 
 
