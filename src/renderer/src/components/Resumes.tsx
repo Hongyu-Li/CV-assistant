@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
 import { ResumeDialog } from './ResumeDialog'
 import type { CV, InterviewStatus } from './ResumeDialog'
+import { INTERVIEW_STATUSES, REJECTED_STATUSES, MAX_VISIBLE_KEYWORDS } from '../lib/constants'
 
 type FilterTab = 'all' | 'interview' | 'hr' | 'offer' | 'rejected'
 
@@ -136,18 +137,12 @@ export function Resumes(): React.JSX.Element {
     resumeSent: resumes.filter((r) => !r.interviewStatus || r.interviewStatus === 'resume_sent')
       .length,
     inInterview: resumes.filter((r) =>
-      [
-        'first_interview',
-        'second_interview',
-        'third_interview',
-        'fourth_interview',
-        'fifth_interview'
-      ].includes(r.interviewStatus || '')
+      INTERVIEW_STATUSES.includes(r.interviewStatus as InterviewStatus)
     ).length,
     hrInterview: resumes.filter((r) => r.interviewStatus === 'hr_interview').length,
     offerAccepted: resumes.filter((r) => r.interviewStatus === 'offer_accepted').length,
     rejected: resumes.filter((r) =>
-      ['offer_rejected', 'interview_failed'].includes(r.interviewStatus || '')
+      REJECTED_STATUSES.includes(r.interviewStatus as InterviewStatus)
     ).length
   }
 
@@ -158,13 +153,7 @@ export function Resumes(): React.JSX.Element {
     let matchesTab = true
     switch (activeTab) {
       case 'interview':
-        matchesTab = [
-          'first_interview',
-          'second_interview',
-          'third_interview',
-          'fourth_interview',
-          'fifth_interview'
-        ].includes(status)
+        matchesTab = INTERVIEW_STATUSES.includes(status as InterviewStatus)
         break
       case 'hr':
         matchesTab = status === 'hr_interview'
@@ -173,7 +162,7 @@ export function Resumes(): React.JSX.Element {
         matchesTab = status === 'offer_accepted'
         break
       case 'rejected':
-        matchesTab = ['offer_rejected', 'interview_failed'].includes(status)
+        matchesTab = REJECTED_STATUSES.includes(status as InterviewStatus)
         break
       default:
         matchesTab = true
@@ -323,7 +312,7 @@ export function Resumes(): React.JSX.Element {
                 {/* Keywords Tags */}
                 {resume.keywords && resume.keywords.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
-                    {resume.keywords.slice(0, 4).map((keyword, index) => (
+                    {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
                       <span
                         key={index}
                         className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full"
@@ -331,9 +320,9 @@ export function Resumes(): React.JSX.Element {
                         {keyword}
                       </span>
                     ))}
-                    {resume.keywords.length > 4 && (
+                    {resume.keywords.length > MAX_VISIBLE_KEYWORDS && (
                       <span className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full">
-                        +{resume.keywords.length - 4}
+                        +{resume.keywords.length - MAX_VISIBLE_KEYWORDS}
                       </span>
                     )}
                   </div>

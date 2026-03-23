@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useSettings } from '../context/SettingsContext'
 import { extractProfileFromPdf } from '../lib/provider'
 import { PROVIDER_CONFIGS } from '../lib/provider'
+import { toErrorMessage } from '../lib/utils'
 
 interface WorkExperience {
   id: string
@@ -257,7 +258,7 @@ export function Profile(): React.JSX.Element {
       toast.success(t('profile.import_success'))
     } catch (error) {
       console.error('Failed to import PDF:', error)
-      toast.error(t('profile.import_error') + (error as Error).message)
+      toast.error(t('profile.import_error') + toErrorMessage(error))
     } finally {
       setImporting(false)
     }

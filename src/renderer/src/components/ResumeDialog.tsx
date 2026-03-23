@@ -12,6 +12,8 @@ import {
   RotateCcw,
   FileText
 } from 'lucide-react'
+import { markdownToHtml } from '../lib/markdown'
+import { COPY_FEEDBACK_DURATION_MS } from '../lib/constants'
 import {
   Dialog,
   DialogContent,
@@ -280,7 +282,7 @@ export function ResumeDialog({
       toast.success(t('resumes.copied'))
       setTimeout((): void => {
         setIsCopied(false)
-      }, 2000)
+      }, COPY_FEEDBACK_DURATION_MS)
     } catch {
       toast.error(t('resumes.copy_error'))
     }
@@ -300,68 +302,6 @@ export function ResumeDialog({
     toast.success(t('resumes.exported'))
   }
 
-  const markdownToHtml = (md: string): string => {
-    if (!md) return ''
-
-    return md
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(
-        /^###### (.*$)/gim,
-        '<h6 style="font-size:12px;font-weight:600;margin:8px 0 4px;">$1</h6>'
-      )
-      .replace(
-        /^##### (.*$)/gim,
-        '<h5 style="font-size:13px;font-weight:600;margin:10px 0 4px;">$1</h5>'
-      )
-      .replace(
-        /^#### (.*$)/gim,
-        '<h4 style="font-size:14px;font-weight:600;margin:12px 0 4px;">$1</h4>'
-      )
-      .replace(
-        /^### (.*$)/gim,
-        '<h3 style="font-size:16px;font-weight:600;margin:14px 0 6px;">$1</h3>'
-      )
-      .replace(
-        /^## (.*$)/gim,
-        '<h2 style="font-size:18px;font-weight:700;margin:16px 0 8px;">$1</h2>'
-      )
-      .replace(
-        /^# (.*$)/gim,
-        '<h1 style="font-size:22px;font-weight:700;margin:20px 0 10px;">$1</h1>'
-      )
-      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(
-        /`([^`]+)`/g,
-        '<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-family:monospace;font-size:13px;">$1</code>'
-      )
-      .replace(/```[\s\S]*?```/g, (match) => {
-        const code = match.slice(3, -3).trim()
-        return `<pre style="background:#f5f5f5;padding:12px;border-radius:6px;overflow-x:auto;margin:12px 0;"><code style="font-size:13px;font-family:monospace;">${code}</code></pre>`
-      })
-      .replace(
-        /\[([^\]]+)\]\(([^)]+)\)/g,
-        '<a href="$2" style="color:#2563eb;text-decoration:underline;">$1</a>'
-      )
-      .replace(
-        /^>\s*(.*$)/gim,
-        '<blockquote style="border-left:4px solid #d1d5db;padding-left:16px;font-style:italic;margin:12px 0;color:#6b7280;">$1</blockquote>'
-      )
-      .replace(/^---$/gim, '<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;" />')
-      .replace(/^\s*\d+\.\s+(.*$)/gim, '<li style="margin-left:16px;margin-bottom:4px;">$1</li>')
-      .replace(/^\s*[-*+]\s+(.*$)/gim, '<li style="margin-left:16px;margin-bottom:4px;">$1</li>')
-      .replace(
-        /(<li[^>]*>.*<\/li>)/g,
-        '<ul style="margin:8px 0;padding-left:20px;list-style:disc;">$1</ul>'
-      )
-      .replace(/<\/ul>\s*<ul[^>]*>/g, '')
-      .replace(/\n\n/g, '<div style="margin-bottom:8px;"></div>')
-      .replace(/\n/g, '<br/>')
-  }
-
   const handleExportPdf = async (): Promise<void> => {
     if (!generatedCV) return
     setIsExportingPdf(true)
@@ -370,7 +310,7 @@ export function ResumeDialog({
       const container = document.createElement('div')
       container.innerHTML = `
         <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 40px; max-width: 800px; margin: 0 auto;">
-          ${markdownToHtml(generatedCV)}
+          ${markdownToHtml(generatedCV, 'pdf')}
         </div>
       `
       container.style.position = 'absolute'

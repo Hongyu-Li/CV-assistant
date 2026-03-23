@@ -604,7 +604,7 @@ describe('ResumeDialog', () => {
       expect(html).toContain('<li')
       expect(html).toContain('Item one')
       expect(html).toContain('Item two')
-      expect(html).toContain('<strong>')
+      expect(html).toContain('<strong')
       expect(html).toContain('Bold item')
       expect(html).not.toContain('* Item one')
     })
