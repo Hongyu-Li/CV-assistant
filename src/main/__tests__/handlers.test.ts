@@ -679,6 +679,128 @@ describe('main/handlers', (): void => {
       const result = await handlers.handleProfileLoad('/ws')
       expect(result).toEqual({})
     })
+
+    it('falls back to empty summary when summaryFile read fails', async (): Promise<void> => {
+      const index = {
+        personalInfo: { name: 'A', email: 'B', phone: 'C', summaryFile: 'summary.md' },
+        workExperience: [],
+        projects: [],
+        education: []
+      }
+      vi.mocked(fs.readWorkspaceFile).mockImplementation(
+        async (filename: string): Promise<string> => {
+          if (filename === 'profile/index.json') return JSON.stringify(index)
+          if (filename === 'profile/summary.md') throw new Error('ENOENT')
+          throw new Error('unexpected')
+        }
+      )
+
+      const result = await handlers.handleProfileLoad('/ws')
+      expect(result).toEqual({
+        personalInfo: { name: 'A', email: 'B', phone: 'C', summary: '' },
+        workExperience: [],
+        projects: [],
+        education: []
+      })
+    })
+
+    it('falls back to empty description when work experience descriptionFile read fails', async (): Promise<void> => {
+      const index = {
+        personalInfo: { name: 'N', email: 'E', phone: 'P' },
+        workExperience: [
+          { id: '1', company: 'Co', role: 'Dev', date: '2020', descriptionFile: 'work-exp-1.md' }
+        ],
+        projects: [],
+        education: []
+      }
+      vi.mocked(fs.readWorkspaceFile).mockImplementation(
+        async (filename: string): Promise<string> => {
+          if (filename === 'profile/index.json') return JSON.stringify(index)
+          if (filename === 'profile/work-exp-1.md') throw new Error('ENOENT')
+          throw new Error('unexpected')
+        }
+      )
+
+      const result = await handlers.handleProfileLoad('/ws')
+      expect(result).toMatchObject({
+        workExperience: [{ id: '1', company: 'Co', role: 'Dev', date: '2020', description: '' }]
+      })
+    })
+
+    it('falls back to empty description when project descriptionFile read fails', async (): Promise<void> => {
+      const index = {
+        personalInfo: { name: 'N', email: 'E', phone: 'P' },
+        workExperience: [],
+        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', descriptionFile: 'project-p1.md' }],
+        education: []
+      }
+      vi.mocked(fs.readWorkspaceFile).mockImplementation(
+        async (filename: string): Promise<string> => {
+          if (filename === 'profile/index.json') return JSON.stringify(index)
+          if (filename === 'profile/project-p1.md') throw new Error('ENOENT')
+          throw new Error('unexpected')
+        }
+      )
+
+      const result = await handlers.handleProfileLoad('/ws')
+      expect(result).toMatchObject({
+        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', description: '' }]
+      })
+    })
+
+    it('falls back to empty description when education descriptionFile read fails', async (): Promise<void> => {
+      const index = {
+        personalInfo: { name: 'N', email: 'E', phone: 'P' },
+        workExperience: [],
+        projects: [],
+        education: [
+          {
+            id: 'e1',
+            school: 'MIT',
+            degree: 'CS',
+            date: '2020',
+            descriptionFile: 'education-e1.md'
+          }
+        ]
+      }
+      vi.mocked(fs.readWorkspaceFile).mockImplementation(
+        async (filename: string): Promise<string> => {
+          if (filename === 'profile/index.json') return JSON.stringify(index)
+          if (filename === 'profile/education-e1.md') throw new Error('ENOENT')
+          throw new Error('unexpected')
+        }
+      )
+
+      const result = await handlers.handleProfileLoad('/ws')
+      expect(result).toMatchObject({
+        education: [{ id: 'e1', school: 'MIT', degree: 'CS', date: '2020', description: '' }]
+      })
+    })
+
+    it('skips description read when entry has no descriptionFile field', async (): Promise<void> => {
+      const index = {
+        personalInfo: { name: 'N', email: 'E', phone: 'P' },
+        workExperience: [{ id: '1', company: 'Co', role: 'Dev', date: '2020' }],
+        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS' }],
+        education: [{ id: 'e1', school: 'MIT', degree: 'CS', date: '2020' }]
+      }
+      vi.mocked(fs.readWorkspaceFile).mockImplementation(
+        async (filename: string): Promise<string> => {
+          if (filename === 'profile/index.json') return JSON.stringify(index)
+          throw new Error('should not be called for description files')
+        }
+      )
+
+      const result = await handlers.handleProfileLoad('/ws')
+      expect(result).toEqual({
+        personalInfo: { name: 'N', email: 'E', phone: 'P', summary: '' },
+        workExperience: [{ id: '1', company: 'Co', role: 'Dev', date: '2020', description: '' }],
+        projects: [{ id: 'p1', name: 'Proj', techStack: 'TS', description: '' }],
+        education: [{ id: 'e1', school: 'MIT', degree: 'CS', date: '2020', description: '' }]
+      })
+      // Only index.json should be read, no description file reads
+      expect(vi.mocked(fs.readWorkspaceFile)).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('handleProfileSave', (): void => {
@@ -738,6 +860,63 @@ describe('main/handlers', (): void => {
 
       const result = await handlers.handleProfileSave({ personalInfo: { summary: 'x' } }, '/ws')
       expect(result).toEqual({ success: false, error: 'boom' })
+    })
+
+    it('saves with empty arrays when workExperience, projects, and education are missing', async (): Promise<void> => {
+      vi.mocked(fs.writeWorkspaceFile).mockResolvedValue(undefined)
+      const data: ProfileSaveData = {
+        personalInfo: { name: 'A', email: 'B', phone: 'C', summary: 'SUM' }
+      }
+
+      const result = await handlers.handleProfileSave(data, '/ws')
+      expect(result).toEqual({ success: true })
+
+      const indexCall = vi
+        .mocked(fs.writeWorkspaceFile)
+        .mock.calls.find((c) => c[0] === 'profile/index.json')
+      expect(indexCall).toBeTruthy()
+      const indexJson = JSON.parse(String(indexCall?.[1])) as Record<string, unknown>
+      expect(indexJson['workExperience']).toEqual([])
+      expect(indexJson['projects']).toEqual([])
+      expect(indexJson['education']).toEqual([])
+    })
+
+    it('defaults personalInfo fields to empty strings when personalInfo is missing', async (): Promise<void> => {
+      vi.mocked(fs.writeWorkspaceFile).mockResolvedValue(undefined)
+      const data: ProfileSaveData = {}
+
+      const result = await handlers.handleProfileSave(data, '/ws')
+      expect(result).toEqual({ success: true })
+
+      expect(vi.mocked(fs.writeWorkspaceFile)).toHaveBeenCalledWith('profile/summary.md', '', '/ws')
+
+      const indexCall = vi
+        .mocked(fs.writeWorkspaceFile)
+        .mock.calls.find((c) => c[0] === 'profile/index.json')
+      expect(indexCall).toBeTruthy()
+      const indexJson = JSON.parse(String(indexCall?.[1])) as Record<string, unknown>
+      expect(indexJson['personalInfo']).toMatchObject({
+        name: '',
+        email: '',
+        phone: '',
+        summaryFile: 'summary.md'
+      })
+    })
+
+    it('writes empty description when workExperience entry has no description', async (): Promise<void> => {
+      vi.mocked(fs.writeWorkspaceFile).mockResolvedValue(undefined)
+      const data: ProfileSaveData = {
+        workExperience: [{ id: '1', company: 'Co', role: 'Dev', date: '2020', description: '' }]
+      }
+
+      const result = await handlers.handleProfileSave(data, '/ws')
+      expect(result).toEqual({ success: true })
+
+      expect(vi.mocked(fs.writeWorkspaceFile)).toHaveBeenCalledWith(
+        'profile/work-exp-1.md',
+        '',
+        '/ws'
+      )
     })
   })
 
