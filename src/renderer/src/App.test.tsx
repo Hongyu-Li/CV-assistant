@@ -28,13 +28,13 @@ describe('App', () => {
 })
 
 // Mock child components to avoid deep rendering
-vi.mock('./components/Profile', () => ({
+vi.mock('./pages/Profile', () => ({
   Profile: (): React.JSX.Element => <div data-testid="profile-view">Profile</div>
 }))
-vi.mock('./components/Settings', () => ({
+vi.mock('./pages/Settings', () => ({
   Settings: (): React.JSX.Element => <div data-testid="settings-view">Settings</div>
 }))
-vi.mock('./components/Resumes', () => ({
+vi.mock('./pages/Resumes', () => ({
   Resumes: (): React.JSX.Element => <div data-testid="resumes-view">Resumes</div>
 }))
 vi.mock('./components/ui/sonner', () => ({

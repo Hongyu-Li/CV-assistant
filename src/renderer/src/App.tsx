@@ -3,9 +3,9 @@ import { Button } from './components/ui/button'
 
 import { FileText, User, Settings as SettingsIcon, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Profile } from './components/Profile'
-import { Settings } from './components/Settings'
-import { Resumes } from './components/Resumes'
+import { Profile } from './pages/Profile'
+import { Settings } from './pages/Settings'
+import { Resumes } from './pages/Resumes'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useTranslation } from 'react-i18next'
 

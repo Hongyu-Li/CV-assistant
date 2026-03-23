@@ -2,11 +2,17 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings, type AppSettings } from '../context/SettingsContext'
 import { PROVIDER_CONFIGS, AIProvider } from '../lib/provider'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Input } from './ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { Button } from './ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '../components/ui/select'
+import { Button } from '../components/ui/button'
 import { toast } from 'sonner'
 import { Eye, EyeOff } from 'lucide-react'
 import {
@@ -18,7 +24,7 @@ import {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel
-} from './ui/alert-dialog'
+} from '../components/ui/alert-dialog'
 
 interface ConfirmDialogState {
   open: boolean

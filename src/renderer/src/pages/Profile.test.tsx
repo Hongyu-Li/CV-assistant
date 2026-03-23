@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { extractProfileFromPdf } from '../lib/provider'
 
 // Mock MarkdownEditor since Tiptap does not render text in jsdom
-vi.mock('./MarkdownEditor', () => ({
+vi.mock('../components/MarkdownEditor', () => ({
   MarkdownEditor: ({
     value,
     onChange

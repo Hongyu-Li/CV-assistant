@@ -46,7 +46,7 @@ vi.mock('../lib/provider', () => ({
 }))
 
 // Mock Radix Select with native <select> elements for testability in jsdom
-vi.mock('./ui/select', async () => {
+vi.mock('../components/ui/select', async () => {
   const React = await import('react')
   return {
     Select: ({
@@ -91,7 +91,7 @@ vi.mock('./ui/select', async () => {
 })
 
 // Mock AlertDialog with simple DOM elements for testability in jsdom
-vi.mock('./ui/alert-dialog', async () => {
+vi.mock('../components/ui/alert-dialog', async () => {
   const React = await import('react')
   return {
     AlertDialog: ({
