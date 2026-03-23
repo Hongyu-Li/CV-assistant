@@ -2,8 +2,9 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { toast } from 'sonner'
-import { generateCV, extractKeywordsFromJD } from '../lib/provider'
-import { ResumeDialog, CV } from './ResumeDialog'
+import { generateCV, extractKeywordsFromJD } from '../../lib/provider'
+import { ResumeDialog } from './ResumeDialog'
+import type { CV } from './types'
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -14,7 +15,7 @@ vi.mock('sonner', () => ({
 }))
 
 // Mock provider module
-vi.mock('../lib/provider', () => ({
+vi.mock('../../lib/provider', () => ({
   generateCV: vi.fn(),
   extractKeywordsFromJD: vi.fn(),
   PROVIDER_CONFIGS: {
@@ -28,7 +29,7 @@ vi.mock('../lib/provider', () => ({
 }))
 
 // Mock SettingsContext
-vi.mock('../context/SettingsContext', () => ({
+vi.mock('../../context/SettingsContext', () => ({
   useSettings: vi.fn((): { settings: Record<string, unknown> } => ({
     settings: {
       provider: 'openai' as const,
@@ -43,7 +44,7 @@ vi.mock('../context/SettingsContext', () => ({
 }))
 
 // Mock MarkdownEditor as a simple textarea
-vi.mock('./MarkdownEditor', () => ({
+vi.mock('../MarkdownEditor', () => ({
   MarkdownEditor: ({
     value,
     onChange

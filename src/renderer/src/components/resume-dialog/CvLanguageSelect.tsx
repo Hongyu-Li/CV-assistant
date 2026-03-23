@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from './ui/select'
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/select'
 
 interface CvLanguageSelectProps {
   value: string

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Resumes } from './Resumes'
-import type { CV } from '../components/ResumeDialog'
+import type { CV } from '../components/resume-dialog'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { SettingsProvider } from '../context/SettingsContext'
 import { toast } from 'sonner'

@@ -1,4 +1,4 @@
-import type { InterviewStatus } from '../components/ResumeDialog'
+import type { InterviewStatus } from '../components/resume-dialog'
 
 export const INTERVIEW_STATUSES: readonly InterviewStatus[] = [
   'first_interview',
