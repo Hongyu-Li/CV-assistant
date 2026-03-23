@@ -186,7 +186,8 @@ describe('Resumes Component', () => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
     })
 
-    const deleteButton = screen.getByText('common.delete')
+    // Find delete button by aria-label
+    const deleteButton = screen.getByLabelText('common.delete')
     fireEvent.click(deleteButton)
 
     await waitFor(() => {
@@ -212,7 +213,9 @@ describe('Resumes Component', () => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('common.delete'))
+    // Find delete button by aria-label
+    const deleteButton = screen.getByLabelText('common.delete')
+    fireEvent.click(deleteButton)
 
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
@@ -234,7 +237,9 @@ describe('Resumes Component', () => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('common.delete'))
+    // Find delete button by aria-label
+    const deleteButton = screen.getByLabelText('common.delete')
+    fireEvent.click(deleteButton)
 
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')

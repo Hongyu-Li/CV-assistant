@@ -184,7 +184,7 @@ test.describe('Resumes View', () => {
       const card = window.locator('.card-hover').filter({ hasText: 'E2E Test Resume' }).first()
       await card.hover()
 
-      const deleteBtn = card.locator('button', { hasText: 'Delete' })
+      const deleteBtn = card.locator('button[aria-label="Delete"]')
       await expect(deleteBtn).toBeVisible({ timeout: 3000 })
       await deleteBtn.click()
 

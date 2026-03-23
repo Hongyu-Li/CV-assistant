@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { toast } from 'sonner'
-import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
+import { Trash2, FileText, Calendar, Plus, Search, DollarSign } from 'lucide-react'
 import { ResumeDialog } from '../components/resume-dialog'
 import type { CV, InterviewStatus } from '../components/resume-dialog'
 import { INTERVIEW_STATUSES, REJECTED_STATUSES, MAX_VISIBLE_KEYWORDS } from '../lib/constants'
@@ -301,74 +301,75 @@ export function Resumes(): React.JSX.Element {
                   {resume.companyName || t('resumes.untitled')}
                 </CardTitle>
 
-                {/* Job Title as Tag */}
-                {resume.jobTitle && (
-                  <div className="mt-1">
+                {/* Job Title and Salary in same row */}
+                <div className="mt-1.5 flex items-center justify-between">
+                  {resume.jobTitle ? (
                     <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
                       {resume.jobTitle}
                     </span>
-                  </div>
-                )}
-
-                {/* Salary */}
-                {resume.targetSalary && (
-                  <div className="mt-2 text-sm font-medium text-green-600">
-                    {resume.targetSalary}
-                  </div>
-                )}
+                  ) : (
+                    <span />
+                  )}
+                  {resume.targetSalary && (
+                    <div className="flex items-center gap-0.5 text-sm font-medium text-green-600">
+                      <span>{resume.targetSalary}</span>
+                      <DollarSign className="h-3.5 w-3.5 opacity-70" />
+                    </div>
+                  )}
+                </div>
               </CardHeader>
 
-              <CardContent className="pt-0">
-                {/* Keywords Tags */}
-                {resume.keywords && resume.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full"
-                      >
-                        {keyword}
-                      </span>
-                    ))}
-                    {resume.keywords.length > MAX_VISIBLE_KEYWORDS && (
-                      <span className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full">
-                        +{resume.keywords.length - MAX_VISIBLE_KEYWORDS}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Interview Status */}
+              <CardContent className="pt-0 pb-4">
+                {/* Interview Status - Prominent */}
                 {resume.interviewStatus && (
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full border ${getInterviewStatusColor(resume.interviewStatus)}`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getInterviewStatusColor(resume.interviewStatus)}`}
                     >
                       {t(`resumes.status_${resume.interviewStatus}`)}
                     </span>
                   </div>
                 )}
 
-                {/* Last Modified Date */}
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3">
-                  <Calendar className="h-3 w-3" />
-                  {resume.lastModified
-                    ? new Date(resume.lastModified).toLocaleDateString()
-                    : t('resumes.unknown_date')}
-                </div>
+                {/* Keywords Tags - more compact, no label */}
+                {resume.keywords && resume.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
+                      <span
+                        key={index}
+                        className="px-1.5 py-0.5 bg-primary/5 text-primary/80 text-[10px] rounded-full border border-primary/10"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                    {resume.keywords.length > MAX_VISIBLE_KEYWORDS && (
+                      <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-[10px] rounded-full">
+                        +{resume.keywords.length - MAX_VISIBLE_KEYWORDS}
+                      </span>
+                    )}
+                  </div>
+                )}
 
-                {/* Delete Button */}
-                <div className="flex justify-end mt-3">
+                {/* Last Modified Date - inline with delete */}
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {resume.lastModified
+                      ? new Date(resume.lastModified).toLocaleDateString()
+                      : t('resumes.unknown_date')}
+                  </div>
+
+                  {/* Delete Button */}
                   <Button
-                    variant="destructive"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('common.delete')}
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
                     onClick={(e: React.MouseEvent): void => {
                       handleDelete(e, resume.filename)
                     }}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    {t('common.delete')}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
