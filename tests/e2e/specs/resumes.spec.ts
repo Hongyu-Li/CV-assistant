@@ -165,8 +165,8 @@ test.describe('Resumes View', () => {
 
     if (exists) {
       await expect(testResumeCard).toBeVisible()
-      // All saved resumes default to 'resume_sent' interview status
-      await expect(testResumeCard.getByText('Resume Sent', { exact: true })).toBeVisible()
+      // All saved resumes default to 'draft' interview status
+      await expect(testResumeCard.getByText('Draft', { exact: true })).toBeVisible()
     }
   })
 
