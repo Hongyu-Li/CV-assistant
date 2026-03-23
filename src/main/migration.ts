@@ -14,9 +14,7 @@ export async function runDataMigration(workspaceDir: string): Promise<void> {
     try {
       await readWorkspaceFile('profile/index.json', workspaceDir)
       // New profile exists — skip migration
-    } catch (e) {
-      // New profile doesn't exist — migrate
-      console.debug('Profile not found in workspace, migrating from userData:', e)
+    } catch {
       const data = JSON.parse(oldProfile) as {
         personalInfo?: {
           name?: string
@@ -124,7 +122,9 @@ export async function runDataMigration(workspaceDir: string): Promise<void> {
       }
     }
   } catch (e) {
-    console.debug('Old profile not found:', e)
+    if (e instanceof Error && (e as NodeJS.ErrnoException).code !== 'ENOENT') {
+      console.debug('Unexpected error reading old profile:', e)
+    }
   }
 
   // 2. Migrate CVs from workspace root to resumes/ subdirectory

@@ -92,14 +92,30 @@ describe('runDataMigration', (): void => {
       expect(profileWrites).toHaveLength(0)
     })
 
-    it('handles missing old profile gracefully (no userData profile)', async (): Promise<void> => {
-      vi.mocked(fs.readUserDataFile).mockRejectedValue(new Error('ENOENT'))
-      vi.mocked(fs.listWorkspaceFiles).mockRejectedValue(new Error('ENOENT'))
+    it('handles missing old profile gracefully (ENOENT suppressed)', async (): Promise<void> => {
+      const enoent = new Error('ENOENT') as NodeJS.ErrnoException
+      enoent.code = 'ENOENT'
+      vi.mocked(fs.readUserDataFile).mockRejectedValue(enoent)
+      vi.mocked(fs.listWorkspaceFiles).mockRejectedValue(enoent)
 
-      // Should not throw
       await runDataMigration('/ws')
 
       expect(vi.mocked(fs.writeWorkspaceFile)).not.toHaveBeenCalled()
+      expect(console.debug).not.toHaveBeenCalled()
+    })
+
+    it('logs unexpected errors when reading old profile fails with non-ENOENT', async (): Promise<void> => {
+      vi.mocked(fs.readUserDataFile).mockRejectedValue(new Error('EPERM'))
+      const enoent = new Error('ENOENT') as NodeJS.ErrnoException
+      enoent.code = 'ENOENT'
+      vi.mocked(fs.listWorkspaceFiles).mockRejectedValue(enoent)
+
+      await runDataMigration('/ws')
+
+      expect(console.debug).toHaveBeenCalledWith(
+        'Unexpected error reading old profile:',
+        expect.any(Error)
+      )
     })
   })
 
