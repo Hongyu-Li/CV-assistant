@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.1.0...cv-assistant-v1.2.0) (2026-03-23)
+
+
+### Features
+
+* add draft as default interview status for new resumes ([b7a2d90](https://github.com/tc9011/CV-assistant/commit/b7a2d901384b76283335d81bc519d63a54969b7a))
+
+
+### Bug Fixes
+
+* revert sandbox:true (breaks preload) and suppress ENOENT log noise in migration ([6ba82ba](https://github.com/tc9011/CV-assistant/commit/6ba82ba1180cbe70ce3b4c8ef6dd879515a12582))
+
 ## [1.1.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.0.26...cv-assistant-v1.1.0) (2026-03-20)
 
 
