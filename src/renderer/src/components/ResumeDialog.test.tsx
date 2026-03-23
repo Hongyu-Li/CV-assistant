@@ -1182,10 +1182,9 @@ describe('ResumeDialog', () => {
   })
 
   it('renders keyword chips when resume has keywords', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-kw',
       filename: 'kw.json',
-      title: 'KW Resume',
       keywords: ['React', 'TypeScript', 'Node.js']
     }
     renderDialog({ resume })
@@ -1213,10 +1212,9 @@ describe('ResumeDialog', () => {
   })
 
   it('sorts and renders multiple interview rounds in timeline', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-sort',
       filename: 'sort.json',
-      title: 'Sort Resume',
       interviewRounds: [
         {
           id: 'round-b',
@@ -1261,10 +1259,9 @@ describe('ResumeDialog', () => {
   })
 
   it('shows notes textarea and language select inside expanded CV when generatedCV exists', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-cv',
       filename: 'cv.json',
-      title: 'CV Resume',
       generatedCV: '# My Generated CV\n\nSome content',
       cvLanguage: 'en',
       notes: 'Existing notes'
@@ -1300,10 +1297,9 @@ describe('ResumeDialog', () => {
   })
 
   it('clicks export Markdown and PDF buttons in export menu', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-export',
       filename: 'export.json',
-      title: 'Export Resume',
       generatedCV: '# Test CV'
     }
     mockInvoke.mockResolvedValue(undefined)
@@ -1340,10 +1336,9 @@ describe('ResumeDialog', () => {
   })
 
   it('does not collapse CV section when clicking action buttons area', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-stop',
       filename: 'stop.json',
-      title: 'StopProp Resume',
       generatedCV: '# CV Content'
     }
     renderDialog({ resume })
@@ -1362,10 +1357,9 @@ describe('ResumeDialog', () => {
   })
 
   it('deletes an interview round via the trash button', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-del',
       filename: 'del.json',
-      title: 'Del Resume',
       interviewRounds: [
         {
           id: 'round-del-1',
@@ -1405,10 +1399,9 @@ describe('ResumeDialog', () => {
   })
 
   it('closes export menu when clicking outside', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-outside',
       filename: 'outside.json',
-      title: 'Outside Resume',
       generatedCV: '# Outside CV'
     }
     renderDialog({ resume })
@@ -1465,10 +1458,9 @@ describe('ResumeDialog', () => {
   })
 
   it('toggles export menu open and closed via download button', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-toggle',
       filename: 'toggle.json',
-      title: 'Toggle Resume',
       generatedCV: '# Toggle CV'
     }
     renderDialog({ resume })
@@ -1491,10 +1483,9 @@ describe('ResumeDialog', () => {
   })
 
   it('shows regenerate button when CV exists and clicks it', async (): Promise<void> => {
-    const resume = {
+    const resume: CV = {
       id: 'resume-regen',
       filename: 'regen.json',
-      title: 'Regen Resume',
       jobDescription: 'Need React developer',
       generatedCV: '# Existing CV'
     }

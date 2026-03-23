@@ -69,7 +69,6 @@ export interface CV {
   interviewStatus?: InterviewStatus
   interviewRounds?: InterviewRound[]
   keywords?: string[]
-  [key: string]: unknown
 }
 
 interface CvLanguageSelectProps {
