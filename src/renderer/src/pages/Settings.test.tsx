@@ -978,3 +978,194 @@ describe('Settings - Version Display', () => {
     expect(screen.queryByTestId('auto-update-switch')).not.toBeInTheDocument()
   })
 })
+
+describe('Settings - Version Fetch Failure', () => {
+  const mockUpdateSettings = vi.fn()
+  const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
+
+  beforeEach((): void => {
+    vi.clearAllMocks()
+    ;(useSettings as Mock).mockReturnValue({
+      settings: {
+        provider: 'openai',
+        apiKeys: {},
+        model: 'gpt-5.2',
+        baseUrl: '',
+        theme: 'system',
+        language: 'en',
+        workspacePath: ''
+      },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.reject(new Error('IPC failed'))
+      return Promise.resolve(undefined)
+    })
+  })
+
+  it('shows ellipsis when version fetch fails and calls console.debug', async (): Promise<void> => {
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation((): void => {})
+    await act(async () => {
+      render(<Settings />)
+    })
+    await waitFor((): void => {
+      expect(screen.getByText(/\.\.\./)).toBeInTheDocument()
+    })
+    expect(debugSpy).toHaveBeenCalledWith('Version fetch failed:', expect.any(Error))
+    debugSpy.mockRestore()
+  })
+})
+
+describe('Settings - Open Folder Error Handling', () => {
+  const mockUpdateSettings = vi.fn()
+  const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
+
+  beforeEach((): void => {
+    vi.clearAllMocks()
+    ;(useSettings as Mock).mockReturnValue({
+      settings: {
+        provider: 'openai',
+        apiKeys: {},
+        model: 'gpt-5.2',
+        baseUrl: '',
+        theme: 'system',
+        language: 'en',
+        workspacePath: '/test/workspace'
+      },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'shell:openPath') return Promise.reject(new Error('Permission denied'))
+      return Promise.resolve(undefined)
+    })
+  })
+
+  it('does not crash and calls console.error when shell:openPath throws', async (): Promise<void> => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation((): void => {})
+    await act(async () => {
+      render(<Settings />)
+    })
+    const openBtn = screen.getByText('settings.open_folder')
+    await act(async (): Promise<void> => {
+      fireEvent.click(openBtn)
+    })
+    await waitFor((): void => {
+      expect(errorSpy).toHaveBeenCalledWith('Failed to open folder:', expect.any(Error))
+    })
+    errorSpy.mockRestore()
+  })
+})
+
+describe('Settings - Migration With Non-Error Thrown', () => {
+  const mockUpdateSettings = vi.fn()
+  const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
+
+  beforeEach((): void => {
+    vi.clearAllMocks()
+    ;(useSettings as Mock).mockReturnValue({
+      settings: {
+        provider: 'openai',
+        apiKeys: {},
+        model: 'gpt-5.2',
+        baseUrl: '',
+        theme: 'system',
+        language: 'en',
+        workspacePath: '/old/workspace'
+      },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'dialog:openDirectory') return Promise.resolve('/new/workspace')
+      if (channel === 'workspace:precheck') return Promise.reject('string error')
+      return Promise.resolve(undefined)
+    })
+  })
+
+  it('shows error toast when migration throws a non-Error string value', async (): Promise<void> => {
+    await act(async () => {
+      render(<Settings />)
+    })
+    const changeBtn = screen.getByText('settings.change_dir')
+    await act(async (): Promise<void> => {
+      fireEvent.click(changeBtn)
+    })
+    const { toast } = await import('sonner')
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('settings.migration_error')
+    })
+  })
+})
+
+describe('Settings - Test Connection Edge Cases', () => {
+  const mockUpdateSettings = vi.fn()
+  const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
+  const defaultSettings = {
+    provider: 'openai',
+    apiKeys: { openai: 'sk-test-key' },
+    model: 'gpt-5.2',
+    baseUrl: '',
+    theme: 'system',
+    language: 'en',
+    workspacePath: ''
+  }
+
+  beforeEach((): void => {
+    vi.clearAllMocks()
+    ;(useSettings as Mock).mockReturnValue({
+      settings: defaultSettings,
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      return Promise.resolve(undefined)
+    })
+  })
+
+  it('shows toast with stringified value when ai:test throws a non-Error', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'ai:test') return Promise.reject('plain string')
+      return Promise.resolve(undefined)
+    })
+    await act(async () => {
+      render(<Settings />)
+    })
+    const testBtn = screen.getByText('settings.test_connection')
+    await act(async (): Promise<void> => {
+      fireEvent.click(testBtn)
+    })
+    const { toast } = await import('sonner')
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('settings.connection_failed plain string')
+    })
+  })
+
+  it('shows toast with empty error part when ai:test returns failure without error field', async (): Promise<void> => {
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+      if (channel === 'ai:test') return Promise.resolve({ success: false })
+      return Promise.resolve(undefined)
+    })
+    await act(async () => {
+      render(<Settings />)
+    })
+    const testBtn = screen.getByText('settings.test_connection')
+    await act(async (): Promise<void> => {
+      fireEvent.click(testBtn)
+    })
+    const { toast } = await import('sonner')
+    await waitFor((): void => {
+      expect(toast.error).toHaveBeenCalledWith('settings.connection_failed ')
+    })
+  })
+})
