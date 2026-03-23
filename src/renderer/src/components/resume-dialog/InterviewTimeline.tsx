@@ -15,7 +15,25 @@ import { Button } from '../ui/button'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/select'
 import { MarkdownEditor } from '../MarkdownEditor'
 import type { InterviewRound, InterviewStatus } from './types'
-import { deriveInterviewStatus } from './types'
+
+const ROUND_TO_STATUS: Record<string, InterviewStatus> = {
+  first: 'first_interview',
+  second: 'second_interview',
+  third: 'third_interview',
+  fourth: 'fourth_interview',
+  fifth: 'fifth_interview',
+  hr: 'hr_interview'
+}
+
+function deriveInterviewStatus(rounds: InterviewRound[]): InterviewStatus {
+  if (rounds.length === 0) return 'resume_sent'
+  const sortedRounds = [...rounds].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
+  const latestRound = sortedRounds[sortedRounds.length - 1]
+  if (latestRound.result === 'failed') return 'interview_failed'
+  return ROUND_TO_STATUS[latestRound.round] || 'resume_sent'
+}
 
 interface InterviewTimelineProps {
   interviewRounds: InterviewRound[]
