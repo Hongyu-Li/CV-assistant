@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { toast } from 'sonner'
-import { Trash2, FileText, Calendar, Plus, Search, DollarSign } from 'lucide-react'
+import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
 import { ResumeDialog } from '../components/resume-dialog'
 import type { CV, InterviewStatus } from '../components/resume-dialog'
 import { INTERVIEW_STATUSES, REJECTED_STATUSES, MAX_VISIBLE_KEYWORDS } from '../lib/constants'
 
-type FilterTab = 'all' | 'interview' | 'hr' | 'offer' | 'rejected'
+type FilterTab = 'all' | 'draft' | 'interview' | 'hr' | 'offer' | 'rejected'
 
 function getInterviewStatusColor(status: InterviewStatus): string {
   switch (status) {
@@ -162,6 +162,12 @@ export function Resumes(): React.JSX.Element {
     const status = resume.interviewStatus || 'draft'
     let matchesTab = true
     switch (activeTab) {
+      case 'draft':
+        matchesTab =
+          !resume.interviewStatus ||
+          resume.interviewStatus === 'draft' ||
+          resume.interviewStatus === 'resume_sent'
+        break
       case 'interview':
         matchesTab = INTERVIEW_STATUSES.includes(status as InterviewStatus)
         break
@@ -190,6 +196,7 @@ export function Resumes(): React.JSX.Element {
 
   const tabs: { key: FilterTab; label: string; count: number; color: string }[] = [
     { key: 'all', label: t('resumes.tab_all'), count: resumes.length, color: 'bg-gray-500' },
+    { key: 'draft', label: t('resumes.tab_draft'), count: stats.draft, color: 'bg-slate-400' },
     {
       key: 'interview',
       label: t('resumes.tab_interview'),
@@ -311,9 +318,8 @@ export function Resumes(): React.JSX.Element {
                     <span />
                   )}
                   {resume.targetSalary && (
-                    <div className="flex items-center gap-0.5 text-sm font-medium text-green-600">
+                    <div className="flex items-center text-sm font-medium text-green-600">
                       <span>{resume.targetSalary}</span>
-                      <DollarSign className="h-3.5 w-3.5 opacity-70" />
                     </div>
                   )}
                 </div>
