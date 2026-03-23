@@ -498,7 +498,7 @@ describe('main/handlers', (): void => {
         baseUrl: 'https://api.openai.com/v1'
       })
 
-      expect(result).toEqual({ success: false, error: 'net' })
+      expect(result).toEqual({ success: false, error: 'AI test failed: net' })
     })
 
     it('rejects invalid baseUrl protocol (file:)', async (): Promise<void> => {
@@ -530,6 +530,50 @@ describe('main/handlers', (): void => {
       expect(result).toEqual({
         success: false,
         error: 'AI test request timed out after 30 seconds'
+      })
+    })
+
+    it('returns rate-limit error with Retry-After on 429 response', async (): Promise<void> => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: { get: (name: string): string | null => (name === 'Retry-After' ? '60' : null) },
+        json: async (): Promise<unknown> => ({}),
+        text: async (): Promise<string> => 'rate limited'
+      })
+
+      const result = await handlers.handleAiTest({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Rate limited by AI provider. Retry after 60 seconds.'
+      })
+    })
+
+    it('returns rate-limit error without Retry-After when header is absent', async (): Promise<void> => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: { get: (): null => null },
+        json: async (): Promise<unknown> => ({}),
+        text: async (): Promise<string> => 'rate limited'
+      })
+
+      const result = await handlers.handleAiTest({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Rate limited by AI provider.'
       })
     })
   })
@@ -727,6 +771,42 @@ describe('main/handlers', (): void => {
       vi.mocked(fs.writeWorkspaceFile).mockRejectedValue(new Error('bad'))
       const result = await handlers.handleSettingsSave({})
       expect(result).toEqual({ success: false, error: 'bad' })
+    })
+
+    it('rejects settings with invalid typed field (theme must be enum)', async (): Promise<void> => {
+      const result = await handlers.handleSettingsSave({ theme: 123 })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('Invalid settings')
+      }
+      expect(vi.mocked(fs.writeWorkspaceFile)).not.toHaveBeenCalled()
+    })
+
+    it('passes through unknown keys via .passthrough()', async (): Promise<void> => {
+      vi.mocked(fs.writeWorkspaceFile).mockResolvedValue(undefined)
+      const result = await handlers.handleSettingsSave({ unknownFutureKey: 'value', theme: 'dark' })
+      expect(result).toEqual({ success: true })
+
+      const call = vi.mocked(fs.writeWorkspaceFile).mock.calls[0]
+      const written = JSON.parse(String(call?.[1])) as Record<string, unknown>
+      expect(written['unknownFutureKey']).toBe('value')
+      expect(written['theme']).toBe('dark')
+    })
+
+    it('accepts valid settings with all known fields', async (): Promise<void> => {
+      vi.mocked(fs.writeWorkspaceFile).mockResolvedValue(undefined)
+      const settings = {
+        provider: 'openai',
+        apiKey: 'key',
+        model: 'gpt-4',
+        baseUrl: 'https://api.openai.com/v1',
+        language: 'en',
+        theme: 'dark' as const,
+        autoUpdate: true,
+        workspacePath: '/path'
+      }
+      const result = await handlers.handleSettingsSave(settings)
+      expect(result).toEqual({ success: true })
     })
   })
 
@@ -1077,6 +1157,60 @@ describe('main/handlers', (): void => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error).not.toContain('sk-secret-token')
+        expect(result.error).toContain('[REDACTED]')
+      }
+    })
+
+    it('redacts gsk_ prefixed keys (Groq)', async (): Promise<void> => {
+      mockFetchNotOk(401, 'Invalid key: gsk_abc123def456')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('gsk_abc123def456')
+        expect(result.error).toContain('[REDACTED]')
+      }
+    })
+
+    it('redacts xai- prefixed keys (xAI/Grok)', async (): Promise<void> => {
+      mockFetchNotOk(401, 'Bad key: xai-proj-secret789')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('xai-proj-secret789')
+        expect(result.error).toContain('[REDACTED]')
+      }
+    })
+
+    it('redacts AIza prefixed keys (Google)', async (): Promise<void> => {
+      mockFetchNotOk(401, 'Invalid: AIzaSyA1234567890abcDEF')
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).not.toContain('AIzaSyA1234567890abcDEF')
         expect(result.error).toContain('[REDACTED]')
       }
     })

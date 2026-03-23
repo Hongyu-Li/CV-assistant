@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { join, normalize, dirname, resolve, relative, isAbsolute } from 'path'
 import { promises as fs } from 'fs'
+import { toErrorMessage } from './utils'
 
 function getSafeFilePath(filename: string): string {
   const userDataPath = app.getPath('userData')
@@ -257,10 +258,10 @@ export async function migrateWorkspaceFiles(
             await fs.unlink(sourcePath)
             migrated.push(file)
           } catch (copyError) {
-            errors.push({ file, error: (copyError as Error).message })
+            errors.push({ file, error: toErrorMessage(copyError) })
           }
         } else {
-          errors.push({ file, error: (renameError as Error).message })
+          errors.push({ file, error: toErrorMessage(renameError) })
         }
       }
     }

@@ -1,4 +1,5 @@
 import { join, resolve, relative, isAbsolute } from 'path'
+import { z } from 'zod/v4'
 import {
   deleteWorkspaceFile,
   getWorkspaceLastModified,
@@ -9,6 +10,20 @@ import {
   writeWorkspaceFile
 } from './fs'
 import type { MigrationPrecheck, MigrationResult } from './fs'
+import { toErrorMessage } from './utils'
+
+const settingsSchema = z
+  .object({
+    provider: z.string().optional(),
+    apiKey: z.string().optional(),
+    model: z.string().optional(),
+    baseUrl: z.string().optional(),
+    language: z.string().optional(),
+    theme: z.enum(['light', 'dark', 'system']).optional(),
+    autoUpdate: z.boolean().optional(),
+    workspacePath: z.string().optional()
+  })
+  .passthrough()
 
 export interface ProfilePersonalInfoSaveData {
   name?: string
@@ -154,8 +169,8 @@ export async function handleProfileLoad(
           `profile/${index.personalInfo.summaryFile}`,
           workspacePath
         )
-      } catch {
-        /* file may not exist */
+      } catch (e) {
+        console.debug('Summary file not found:', e)
       }
     }
 
@@ -165,8 +180,8 @@ export async function handleProfileLoad(
         if (exp.descriptionFile) {
           try {
             description = await readWorkspaceFile(`profile/${exp.descriptionFile}`, workspacePath)
-          } catch {
-            /* file may not exist */
+          } catch (e) {
+            console.debug('Work experience description file not found:', e)
           }
         }
         return {
@@ -185,8 +200,8 @@ export async function handleProfileLoad(
         if (proj.descriptionFile) {
           try {
             description = await readWorkspaceFile(`profile/${proj.descriptionFile}`, workspacePath)
-          } catch {
-            /* file may not exist */
+          } catch (e) {
+            console.debug('Project description file not found:', e)
           }
         }
         return {
@@ -204,8 +219,8 @@ export async function handleProfileLoad(
         if (edu.descriptionFile) {
           try {
             description = await readWorkspaceFile(`profile/${edu.descriptionFile}`, workspacePath)
-          } catch {
-            /* file may not exist */
+          } catch (e) {
+            console.debug('Education description file not found:', e)
           }
         }
         return {
@@ -341,7 +356,7 @@ export async function handleProfileSave(
     return { success: true }
   } catch (error) {
     console.error('Failed to save profile:', error)
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -359,11 +374,15 @@ export async function handleSettingsSave(
   data: unknown
 ): Promise<IpcSuccessResponse | IpcErrorResponse> {
   try {
-    await writeWorkspaceFile('settings.json', JSON.stringify(data, null, 2))
+    const parsed = settingsSchema.safeParse(data)
+    if (!parsed.success) {
+      return { success: false, error: `Invalid settings: ${parsed.error.message}` }
+    }
+    await writeWorkspaceFile('settings.json', JSON.stringify(parsed.data, null, 2))
     return { success: true }
   } catch (error) {
     console.error('Failed to save settings:', error)
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -425,7 +444,7 @@ export async function handleCvSave(params: {
     return { success: true }
   } catch (error) {
     console.error('Failed to save CV:', error)
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -439,13 +458,13 @@ export async function handleCvDelete(params: {
     const mdFilename = filename.replace('.json', '.md')
     try {
       await deleteWorkspaceFile(`resumes/${mdFilename}`, workspacePath)
-    } catch {
-      /* .md file may not exist — that's fine */
+    } catch (e) {
+      console.debug('MD file not found during CV delete:', e)
     }
     return { success: true }
   } catch (error) {
     console.error('Failed to delete CV:', error)
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -462,7 +481,8 @@ export async function handleCvRead(params: {
       try {
         const mdContent = await readWorkspaceFile(`resumes/${data.mdFile}`, workspacePath)
         data.generatedCV = mdContent
-      } catch {
+      } catch (e) {
+        console.debug('MD file not found during CV read:', e)
         data.generatedCV = ''
       }
     }
@@ -470,7 +490,7 @@ export async function handleCvRead(params: {
     return { success: true, data: data as unknown as Record<string, unknown> }
   } catch (error) {
     console.error('Failed to read CV:', error)
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -509,7 +529,7 @@ export async function handleProfileExtractPdfText(
     return { success: true, text: result.text, filename }
   } catch (error) {
     console.error('Failed to parse PDF:', error)
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -554,7 +574,7 @@ export async function handleWorkspacePrecheck(params: {
     const result = await precheckWorkspaceMigration(params.from, params.to)
     return { success: true, ...result }
   } catch (error) {
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: toErrorMessage(error) }
   }
 }
 
@@ -571,7 +591,7 @@ export async function handleWorkspaceMigrate(params: {
       success: false,
       migrated: [],
       skipped: [],
-      errors: [{ file: '', error: (error as Error).message }]
+      errors: [{ file: '', error: toErrorMessage(error) }]
     }
   }
 }
@@ -581,7 +601,7 @@ function sanitizeApiError(statusCode: number, rawError: string): string {
   const truncated = rawError.length > 500 ? rawError.substring(0, 500) + '...' : rawError
   // Remove potential auth tokens/keys from error text
   const sanitized = truncated.replace(
-    /(?:Bearer |sk-|key-|api[_-]?key[=:]\s*)[^\s"',}]*/gi,
+    /(?:Bearer |sk-|gsk_|xai-|AIza[A-Za-z0-9_-]+|key-|api[_-]?key[=:]\s*)[^\s"',}]*/gi,
     '[REDACTED]'
   )
   return `API error ${statusCode}: ${sanitized}`
@@ -692,7 +712,7 @@ export async function handleAiChat(params: {
       const timeoutSec = Math.round(timeoutMs / 1000)
       return { success: false, error: `AI request timed out after ${timeoutSec} seconds` }
     }
-    return { success: false, error: `AI chat failed: ${(error as Error).message}` }
+    return { success: false, error: `AI chat failed: ${toErrorMessage(error)}` }
   }
 }
 
@@ -730,6 +750,11 @@ export async function handleAiTest(params: {
         signal: controller.signal
       })
       if (!response.ok) {
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After')
+          const retryMsg = retryAfter ? ` Retry after ${retryAfter} seconds.` : ''
+          return { success: false, error: `Rate limited by AI provider.${retryMsg}` }
+        }
         const errorText = await response.text()
         return { success: false, error: sanitizeApiError(response.status, errorText) }
       }
@@ -741,7 +766,7 @@ export async function handleAiTest(params: {
     if (error instanceof Error && error.name === 'AbortError') {
       return { success: false, error: 'AI test request timed out after 30 seconds' }
     }
-    return { success: false, error: (error as Error).message }
+    return { success: false, error: `AI test failed: ${toErrorMessage(error)}` }
   }
 }
 
