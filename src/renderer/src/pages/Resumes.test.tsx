@@ -186,8 +186,18 @@ describe('Resumes Component', () => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
     })
 
-    const deleteButton = screen.getByText('common.delete')
+    // Find delete button by aria-label
+    const deleteButton = screen.getByLabelText('common.delete')
     fireEvent.click(deleteButton)
+
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('resumes.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor(() => {
       expect(mockInvoke).toHaveBeenCalledWith('cv:delete', {
@@ -212,7 +222,18 @@ describe('Resumes Component', () => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('common.delete'))
+    // Find delete button by aria-label
+    const deleteButton = screen.getByLabelText('common.delete')
+    fireEvent.click(deleteButton)
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
@@ -234,7 +255,18 @@ describe('Resumes Component', () => {
       expect(screen.getByText('Developer')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByText('common.delete'))
+    // Find delete button by aria-label
+    const deleteButton = screen.getByLabelText('common.delete')
+    fireEvent.click(deleteButton)
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('resumes.delete_error')
@@ -332,6 +364,13 @@ describe('Resumes Component', () => {
       companyName: 'Netflix',
       interviewStatus: 'offer_rejected',
       lastModified: '2026-03-07'
+    },
+    {
+      id: '6',
+      filename: 'cv6.json',
+      jobTitle: 'Draft Developer',
+      companyName: 'Draft Corp',
+      lastModified: '2026-03-12'
     }
   ]
 
@@ -558,14 +597,35 @@ describe('Resumes Component', () => {
     })
   })
 
+  it('filters to Draft tab showing only draft resumes', async (): Promise<void> => {
+    mockInvoke.mockResolvedValue(richResumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Draft Developer')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('resumes.tab_draft'))
+
+    await waitFor((): void => {
+      expect(screen.getByText('Draft Developer')).toBeInTheDocument()
+      expect(screen.queryByText('React Developer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Backend Engineer')).not.toBeInTheDocument()
+      expect(screen.queryByText('Designer')).not.toBeInTheDocument()
+    })
+  })
+
   it('shows correct counts in tab badges', async (): Promise<void> => {
     mockInvoke.mockResolvedValue(richResumes)
     renderWithProvider(<Resumes />)
 
     await waitFor((): void => {
-      // All tab shows total count 5
+      // All tab shows total count 6
       const allTab = screen.getByText('resumes.tab_all').closest('button')
-      expect(allTab).toHaveTextContent('5')
+      expect(allTab).toHaveTextContent('6')
+      // Draft tab: 1 (no interviewStatus)
+      const draftTab = screen.getByText('resumes.tab_draft').closest('button')
+      expect(draftTab).toHaveTextContent('1')
       // Interview tab: 1 (first_interview)
       const interviewTab = screen.getByText('resumes.tab_interview').closest('button')
       expect(interviewTab).toHaveTextContent('1')

@@ -159,8 +159,8 @@ test.describe('Resumes View', () => {
     // Success toast
     await expect(window.locator('text=Resume saved successfully')).toBeVisible({ timeout: 5000 })
 
-    // Resume card should appear in the list
-    await expect(window.locator('text=E2E Test Resume')).toBeVisible({ timeout: 5000 })
+    // Resume card should appear in the list (use first() in case of duplicates from previous runs)
+    await expect(window.locator('text=E2E Test Resume').first()).toBeVisible({ timeout: 5000 })
   })
 
   test('should show default interview status badge for saved resume', async ({ window }) => {
@@ -184,9 +184,16 @@ test.describe('Resumes View', () => {
       const card = window.locator('.card-hover').filter({ hasText: 'E2E Test Resume' }).first()
       await card.hover()
 
-      const deleteBtn = card.locator('button', { hasText: 'Delete' })
+      const deleteBtn = card.locator('button[aria-label="Delete"]')
       await expect(deleteBtn).toBeVisible({ timeout: 3000 })
       await deleteBtn.click()
+
+      // Confirm dialog should appear
+      await expect(window.getByText('Delete Resume')).toBeVisible({ timeout: 5000 })
+
+      // Click confirm button
+      const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
+      await confirmBtn.click()
 
       // Success toast
       await expect(window.locator('text=Resume deleted successfully')).toBeVisible({
@@ -212,8 +219,11 @@ test.describe('Resumes View', () => {
     await saveBtn.click()
     await expect(dialog).not.toBeVisible({ timeout: 5000 })
 
-    // Open the saved resume to edit
-    const resumeCard = window.locator('[class*="card"]').filter({ hasText: 'Export Test Resume' })
+    // Open the saved resume to edit (use first() in case of duplicates from previous runs)
+    const resumeCard = window
+      .locator('[class*="card"]')
+      .filter({ hasText: 'Export Test Resume' })
+      .first()
     await expect(resumeCard).toBeVisible({ timeout: 5000 })
     await resumeCard.click()
 
@@ -243,10 +253,21 @@ test.describe('Resumes View', () => {
     const cardExists = await card.isVisible().catch(() => false)
     if (cardExists) {
       await card.hover()
-      const deleteBtn = card.locator('button', { hasText: 'Delete' })
+      const deleteBtn = card.locator('button[aria-label="Delete"]')
       const deleteVisible = await deleteBtn.isVisible().catch(() => false)
       if (deleteVisible) {
         await deleteBtn.click()
+
+        // Confirm dialog should appear
+        const confirmVisible = await window
+          .getByText('Delete Resume')
+          .isVisible()
+          .catch(() => false)
+        if (confirmVisible) {
+          // Click confirm button
+          const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
+          await confirmBtn.click()
+        }
       }
     }
   })

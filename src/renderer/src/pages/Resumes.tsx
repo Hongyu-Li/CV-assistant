@@ -7,10 +7,11 @@ import { Input } from '../components/ui/input'
 import { toast } from 'sonner'
 import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
 import { ResumeDialog } from '../components/resume-dialog'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { CV, InterviewStatus } from '../components/resume-dialog'
 import { INTERVIEW_STATUSES, REJECTED_STATUSES, MAX_VISIBLE_KEYWORDS } from '../lib/constants'
 
-type FilterTab = 'all' | 'interview' | 'hr' | 'offer' | 'rejected'
+type FilterTab = 'all' | 'draft' | 'interview' | 'hr' | 'offer' | 'rejected'
 
 function getInterviewStatusColor(status: InterviewStatus): string {
   switch (status) {
@@ -45,6 +46,8 @@ export function Resumes(): React.JSX.Element {
   const [editingResume, setEditingResume] = useState<CV | null>(null)
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [resumeToDelete, setResumeToDelete] = useState<string | null>(null)
   const loadIdRef = useRef(0)
 
   const loadResumes = React.useCallback(async (): Promise<void> => {
@@ -80,11 +83,17 @@ export function Resumes(): React.JSX.Element {
     loadResumes()
   }, [loadResumes])
 
-  const handleDelete = async (e: React.MouseEvent, filename: string): Promise<void> => {
+  const handleDeleteClick = (e: React.MouseEvent, filename: string): void => {
     e.stopPropagation()
+    setResumeToDelete(filename)
+    setConfirmDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!resumeToDelete) return
     try {
       const result = await window.electron.ipcRenderer.invoke('cv:delete', {
-        filename,
+        filename: resumeToDelete,
         workspacePath: settings.workspacePath
       })
       if (result.success) {
@@ -96,6 +105,9 @@ export function Resumes(): React.JSX.Element {
     } catch (error) {
       console.error('Failed to delete resume:', error)
       toast.error(t('resumes.delete_error'))
+    } finally {
+      setConfirmDeleteOpen(false)
+      setResumeToDelete(null)
     }
   }
 
@@ -162,6 +174,12 @@ export function Resumes(): React.JSX.Element {
     const status = resume.interviewStatus || 'draft'
     let matchesTab = true
     switch (activeTab) {
+      case 'draft':
+        matchesTab =
+          !resume.interviewStatus ||
+          resume.interviewStatus === 'draft' ||
+          resume.interviewStatus === 'resume_sent'
+        break
       case 'interview':
         matchesTab = INTERVIEW_STATUSES.includes(status as InterviewStatus)
         break
@@ -190,6 +208,7 @@ export function Resumes(): React.JSX.Element {
 
   const tabs: { key: FilterTab; label: string; count: number; color: string }[] = [
     { key: 'all', label: t('resumes.tab_all'), count: resumes.length, color: 'bg-gray-500' },
+    { key: 'draft', label: t('resumes.tab_draft'), count: stats.draft, color: 'bg-slate-400' },
     {
       key: 'interview',
       label: t('resumes.tab_interview'),
@@ -301,74 +320,74 @@ export function Resumes(): React.JSX.Element {
                   {resume.companyName || t('resumes.untitled')}
                 </CardTitle>
 
-                {/* Job Title as Tag */}
-                {resume.jobTitle && (
-                  <div className="mt-1">
+                {/* Job Title and Salary in same row */}
+                <div className="mt-1.5 flex items-center justify-between">
+                  {resume.jobTitle ? (
                     <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded">
                       {resume.jobTitle}
                     </span>
-                  </div>
-                )}
-
-                {/* Salary */}
-                {resume.targetSalary && (
-                  <div className="mt-2 text-sm font-medium text-green-600">
-                    {resume.targetSalary}
-                  </div>
-                )}
+                  ) : (
+                    <span />
+                  )}
+                  {resume.targetSalary && (
+                    <div className="flex items-center text-sm font-medium text-green-600">
+                      <span>{resume.targetSalary}</span>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
 
-              <CardContent className="pt-0">
-                {/* Keywords Tags */}
-                {resume.keywords && resume.keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full"
-                      >
-                        {keyword}
-                      </span>
-                    ))}
-                    {resume.keywords.length > MAX_VISIBLE_KEYWORDS && (
-                      <span className="px-2 py-0.5 bg-muted text-muted-foreground text-xs rounded-full">
-                        +{resume.keywords.length - MAX_VISIBLE_KEYWORDS}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Interview Status */}
+              <CardContent className="pt-0 pb-4">
+                {/* Interview Status - Prominent */}
                 {resume.interviewStatus && (
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full border ${getInterviewStatusColor(resume.interviewStatus)}`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getInterviewStatusColor(resume.interviewStatus)}`}
                     >
                       {t(`resumes.status_${resume.interviewStatus}`)}
                     </span>
                   </div>
                 )}
 
-                {/* Last Modified Date */}
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mt-3">
-                  <Calendar className="h-3 w-3" />
-                  {resume.lastModified
-                    ? new Date(resume.lastModified).toLocaleDateString()
-                    : t('resumes.unknown_date')}
-                </div>
+                {/* Keywords Tags - more compact, no label */}
+                {resume.keywords && resume.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
+                      <span
+                        key={index}
+                        className="px-1.5 py-0.5 bg-primary/5 text-primary/80 text-[10px] rounded-full border border-primary/10"
+                      >
+                        {keyword}
+                      </span>
+                    ))}
+                    {resume.keywords.length > MAX_VISIBLE_KEYWORDS && (
+                      <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-[10px] rounded-full">
+                        +{resume.keywords.length - MAX_VISIBLE_KEYWORDS}
+                      </span>
+                    )}
+                  </div>
+                )}
 
-                {/* Delete Button */}
-                <div className="flex justify-end mt-3">
+                {/* Last Modified Date - inline with delete */}
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="h-3 w-3" />
+                    {resume.lastModified
+                      ? new Date(resume.lastModified).toLocaleDateString()
+                      : t('resumes.unknown_date')}
+                  </div>
+
+                  {/* Delete Button */}
                   <Button
-                    variant="destructive"
-                    size="sm"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('common.delete')}
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
                     onClick={(e: React.MouseEvent): void => {
-                      handleDelete(e, resume.filename)
+                      handleDeleteClick(e, resume.filename)
                     }}
                   >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    {t('common.delete')}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -382,6 +401,15 @@ export function Resumes(): React.JSX.Element {
         onOpenChange={setDialogOpen}
         resume={editingResume}
         onSaved={loadResumes}
+      />
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('resumes.delete_confirm_title')}
+        description={t('resumes.delete_confirm_desc')}
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
       />
     </div>
   )

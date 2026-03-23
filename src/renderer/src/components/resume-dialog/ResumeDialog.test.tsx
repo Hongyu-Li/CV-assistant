@@ -428,6 +428,15 @@ describe('ResumeDialog', () => {
     const deleteButton = iconButtons[iconButtons.length - 1]
     fireEvent.click(deleteButton)
 
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_round_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
+
     await waitFor((): void => {
       expect(screen.getByText('resumes.no_rounds')).toBeInTheDocument()
       expect(screen.queryByText('resumes.round_first')).not.toBeInTheDocument()
@@ -806,6 +815,15 @@ describe('ResumeDialog', () => {
       .getAllByRole('button')
       .filter((btn): boolean => btn.querySelector('.lucide-trash-2') !== null)
     fireEvent.click(trashButtons[trashButtons.length - 1])
+
+    // Confirm dialog should appear
+    await waitFor((): void => {
+      expect(screen.getByText('resumes.delete_round_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor((): void => {
       expect(screen.queryByText('Delete this round')).not.toBeInTheDocument()

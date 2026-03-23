@@ -135,6 +135,15 @@ describe('Profile Component', () => {
     const removeBtn = screen.getByText('profile.remove')
     fireEvent.click(removeBtn)
 
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('profile.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
+
     await waitFor(() => {
       expect(screen.queryByDisplayValue('New Company')).not.toBeInTheDocument()
     })
@@ -161,6 +170,15 @@ describe('Profile Component', () => {
 
     const removeBtn = screen.getByText('profile.remove')
     fireEvent.click(removeBtn)
+
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('profile.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor(() => {
       expect(screen.queryByDisplayValue('New Project')).not.toBeInTheDocument()
@@ -396,6 +414,15 @@ describe('Profile - Work Experience CRUD', () => {
     const removeBtns = screen.getAllByText('profile.remove')
     fireEvent.click(removeBtns[1])
 
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('profile.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
+
     await waitFor(() => {
       expect(screen.getAllByPlaceholderText('profile.company_ph')).toHaveLength(1)
     })
@@ -524,6 +551,15 @@ describe('Profile - Project CRUD', () => {
     const removeBtns = screen.getAllByText('profile.remove')
     fireEvent.click(removeBtns[1])
 
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('profile.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
+
     await waitFor(() => {
       expect(screen.getAllByPlaceholderText('profile.project_name_ph')).toHaveLength(1)
     })
@@ -633,6 +669,15 @@ describe('Profile - Education CRUD', () => {
     // Remove the second one
     const removeBtns = screen.getAllByText('profile.remove')
     fireEvent.click(removeBtns[1])
+
+    // Confirm dialog should appear
+    await waitFor(() => {
+      expect(screen.getByText('profile.delete_confirm_title')).toBeInTheDocument()
+    })
+
+    // Click confirm button
+    const confirmBtn = screen.getByRole('button', { name: 'common.delete' })
+    fireEvent.click(confirmBtn)
 
     await waitFor(() => {
       expect(screen.getAllByPlaceholderText('profile.school_ph')).toHaveLength(1)

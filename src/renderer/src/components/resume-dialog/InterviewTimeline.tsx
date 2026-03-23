@@ -15,6 +15,7 @@ import { Button } from '../ui/button'
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '../ui/select'
 import { MarkdownEditor } from '../MarkdownEditor'
 import type { InterviewRound, InterviewStatus } from './types'
+import { ConfirmDialog } from '../ConfirmDialog'
 
 const ROUND_TO_STATUS: Record<string, InterviewStatus> = {
   first: 'first_interview',
@@ -49,11 +50,21 @@ export function InterviewTimeline({
   const { t } = useTranslation()
   const [roundsExpanded, setRoundsExpanded] = useState(false)
   const [editingRound, setEditingRound] = useState<InterviewRound | null>(null)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [roundToDelete, setRoundToDelete] = useState<string | null>(null)
 
-  const handleDeleteRound = (roundId: string): void => {
-    const updatedRounds = interviewRounds.filter((r) => r.id !== roundId)
+  const handleDeleteClick = (roundId: string): void => {
+    setRoundToDelete(roundId)
+    setConfirmDeleteOpen(true)
+  }
+
+  const handleConfirmDelete = (): void => {
+    if (!roundToDelete) return
+    const updatedRounds = interviewRounds.filter((r) => r.id !== roundToDelete)
     onInterviewRoundsChange(updatedRounds)
     onInterviewStatusChange(deriveInterviewStatus(updatedRounds))
+    setConfirmDeleteOpen(false)
+    setRoundToDelete(null)
   }
 
   const handleSaveRound = (): void => {
@@ -153,8 +164,8 @@ export function InterviewTimeline({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => handleDeleteRound(round.id)}
+                                    className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleDeleteClick(round.id)}
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
@@ -289,6 +300,15 @@ export function InterviewTimeline({
           </DialogContent>
         </Dialog>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title={t('resumes.delete_round_confirm_title')}
+        description={t('resumes.delete_round_confirm_desc')}
+        onConfirm={handleConfirmDelete}
+        variant="destructive"
+      />
     </>
   )
 }
