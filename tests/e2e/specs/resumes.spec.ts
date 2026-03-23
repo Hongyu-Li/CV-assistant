@@ -246,7 +246,7 @@ test.describe('Resumes View', () => {
     const cardExists = await card.isVisible().catch(() => false)
     if (cardExists) {
       await card.hover()
-      const deleteBtn = card.locator('button', { hasText: 'Delete' })
+      const deleteBtn = card.locator('button[aria-label="Delete"]')
       const deleteVisible = await deleteBtn.isVisible().catch(() => false)
       if (deleteVisible) {
         await deleteBtn.click()
