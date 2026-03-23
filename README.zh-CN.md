@@ -122,17 +122,46 @@ npm run dev
 
 ```
 src/
-├── main/           # Electron 主进程（IPC 处理、文件系统操作）
-│   ├── index.ts    # 应用入口、窗口创建、IPC 注册
-│   └── fs.ts       # 文件系统操作（工作目录 CRUD、数据迁移）
-├── preload/        # 预加载脚本（上下文桥接）
+├── main/                # Electron 主进程
+│   ├── index.ts         # 应用入口、窗口创建、IPC 注册
+│   ├── fs.ts            # 文件系统操作（工作目录 CRUD）
+│   ├── migration.ts     # 旧工作目录自动迁移
+│   ├── utils.ts         # 共享工具函数（toErrorMessage）
+│   ├── handlers/        # IPC 处理模块
+│   │   ├── ai.ts        # AI 对话、测试、API 密钥脱敏
+│   │   ├── cv.ts        # 简历 CRUD（保存、读取、列表、删除）
+│   │   ├── profile.ts   # 个人资料加载/保存、PDF 文本提取
+│   │   ├── types.ts     # 共享类型（IpcResult、依赖注入）
+│   │   └── index.ts     # 统一导出 + 设置、对话框、工作目录处理
+│   └── __tests__/       # 主进程单元测试
+│       ├── ai.test.ts
+│       ├── cv.test.ts
+│       ├── profile.test.ts
+│       ├── handlers.test.ts  # 设置、对话框、工作目录、版本
+│       ├── fs.test.ts
+│       ├── migration.test.ts
+│       └── utils.test.ts
+├── preload/             # 预加载脚本（上下文桥接）
 │   ├── index.ts
 │   └── index.d.ts
-└── renderer/       # React 前端
+└── renderer/            # React 前端
     └── src/
-        ├── components/   # UI 组件（个人资料、简历、设置等）
+        ├── pages/            # 页面级组件
+        │   ├── Profile.tsx   # 个人资料编辑器（自动保存）
+        │   ├── Resumes.tsx   # 简历列表、搜索、筛选
+        │   └── Settings.tsx  # AI 服务商、主题、工作目录配置
+        ├── components/       # 共享 UI 组件
+        │   ├── resume-dialog/  # 简历创建/编辑对话框
+        │   │   ├── ResumeDialog.tsx      # 主对话框表单
+        │   │   ├── CvSection.tsx         # 简历生成/导出/复制
+        │   │   ├── InterviewTimeline.tsx  # 面试轮次 CRUD
+        │   │   ├── CvLanguageSelect.tsx  # 语言下拉选择
+        │   │   └── types.ts             # 共享类型
+        │   ├── ErrorBoundary.tsx
+        │   ├── MarkdownEditor.tsx
+        │   └── ui/           # shadcn/ui 基础组件
         ├── context/      # React 上下文（设置、主题）
-        ├── lib/          # 工具函数（AI 服务商配置、简历生成）
+        ├── lib/          # 工具函数（AI 服务商配置、Markdown 处理）
         ├── locales/      # 国际化翻译文件（en.json、zh.json）
         └── assets/       # 样式文件（Tailwind CSS v4）
 ```

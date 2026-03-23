@@ -122,17 +122,46 @@ npm run dev
 
 ```
 src/
-├── main/           # Electron main process (IPC handlers, file system)
-│   ├── index.ts    # App entry, window creation, IPC registration
-│   └── fs.ts       # File system operations (workspace CRUD, migration)
-├── preload/        # Preload scripts (context bridge)
+├── main/                # Electron main process
+│   ├── index.ts         # App entry, window creation, IPC registration
+│   ├── fs.ts            # File system operations (workspace CRUD)
+│   ├── migration.ts     # Legacy workspace auto-migration
+│   ├── utils.ts         # Shared utilities (toErrorMessage)
+│   ├── handlers/        # IPC handler modules
+│   │   ├── ai.ts        # AI chat, test, sanitizeApiError
+│   │   ├── cv.ts        # CV CRUD (save, read, list, delete)
+│   │   ├── profile.ts   # Profile load/save, PDF text extraction
+│   │   ├── types.ts     # Shared handler types (IpcResult, deps)
+│   │   └── index.ts     # Barrel export + settings, dialog, workspace handlers
+│   └── __tests__/       # Main process unit tests
+│       ├── ai.test.ts
+│       ├── cv.test.ts
+│       ├── profile.test.ts
+│       ├── handlers.test.ts  # Settings, dialog, workspace, version
+│       ├── fs.test.ts
+│       ├── migration.test.ts
+│       └── utils.test.ts
+├── preload/             # Preload scripts (context bridge)
 │   ├── index.ts
 │   └── index.d.ts
-└── renderer/       # React frontend
+└── renderer/            # React frontend
     └── src/
-        ├── components/   # UI components (Profile, Resumes, Settings, etc.)
+        ├── pages/            # Page-level components
+        │   ├── Profile.tsx   # Profile editor with auto-save
+        │   ├── Resumes.tsx   # Resume list, search, filter
+        │   └── Settings.tsx  # AI provider, theme, workspace config
+        ├── components/       # Shared UI components
+        │   ├── resume-dialog/  # Resume create/edit dialog
+        │   │   ├── ResumeDialog.tsx      # Main dialog form
+        │   │   ├── CvSection.tsx         # CV generation/export/copy
+        │   │   ├── InterviewTimeline.tsx  # Interview rounds CRUD
+        │   │   ├── CvLanguageSelect.tsx  # Language dropdown
+        │   │   └── types.ts             # Shared types
+        │   ├── ErrorBoundary.tsx
+        │   ├── MarkdownEditor.tsx
+        │   └── ui/           # shadcn/ui primitives
         ├── context/      # React contexts (Settings, Theme)
-        ├── lib/          # Utilities (AI provider configs, CV generation)
+        ├── lib/          # Utilities (AI provider configs, markdown)
         ├── locales/      # i18n translations (en.json, zh.json)
         └── assets/       # Styles (Tailwind CSS v4)
 ```

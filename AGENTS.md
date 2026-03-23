@@ -30,9 +30,12 @@ npm run typecheck    # TypeScript type checks
 
 Three process Electron architecture:
 
-- **Main process** (`src/main/`): Electron app lifecycle, BrowserWindow creation, IPC handlers, file system operations. Entry: `src/main/index.ts`. File operations: `src/main/fs.ts`.
+- **Main process** (`src/main/`): Electron app lifecycle, BrowserWindow creation, IPC handlers, file system operations. Entry: `src/main/index.ts`. File operations: `src/main/fs.ts`. Legacy migration: `src/main/migration.ts`. Shared utilities: `src/main/utils.ts`.
+  - **Handlers** (`src/main/handlers/`): IPC handler modules split by domain. `ai.ts` (AI chat/test + `sanitizeApiError`), `cv.ts` (CV CRUD), `profile.ts` (profile load/save + PDF extraction), `types.ts` (shared types/interfaces), `index.ts` (barrel export + settings/dialog/workspace/version handlers).
 - **Preload** (`src/preload/`): Context bridge exposing safe IPC APIs to renderer. Do not modify `src/preload/index.ts` or `src/preload/index.d.ts` without updating both.
-- **Renderer** (`src/renderer/src/`): React SPA. Components in `components/`, contexts in `context/`, utilities in `lib/`, i18n in `locales/`.
+- **Renderer** (`src/renderer/src/`): React SPA. Pages in `pages/`, shared components in `components/`, contexts in `context/`, utilities in `lib/`, i18n in `locales/`.
+  - **Pages** (`src/renderer/src/pages/`): Page-level components — `Profile.tsx`, `Resumes.tsx`, `Settings.tsx`. Each colocated with its `*.test.tsx`.
+  - **Components** (`src/renderer/src/components/`): Shared components. `resume-dialog/` is a folder module containing `ResumeDialog.tsx`, `CvSection.tsx`, `InterviewTimeline.tsx`, `CvLanguageSelect.tsx`, `types.ts`, and an `index.ts` barrel. Also `ErrorBoundary.tsx`, `MarkdownEditor.tsx`, and `ui/` (shadcn/ui primitives).
 
 IPC Pattern: All external API calls must go through IPC. Renderer invokes via `window.electron.ipcRenderer.invoke()`, main process handles the HTTP call. Never make HTTP requests from the renderer process.
 
@@ -40,7 +43,7 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 
 - BrowserWindow: `nodeIntegration: false`, `contextIsolation: true`.
 - CSP: strict Content-Security-Policy in `src/renderer/index.html` (no localhost wildcards, explicit font-src).
-- API error sanitization: `sanitizeApiError()` in `handlers.ts` redacts API keys from error messages before sending to renderer.
+- API error sanitization: `sanitizeApiError()` in `src/main/handlers/ai.ts` redacts API keys from error messages before sending to renderer.
 - Request timeouts: AbortController with 30s timeout on all AI API requests.
 - Rate limiting: 429 status detection with `Retry-After` header parsing.
 - Global error handlers: `unhandledRejection` and `uncaughtException` in main process.
@@ -112,7 +115,7 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 - `src/preload/index.ts` and `src/preload/index.d.ts` are paired files, modify together.
 - `src/renderer/index.html`: contains CSP header, avoid modifying unless absolutely necessary. If modifying CSP, test both dev and production builds.
 - `src/renderer/src/locales/*.json`: always update both en.json and zh.json together.
-- `src/main/handlers.ts`: contains `sanitizeApiError()` — any new IPC handlers that return errors from AI APIs must use this function.
+- `src/main/handlers/ai.ts`: contains `sanitizeApiError()` — any new IPC handlers that return errors from AI APIs must use this function.
 - `electron-builder.mas.yml`: MAS-specific build config; do not merge into main `electron-builder.yml`.
 - `build/entitlements.mas.plist` and `build/entitlements.mas.inherit.plist`: MAS sandbox entitlements.
 
