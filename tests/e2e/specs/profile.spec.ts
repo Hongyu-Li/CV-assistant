@@ -176,6 +176,13 @@ test.describe('Profile View', () => {
     const removeBtn = window.locator('button', { hasText: 'Remove' }).last()
     await removeBtn.click()
 
+    // Confirm dialog should appear
+    await expect(window.getByText('Delete Entry')).toBeVisible({ timeout: 5000 })
+
+    // Click confirm button
+    const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
+    await confirmBtn.click()
+
     const entriesAfter = await window.locator('input[placeholder="Project Name"]').count()
     expect(entriesAfter).toBeLessThan(entriesBefore)
   })
