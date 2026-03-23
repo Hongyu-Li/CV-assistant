@@ -72,6 +72,31 @@ export interface CV {
   [key: string]: unknown
 }
 
+interface CvLanguageSelectProps {
+  value: string
+  onValueChange: (value: string) => void
+}
+
+function CvLanguageSelect({ value, onValueChange }: CvLanguageSelectProps): React.JSX.Element {
+  const { t } = useTranslation()
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger>
+        <SelectValue placeholder={t('resumes.cv_language_ph')} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
+        <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
+        <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
+        <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
+        <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
+        <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
+        <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
+      </SelectContent>
+    </Select>
+  )
+}
+
 interface ResumeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -480,20 +505,7 @@ export function ResumeDialog({
           <>
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
-              <Select value={cvLanguage} onValueChange={setCvLanguage}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('resumes.cv_language_ph')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
-                  <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
-                  <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
-                  <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
-                  <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
-                  <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
-                  <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
-                </SelectContent>
-              </Select>
+              <CvLanguageSelect value={cvLanguage} onValueChange={setCvLanguage} />
             </div>
 
             <div className="space-y-2">
@@ -627,20 +639,7 @@ export function ResumeDialog({
                 <>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
-                    <Select value={cvLanguage} onValueChange={setCvLanguage}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('resumes.cv_language_ph')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">{t('resumes.lang_en')}</SelectItem>
-                        <SelectItem value="zh">{t('resumes.lang_zh')}</SelectItem>
-                        <SelectItem value="ja">{t('resumes.lang_ja')}</SelectItem>
-                        <SelectItem value="ko">{t('resumes.lang_ko')}</SelectItem>
-                        <SelectItem value="fr">{t('resumes.lang_fr')}</SelectItem>
-                        <SelectItem value="de">{t('resumes.lang_de')}</SelectItem>
-                        <SelectItem value="es">{t('resumes.lang_es')}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <CvLanguageSelect value={cvLanguage} onValueChange={setCvLanguage} />
                   </div>
 
                   <div className="space-y-2">
