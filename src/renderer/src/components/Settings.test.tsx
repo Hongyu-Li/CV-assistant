@@ -90,6 +90,53 @@ vi.mock('./ui/select', async () => {
   }
 })
 
+// Mock AlertDialog with simple DOM elements for testability in jsdom
+vi.mock('./ui/alert-dialog', async () => {
+  const React = await import('react')
+  return {
+    AlertDialog: ({
+      open,
+      children
+    }: {
+      open: boolean
+      children: React.ReactNode
+    }): React.ReactElement | null => {
+      if (!open) return null
+      return React.createElement(
+        'div',
+        { 'data-testid': 'alert-dialog', role: 'alertdialog' },
+        children
+      )
+    },
+    AlertDialogContent: ({ children }: { children: React.ReactNode }): React.ReactElement =>
+      React.createElement('div', { 'data-testid': 'alert-dialog-content' }, children),
+    AlertDialogHeader: ({ children }: { children: React.ReactNode }): React.ReactElement =>
+      React.createElement('div', null, children),
+    AlertDialogFooter: ({ children }: { children: React.ReactNode }): React.ReactElement =>
+      React.createElement('div', null, children),
+    AlertDialogTitle: ({ children }: { children: React.ReactNode }): React.ReactElement =>
+      React.createElement('h2', null, children),
+    AlertDialogDescription: ({ children }: { children: React.ReactNode }): React.ReactElement =>
+      React.createElement('p', null, children),
+    AlertDialogAction: ({
+      children,
+      onClick
+    }: {
+      children: React.ReactNode
+      onClick?: () => void
+    }): React.ReactElement =>
+      React.createElement('button', { 'data-testid': 'alert-dialog-confirm', onClick }, children),
+    AlertDialogCancel: ({
+      children,
+      onClick
+    }: {
+      children: React.ReactNode
+      onClick?: () => void
+    }): React.ReactElement =>
+      React.createElement('button', { 'data-testid': 'alert-dialog-cancel', onClick }, children)
+  }
+})
+
 describe('Settings Component', () => {
   const mockUpdateSettings = vi.fn()
   const defaultSettings = {
@@ -573,7 +620,6 @@ describe('Settings - Migration Flow', () => {
   })
 
   it('migrates files when user confirms and migration succeeds', async (): Promise<void> => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
       if (channel === 'dialog:openDirectory') return Promise.resolve('/new/workspace')
       if (channel === 'workspace:precheck')
@@ -589,17 +635,20 @@ describe('Settings - Migration Flow', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
     })
+    await waitFor((): void => {
+      expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
+    })
+    await act(async (): Promise<void> => {
+      fireEvent.click(screen.getByTestId('alert-dialog-confirm'))
+    })
     const { toast } = await import('sonner')
     await waitFor((): void => {
       expect(mockUpdateSettings).toHaveBeenCalledWith({ workspacePath: '/new/workspace' })
       expect(toast.success).toHaveBeenCalled()
     })
-    vi.restoreAllMocks()
   })
 
   it('handles conflicts when user confirms overwrite', async (): Promise<void> => {
-    // First confirm for migration, second confirm for overwrite
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
       if (channel === 'dialog:openDirectory') return Promise.resolve('/new/workspace')
       if (channel === 'workspace:precheck')
@@ -620,15 +669,23 @@ describe('Settings - Migration Flow', () => {
       fireEvent.click(changeBtn)
     })
     await waitFor((): void => {
-      // confirm called twice: once for migration, once for conflicts
-      expect(window.confirm).toHaveBeenCalledTimes(2)
+      expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
+    })
+    await act(async (): Promise<void> => {
+      fireEvent.click(screen.getByTestId('alert-dialog-confirm'))
+    })
+    await waitFor((): void => {
+      expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
+    })
+    await act(async (): Promise<void> => {
+      fireEvent.click(screen.getByTestId('alert-dialog-confirm'))
+    })
+    await waitFor((): void => {
       expect(mockUpdateSettings).toHaveBeenCalledWith({ workspacePath: '/new/workspace' })
     })
-    vi.restoreAllMocks()
   })
 
   it('does not migrate when user cancels confirmation', async (): Promise<void> => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false)
     mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
       if (channel === 'dialog:openDirectory') return Promise.resolve('/new/workspace')
       if (channel === 'workspace:precheck')
@@ -642,13 +699,17 @@ describe('Settings - Migration Flow', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
     })
+    await waitFor((): void => {
+      expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
+    })
+    await act(async (): Promise<void> => {
+      fireEvent.click(screen.getByTestId('alert-dialog-cancel'))
+    })
     expect(mockUpdateSettings).not.toHaveBeenCalled()
     expect(mockInvoke).not.toHaveBeenCalledWith('workspace:migrate', expect.anything())
-    vi.restoreAllMocks()
   })
 
   it('shows error toast on partial migration failure', async (): Promise<void> => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
       if (channel === 'dialog:openDirectory') return Promise.resolve('/new/workspace')
       if (channel === 'workspace:precheck')
@@ -671,17 +732,21 @@ describe('Settings - Migration Flow', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
     })
+    await waitFor((): void => {
+      expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
+    })
+    await act(async (): Promise<void> => {
+      fireEvent.click(screen.getByTestId('alert-dialog-confirm'))
+    })
     const { toast } = await import('sonner')
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalled()
       // Should NOT update workspace path on partial failure
       expect(mockUpdateSettings).not.toHaveBeenCalled()
     })
-    vi.restoreAllMocks()
   })
 
   it('shows error toast on total migration failure', async (): Promise<void> => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
     mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
       if (channel === 'dialog:openDirectory') return Promise.resolve('/new/workspace')
       if (channel === 'workspace:precheck')
@@ -701,12 +766,17 @@ describe('Settings - Migration Flow', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(changeBtn)
     })
+    await waitFor((): void => {
+      expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
+    })
+    await act(async (): Promise<void> => {
+      fireEvent.click(screen.getByTestId('alert-dialog-confirm'))
+    })
     const { toast } = await import('sonner')
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('settings.migration_error')
       expect(mockUpdateSettings).not.toHaveBeenCalled()
     })
-    vi.restoreAllMocks()
   })
 
   it('shows error toast when migration throws an exception', async (): Promise<void> => {

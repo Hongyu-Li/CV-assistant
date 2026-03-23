@@ -88,26 +88,37 @@ export function Profile(): React.JSX.Element {
   )
 
   useEffect(() => {
+    let cancelled = false
     const loadProfile = async (): Promise<void> => {
       try {
         const data = await window.electron.ipcRenderer.invoke(
           'profile:load',
           settings.workspacePath
         )
+        if (cancelled) return
         if (data && Object.keys(data).length > 0) {
           // Mark that the next profile change comes from loading, not user input
           skipNextSaveRef.current = true
           setProfile(data)
         }
       } catch (error) {
+        if (cancelled) return
         console.error('Failed to load profile:', error)
         toast.error(t('profile.load_error'))
       } finally {
-        setLoading(false)
-        loadedRef.current = true
+        if (!cancelled) {
+          setLoading(false)
+          loadedRef.current = true
+        }
       }
     }
     loadProfile()
+    return (): void => {
+      cancelled = true
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
   }, [t, settings.workspacePath])
 
   // Debounced auto-save: triggers 500ms after any profile state change, skips initial load

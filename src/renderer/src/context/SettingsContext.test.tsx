@@ -240,6 +240,44 @@ describe('SettingsContext', () => {
       // setup.ts mocks matchMedia to return matches:false → light theme
       expect(document.documentElement.classList.contains('light')).toBe(true)
     })
+
+    it('should update theme when system matchMedia fires change event', async () => {
+      // Track the handler registered via addEventListener
+      let changeHandler: (() => void) | undefined
+      const mockMq = {
+        matches: false,
+        media: '(prefers-color-scheme: dark)',
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn((_event: string, handler: () => void): void => {
+          changeHandler = handler
+        }),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn()
+      }
+      ;(window.matchMedia as ReturnType<typeof vi.fn>).mockReturnValue(mockMq)
+
+      mockInvoke.mockResolvedValueOnce({ ...defaultSettings, theme: 'system' })
+
+      renderWithProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading').textContent).toBe('false')
+      })
+
+      // Initially light (matches: false)
+      expect(document.documentElement.classList.contains('light')).toBe(true)
+
+      // Simulate system theme change to dark
+      mockMq.matches = true
+      await act(async () => {
+        changeHandler?.()
+      })
+
+      expect(document.documentElement.classList.contains('dark')).toBe(true)
+      expect(document.documentElement.classList.contains('light')).toBe(false)
+    })
   })
 
   describe('language change', () => {

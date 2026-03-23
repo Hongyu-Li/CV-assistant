@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Profile } from './components/Profile'
 import { Settings } from './components/Settings'
 import { Resumes } from './components/Resumes'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { useTranslation } from 'react-i18next'
 
 function App(): React.JSX.Element {
@@ -55,11 +56,13 @@ function App(): React.JSX.Element {
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
-        <div key={currentView} className="animate-page-enter">
-          {currentView === 'resumes' && <Resumes />}
-          {currentView === 'profile' && <Profile />}
-          {currentView === 'settings' && <Settings />}
-        </div>
+        <ErrorBoundary>
+          <div key={currentView} className="animate-page-enter">
+            {currentView === 'resumes' && <Resumes />}
+            {currentView === 'profile' && <Profile />}
+            {currentView === 'settings' && <Settings />}
+          </div>
+        </ErrorBoundary>
       </main>
       <Toaster />
     </div>

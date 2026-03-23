@@ -1,10 +1,10 @@
 import {
   deleteWorkspaceFile,
   listWorkspaceFiles,
+  readUserDataFile,
   readWorkspaceFile,
   writeWorkspaceFile
 } from './fs'
-import { readUserDataFile } from './fs'
 
 export async function runDataMigration(workspaceDir: string): Promise<void> {
   // 1. Migrate profile from userData to workspace
@@ -14,8 +14,9 @@ export async function runDataMigration(workspaceDir: string): Promise<void> {
     try {
       await readWorkspaceFile('profile/index.json', workspaceDir)
       // New profile exists — skip migration
-    } catch {
+    } catch (e) {
       // New profile doesn't exist — migrate
+      console.debug('Profile not found in workspace, migrating from userData:', e)
       const data = JSON.parse(oldProfile) as {
         personalInfo?: {
           name?: string

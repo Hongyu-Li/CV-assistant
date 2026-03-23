@@ -699,6 +699,49 @@ describe('Profile - Education CRUD', () => {
   })
 })
 
+describe('Profile - Race Condition Guard', () => {
+  it('does not update state after unmount (cancelled flag)', async (): Promise<void> => {
+    let resolveLoad: ((value: unknown) => void) | undefined
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      (channel: string): Promise<unknown> => {
+        if (channel === 'profile:load') {
+          return new Promise((resolve) => {
+            resolveLoad = resolve
+          })
+        }
+        if (channel === 'settings:load') {
+          return Promise.resolve({ workspacePath: '' })
+        }
+        return Promise.resolve(undefined)
+      }
+    )
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { unmount } = renderWithProvider(<Profile />)
+
+    unmount()
+
+    resolveLoad?.({
+      personalInfo: {
+        name: 'Should Not Appear',
+        email: 'ghost@test.com',
+        phone: '000',
+        summary: 'ghost'
+      },
+      workExperience: [],
+      projects: [],
+      education: []
+    })
+
+    await new Promise((r) => setTimeout(r, 50))
+
+    expect(screen.queryByDisplayValue('Should Not Appear')).not.toBeInTheDocument()
+
+    consoleSpy.mockRestore()
+  })
+})
+
 describe('Profile - Edge Cases', () => {
   beforeEach((): void => {
     ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(

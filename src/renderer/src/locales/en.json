@@ -62,7 +62,9 @@
     "version_desc": "Application version information.",
     "auto_update_version": "Current Version",
     "lang_english": "English",
-    "lang_chinese": "中文"
+    "lang_chinese": "中文",
+    "confirm_dialog_confirm": "Confirm",
+    "confirm_dialog_cancel": "Cancel"
   },
   "profile": {
     "title": "Profile",

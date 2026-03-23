@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '../context/SettingsContext'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
@@ -43,11 +43,14 @@ export function Resumes(): React.JSX.Element {
   const [editingResume, setEditingResume] = useState<CV | null>(null)
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const loadIdRef = useRef(0)
 
   const loadResumes = React.useCallback(async (): Promise<void> => {
+    const currentLoadId = ++loadIdRef.current
     try {
       setLoading(true)
       const data = await window.electron.ipcRenderer.invoke('cv:list', settings.workspacePath)
+      if (currentLoadId !== loadIdRef.current) return
       // Ensure data is an array before calling sort
       if (Array.isArray(data)) {
         // Sort by lastModified descending
@@ -61,10 +64,13 @@ export function Resumes(): React.JSX.Element {
         setResumes([])
       }
     } catch (error) {
+      if (currentLoadId !== loadIdRef.current) return
       console.error('Failed to load resumes:', error)
       toast.error(t('resumes.load_error'))
     } finally {
-      setLoading(false)
+      if (currentLoadId === loadIdRef.current) {
+        setLoading(false)
+      }
     }
   }, [t, settings.workspacePath])
 

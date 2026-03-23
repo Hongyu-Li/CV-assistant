@@ -62,7 +62,9 @@
     "version_desc": "应用程序版本信息。",
     "auto_update_version": "当前版本",
     "lang_english": "English",
-    "lang_chinese": "中文"
+    "lang_chinese": "中文",
+    "confirm_dialog_confirm": "确认",
+    "confirm_dialog_cancel": "取消"
   },
   "profile": {
     "title": "个人资料",

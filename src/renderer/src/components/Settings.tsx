@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSettings, AppSettings } from '../context/SettingsContext'
+import { useSettings, type AppSettings } from '../context/SettingsContext'
 import { PROVIDER_CONFIGS, AIProvider } from '../lib/provider'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Input } from './ui/input'
@@ -9,95 +9,141 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button'
 import { toast } from 'sonner'
 import { Eye, EyeOff } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel
+} from './ui/alert-dialog'
+
+interface ConfirmDialogState {
+  open: boolean
+  title: string
+  description: string
+  resolve: ((value: boolean) => void) | null
+}
+
 export const Settings = (): React.JSX.Element => {
   const { settings, updateSettings } = useSettings()
   const { t } = useTranslation()
   const [isMigrating, setIsMigrating] = React.useState(false)
   const [showApiKey, setShowApiKey] = React.useState(false)
   const [appVersion, setAppVersion] = React.useState<string>('')
+  const [confirmDialog, setConfirmDialog] = React.useState<ConfirmDialogState>({
+    open: false,
+    title: '',
+    description: '',
+    resolve: null
+  })
 
-  const handleMigration = async (currentPath: string, newDir: string): Promise<void> => {
-    // Determine actual source path
-    const fromPath =
-      currentPath || (await window.electron.ipcRenderer.invoke('app:getDefaultWorkspacePath'))
-
-    // If newDir not yet selected, open directory picker
-    let toPath = newDir
-    if (!toPath) {
-      toPath = await window.electron.ipcRenderer.invoke('dialog:openDirectory')
-      if (!toPath) return // User cancelled
-    }
-
-    // Same directory check
-    if (fromPath === toPath) {
-      toast.info(t('settings.migration_same_dir'))
-      return
-    }
-
-    setIsMigrating(true)
-    try {
-      // Step 1: Precheck
-      const precheck = await window.electron.ipcRenderer.invoke('workspace:precheck', {
-        from: fromPath,
-        to: toPath
+  const showConfirmDialog = React.useCallback(
+    (title: string, description: string): Promise<boolean> => {
+      return new Promise<boolean>((resolve) => {
+        setConfirmDialog({ open: true, title, description, resolve })
       })
+    },
+    []
+  )
 
-      if (!precheck.success) {
-        toast.error(t('settings.migration_error', { error: precheck.error }))
+  const handleConfirmDialogResponse = React.useCallback(
+    (confirmed: boolean): void => {
+      confirmDialog.resolve?.(confirmed)
+      setConfirmDialog({ open: false, title: '', description: '', resolve: null })
+    },
+    [confirmDialog]
+  )
+
+  const handleMigration = React.useCallback(
+    async (currentPath: string, newDir: string): Promise<void> => {
+      // Determine actual source path
+      const fromPath =
+        currentPath || (await window.electron.ipcRenderer.invoke('app:getDefaultWorkspacePath'))
+
+      // If newDir not yet selected, open directory picker
+      let toPath = newDir
+      if (!toPath) {
+        toPath = await window.electron.ipcRenderer.invoke('dialog:openDirectory')
+        if (!toPath) return // User cancelled
+      }
+
+      // Same directory check
+      if (fromPath === toPath) {
+        toast.info(t('settings.migration_same_dir'))
         return
       }
 
-      // No files to migrate — just update path
-      if (precheck.fileCount === 0) {
-        updateSettings({ workspacePath: toPath })
-        return
-      }
+      setIsMigrating(true)
+      try {
+        // Step 1: Precheck
+        const precheck = await window.electron.ipcRenderer.invoke('workspace:precheck', {
+          from: fromPath,
+          to: toPath
+        })
 
-      // Step 2: Confirmation dialog
-      const confirmed = window.confirm(
-        t('settings.migration_confirm', { count: precheck.fileCount })
-      )
-      if (!confirmed) return
+        if (!precheck.success) {
+          toast.error(t('settings.migration_error', { error: precheck.error }))
+          return
+        }
 
-      // Step 3: Handle conflicts
-      let overwriteConflicts = false
-      if (precheck.conflicts.length > 0) {
-        overwriteConflicts = window.confirm(
-          t('settings.migration_conflict', { count: precheck.conflicts.length })
+        // No files to migrate — just update path
+        if (precheck.fileCount === 0) {
+          updateSettings({ workspacePath: toPath })
+          return
+        }
+
+        // Step 2: Confirmation dialog
+        const confirmed = await showConfirmDialog(
+          t('settings.migration_confirm_title', { defaultValue: 'Confirm Migration' }),
+          t('settings.migration_confirm', { count: precheck.fileCount })
         )
-      }
+        if (!confirmed) return
 
-      // Step 4: Execute migration
-      const result = await window.electron.ipcRenderer.invoke('workspace:migrate', {
-        from: fromPath,
-        to: toPath,
-        overwriteConflicts
-      })
+        // Step 3: Handle conflicts
+        let overwriteConflicts = false
+        if (precheck.conflicts.length > 0) {
+          overwriteConflicts = await showConfirmDialog(
+            t('settings.migration_conflict_title', { defaultValue: 'File Conflicts' }),
+            t('settings.migration_conflict', { count: precheck.conflicts.length })
+          )
+        }
 
-      if (result.success) {
-        // All files migrated successfully — update path
-        updateSettings({ workspacePath: toPath })
-        toast.success(t('settings.migration_success', { count: result.migrated.length }))
-      } else if (result.migrated.length > 0) {
-        // Partial failure — don't update path
-        toast.error(
-          t('settings.migration_partial', {
-            migrated: result.migrated.length,
-            failed: result.errors.length
-          })
-        )
-      } else {
-        // Total failure
-        const errorMsg = result.errors[0]?.error || 'Unknown error'
-        toast.error(t('settings.migration_error', { error: errorMsg }))
+        // Step 4: Execute migration
+        const result = await window.electron.ipcRenderer.invoke('workspace:migrate', {
+          from: fromPath,
+          to: toPath,
+          overwriteConflicts
+        })
+
+        if (result.success) {
+          // All files migrated successfully — update path
+          updateSettings({ workspacePath: toPath })
+          toast.success(t('settings.migration_success', { count: result.migrated.length }))
+        } else if (result.migrated.length > 0) {
+          // Partial failure — don't update path
+          toast.error(
+            t('settings.migration_partial', {
+              migrated: result.migrated.length,
+              failed: result.errors.length
+            })
+          )
+        } else {
+          // Total failure
+          const errorMsg = result.errors[0]?.error || 'Unknown error'
+          toast.error(t('settings.migration_error', { error: errorMsg }))
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        toast.error(t('settings.migration_error', { error: msg }))
+      } finally {
+        setIsMigrating(false)
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      toast.error(t('settings.migration_error', { error: msg }))
-    } finally {
-      setIsMigrating(false)
-    }
-  }
+    },
+    [t, updateSettings, showConfirmDialog]
+  )
 
   // Listen for first-run migration prompt from main process
   React.useEffect(() => {
@@ -116,8 +162,7 @@ export const Settings = (): React.JSX.Element => {
     return () => {
       window.electron.ipcRenderer.removeListener('workspace:first-run-migration', handler)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [t, handleMigration])
 
   React.useEffect(() => {
     window.electron.ipcRenderer
@@ -349,6 +394,23 @@ export const Settings = (): React.JSX.Element => {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={confirmDialog.open}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(): void => handleConfirmDialogResponse(false)}>
+              {t('settings.confirm_dialog_cancel', { defaultValue: 'Cancel' })}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={(): void => handleConfirmDialogResponse(true)}>
+              {t('settings.confirm_dialog_confirm', { defaultValue: 'Confirm' })}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

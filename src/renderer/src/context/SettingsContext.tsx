@@ -66,23 +66,42 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Effect to apply theme to document
   useEffect(() => {
     const root = document.documentElement
-    root.classList.remove('light', 'dark')
+    const applyTheme = (): void => {
+      root.classList.remove('light', 'dark')
+      if (settings.theme === 'system') {
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        root.classList.add(systemTheme)
+      } else {
+        root.classList.add(settings.theme)
+      }
+    }
+
+    applyTheme()
 
     if (settings.theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
-      root.classList.add(systemTheme)
-    } else {
-      root.classList.add(settings.theme)
+      const mq = window.matchMedia('(prefers-color-scheme: dark)')
+      const handler = (): void => {
+        applyTheme()
+      }
+      mq.addEventListener('change', handler)
+      return (): void => {
+        mq.removeEventListener('change', handler)
+      }
     }
+    return undefined
   }, [settings.theme])
 
   // Effect to apply language
   useEffect(() => {
-    import('../i18n').then(({ default: i18n }) => {
-      i18n.changeLanguage(settings.language)
-    })
+    import('../i18n')
+      .then(({ default: i18n }) => {
+        i18n.changeLanguage(settings.language)
+      })
+      .catch((e: unknown) => {
+        console.error('Failed to load i18n module:', e)
+      })
     // Notify main process to rebuild macOS menu and About panel
     window.electron.ipcRenderer.invoke('app:setLanguage', settings.language).catch((e: unknown) => {
       console.debug('Language sync failed:', e)

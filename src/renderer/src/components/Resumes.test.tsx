@@ -626,4 +626,33 @@ describe('Resumes Component', () => {
       expect(toast.error).toHaveBeenCalledWith('resumes.load_error')
     })
   })
+
+  it('discards stale load results via loadIdRef guard', async (): Promise<void> => {
+    let resolveList: ((value: unknown) => void) | undefined
+    mockInvoke.mockImplementation((channel: string): Promise<unknown> => {
+      if (channel === 'cv:list') {
+        return new Promise((resolve) => {
+          resolveList = resolve
+        })
+      }
+      if (channel === 'settings:load') return Promise.resolve({ workspacePath: '' })
+      return Promise.resolve(undefined)
+    })
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const { unmount } = renderWithProvider(<Resumes />)
+
+    unmount()
+
+    resolveList?.([
+      { id: '1', filename: 'cv1.json', jobTitle: 'Stale Result', lastModified: '2026-01-01' }
+    ])
+
+    await new Promise((r) => setTimeout(r, 50))
+
+    expect(screen.queryByText('Stale Result')).not.toBeInTheDocument()
+
+    consoleSpy.mockRestore()
+  })
 })
