@@ -1,9 +1,16 @@
 import React from 'react'
+import { readFileSync } from 'fs'
+import path from 'path'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { toast } from 'sonner'
 import { generateCV, extractKeywordsFromJD } from '../../lib/provider'
 import { CvSection } from './CvSection'
+
+const JD_FIXTURE = readFileSync(
+  path.join(__dirname, '../../../../../tests/fixtures/jd.md'),
+  'utf-8'
+)
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -193,7 +200,7 @@ describe('CvSection', () => {
     vi.mocked(generateCV).mockResolvedValue('# Generated Resume')
     vi.mocked(extractKeywordsFromJD).mockResolvedValue(['React', 'TypeScript', 'Node.js'])
 
-    renderCvSection({ jobDescription: 'Build web apps' })
+    renderCvSection({ jobDescription: JD_FIXTURE })
 
     fireEvent.click(screen.getByText('resumes.generate_cv'))
 
@@ -201,7 +208,7 @@ describe('CvSection', () => {
       expect(mockInvoke).toHaveBeenCalledWith('profile:load', '/test/workspace')
       expect(generateCV).toHaveBeenCalledWith(
         expect.objectContaining({
-          jobDescription: 'Build web apps',
+          jobDescription: JD_FIXTURE,
           provider: 'openai',
           apiKey: 'sk-test',
           model: 'gpt-5.2',
@@ -229,7 +236,7 @@ describe('CvSection', () => {
     mockInvoke.mockResolvedValue(profileData)
     vi.mocked(generateCV).mockResolvedValue('# Generated Resume')
 
-    renderCvSection({ jobDescription: 'Build web apps' })
+    renderCvSection({ jobDescription: JD_FIXTURE })
 
     fireEvent.click(screen.getByText('resumes.generate_cv'))
 
@@ -255,7 +262,7 @@ describe('CvSection', () => {
     mockInvoke.mockResolvedValue({})
     vi.mocked(generateCV).mockRejectedValue(new Error('API error'))
 
-    renderCvSection({ jobDescription: 'Build web apps' })
+    renderCvSection({ jobDescription: JD_FIXTURE })
 
     fireEvent.click(screen.getByText('resumes.generate_cv'))
 
@@ -443,7 +450,7 @@ describe('CvSection', () => {
     vi.mocked(generateCV).mockResolvedValue('# Resume')
     vi.mocked(extractKeywordsFromJD).mockResolvedValue([])
 
-    renderCvSection({ jobDescription: 'Build things' })
+    renderCvSection({ jobDescription: JD_FIXTURE })
 
     fireEvent.click(screen.getByText('resumes.generate_cv'))
 
@@ -463,7 +470,7 @@ describe('CvSection', () => {
     mockInvoke.mockResolvedValue({})
     vi.mocked(generateCV).mockRejectedValue('string error without message')
 
-    renderCvSection({ jobDescription: 'Build web apps' })
+    renderCvSection({ jobDescription: JD_FIXTURE })
 
     fireEvent.click(screen.getByText('resumes.generate_cv'))
 
@@ -653,7 +660,7 @@ describe('CvSection', () => {
     vi.mocked(generateCV).mockResolvedValue('# Regenerated CV')
 
     renderCvSection({
-      jobDescription: 'Need React developer',
+      jobDescription: JD_FIXTURE,
       generatedCV: '# Existing CV'
     })
 

@@ -1,4 +1,8 @@
+import { readFileSync } from 'fs'
+import path from 'path'
 import { test, expect } from '../coverage-fixture'
+
+const JD_FIXTURE = readFileSync(path.join(__dirname, '../../fixtures/jd.md'), 'utf-8')
 
 test.describe('Resumes View', () => {
   test.beforeEach(async ({ window }) => {
@@ -97,8 +101,8 @@ test.describe('Resumes View', () => {
 
     // Fill Job Description
     const jdTextarea = dialog.locator('textarea[placeholder="Paste the job description here..."]')
-    await jdTextarea.fill('We are looking for a Senior Frontend Developer...')
-    await expect(jdTextarea).toHaveValue('We are looking for a Senior Frontend Developer...')
+    await jdTextarea.fill(JD_FIXTURE)
+    await expect(jdTextarea).toHaveValue(JD_FIXTURE)
   })
 
   test('should show validation error when saving without job title', async ({ window }) => {
@@ -261,7 +265,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'Filter Interview Job',
               companyName: 'Interview Corp',
               targetSalary: '$100,000',
-              jobDescription: 'Some JD text...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'first_interview',
@@ -272,7 +276,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename: filenameInterview }
+        { filename: filenameInterview, jd: JD_FIXTURE }
       )
 
       await window.evaluate(
@@ -283,7 +287,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'Filter Offer Job',
               companyName: 'Offer Corp',
               targetSalary: '$120,000',
-              jobDescription: 'Some JD text...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'offer_accepted',
@@ -294,7 +298,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename: filenameOffer }
+        { filename: filenameOffer, jd: JD_FIXTURE }
       )
 
       // Navigate away then back to force data reload
@@ -361,7 +365,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'React Developer',
               companyName: 'React Corp',
               targetSalary: '$100,000',
-              jobDescription: 'Some JD text...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'resume_sent',
@@ -372,7 +376,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename: filenameReact }
+        { filename: filenameReact, jd: JD_FIXTURE }
       )
 
       await window.evaluate(
@@ -383,7 +387,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'Python Engineer',
               companyName: 'Python Corp',
               targetSalary: '$110,000',
-              jobDescription: 'Some JD text...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'resume_sent',
@@ -394,7 +398,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename: filenamePython }
+        { filename: filenamePython, jd: JD_FIXTURE }
       )
 
       // Navigate away then back to force data reload
@@ -449,7 +453,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'Original Title',
               companyName: 'Edit Corp',
               targetSalary: '$90,000',
-              jobDescription: 'Some JD...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'resume_sent',
@@ -460,7 +464,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename }
+        { filename, jd: JD_FIXTURE }
       )
 
       // Navigate away then back to force data reload
@@ -522,7 +526,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'Status Test Job',
               companyName: 'Status Corp',
               targetSalary: '$100,000',
-              jobDescription: 'Some JD...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'resume_sent',
@@ -533,7 +537,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename }
+        { filename, jd: JD_FIXTURE }
       )
 
       // Navigate away then back to force data reload
@@ -601,7 +605,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'Round Test Job',
               companyName: 'Round Corp',
               targetSalary: '$100,000',
-              jobDescription: 'Some JD...',
+              jobDescription: args.jd,
               generatedCV: '',
               cvLanguage: 'en',
               interviewStatus: 'resume_sent',
@@ -612,7 +616,7 @@ test.describe('Resumes View', () => {
               status: 'draft'
             }
           }),
-        { filename }
+        { filename, jd: JD_FIXTURE }
       )
 
       // Navigate away then back to force data reload
@@ -690,7 +694,7 @@ test.describe('Resumes View', () => {
               jobTitle: 'CV Display Job',
               companyName: 'CV Corp',
               targetSalary: '$100,000',
-              jobDescription: 'Some JD...',
+              jobDescription: args.jd,
               generatedCV: '# Test CV\n\nThis is generated content.',
               cvLanguage: 'en',
               interviewStatus: 'resume_sent',
@@ -701,7 +705,7 @@ test.describe('Resumes View', () => {
               status: 'generated'
             }
           }),
-        { filename }
+        { filename, jd: JD_FIXTURE }
       )
 
       // Navigate away then back to force data reload

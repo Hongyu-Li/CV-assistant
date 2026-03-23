@@ -1,4 +1,7 @@
+import path from 'path'
 import { test, expect } from '../coverage-fixture'
+
+const PDF_FIXTURE_PATH = path.resolve(__dirname, '../../fixtures/test-resume-en.pdf')
 
 test.describe('Profile View', () => {
   test.beforeEach(async ({ window }) => {
@@ -258,5 +261,23 @@ test.describe('Profile View', () => {
   test('should show import PDF button', async ({ window }) => {
     const importBtn = window.locator('button', { hasText: 'Import PDF' })
     await expect(importBtn).toBeVisible({ timeout: 5000 })
+  })
+
+  test('should import PDF and extract text', async ({ electronApp, window }) => {
+    await electronApp.evaluate(async ({ dialog }, fixturePath) => {
+      dialog.showOpenDialog = (): Promise<Electron.OpenDialogReturnValue> =>
+        Promise.resolve({
+          canceled: false,
+          filePaths: [fixturePath]
+        })
+    }, PDF_FIXTURE_PATH)
+
+    const importBtn = window.locator('button', { hasText: 'Import PDF' })
+    await importBtn.click()
+
+    await window.waitForTimeout(2000)
+
+    await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible()
+    await expect(window.locator('text=Personal Info')).toBeVisible()
   })
 })

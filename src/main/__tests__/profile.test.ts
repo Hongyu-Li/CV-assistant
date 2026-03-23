@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs'
+import path from 'path'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('../fs', () => ({
@@ -470,6 +472,36 @@ describe('main/handlers', (): void => {
         await handlers.handleProfileExtractPdfText(deps)
 
       expect(result).toEqual({ success: true, text: 'content', filename: 'my-cv.pdf' })
+    })
+
+    it('handles real PDF fixture binary data', async (): Promise<void> => {
+      const fixturePath = path.join(__dirname, '../../../tests/fixtures/test-resume-en.pdf')
+      const realPdfBytes = readFileSync(fixturePath)
+
+      const deps = createDialogDeps({
+        canceled: false,
+        filePaths: [fixturePath]
+      })
+      const { readFile } = await import('fs/promises')
+      const { PDFParse } = await import('pdf-parse')
+      ;(readFile as ReturnType<typeof vi.fn>).mockResolvedValue(realPdfBytes)
+      ;(PDFParse as unknown as ReturnType<typeof vi.fn>).mockImplementation(function () {
+        return {
+          getText: vi.fn().mockResolvedValue({ text: 'Alex Johnson\nSenior Full-Stack Engineer' }),
+          destroy: vi.fn().mockResolvedValue(undefined)
+        }
+      })
+
+      const result: PdfExtractResult | PdfExtractError | null =
+        await handlers.handleProfileExtractPdfText(deps)
+
+      expect(result).toEqual({
+        success: true,
+        text: 'Alex Johnson\nSenior Full-Stack Engineer',
+        filename: 'test-resume-en.pdf'
+      })
+      expect(readFile).toHaveBeenCalledWith(fixturePath)
+      expect(realPdfBytes.length).toBeGreaterThan(1000)
     })
   })
 })

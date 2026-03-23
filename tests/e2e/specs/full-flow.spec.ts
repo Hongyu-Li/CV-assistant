@@ -1,4 +1,8 @@
+import { readFileSync } from 'fs'
+import path from 'path'
 import { test, expect } from '../coverage-fixture'
+
+const JD_FIXTURE = readFileSync(path.join(__dirname, '../../fixtures/jd.md'), 'utf-8')
 
 test.describe('Full User Flow', () => {
   test('should complete full workflow: profile → resume → interview → CV', async ({ window }) => {
@@ -186,10 +190,8 @@ test.describe('Full User Flow', () => {
       await expect(notesTextarea).toHaveValue('Full flow e2e test notes')
 
       const jdTextarea = dialog.locator('textarea[placeholder="Paste the job description here..."]')
-      await jdTextarea.fill('We need a test engineer to verify full user flows end-to-end.')
-      await expect(jdTextarea).toHaveValue(
-        'We need a test engineer to verify full user flows end-to-end.'
-      )
+      await jdTextarea.fill(JD_FIXTURE)
+      await expect(jdTextarea).toHaveValue(JD_FIXTURE)
 
       // Click Save (NOT Generate CV)
       const saveBtn = dialog.locator('button', { hasText: 'Save' })
