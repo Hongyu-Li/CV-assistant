@@ -113,7 +113,7 @@ export function Resumes(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto pb-10">
+      <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <div className="h-8 w-48 rounded-lg animate-shimmer" />
@@ -195,31 +195,31 @@ export function Resumes(): React.JSX.Element {
       key: 'draft',
       label: t('resumes.tab_draft'),
       count: stats.draft,
-      color: 'bg-muted-foreground'
+      color: 'bg-muted-foreground/60'
     },
     {
       key: 'interview',
       label: t('resumes.tab_interview'),
       count: stats.inInterview,
-      color: 'bg-muted-foreground'
+      color: 'bg-info'
     },
     {
       key: 'hr',
       label: t('resumes.tab_hr'),
       count: stats.hrInterview,
-      color: 'bg-muted-foreground'
+      color: 'bg-interview'
     },
     {
       key: 'offer',
       label: t('resumes.tab_offer'),
       count: stats.offerAccepted,
-      color: 'bg-muted-foreground'
+      color: 'bg-success'
     },
     {
       key: 'rejected',
       label: t('resumes.tab_rejected'),
       count: stats.rejected,
-      color: 'bg-muted-foreground'
+      color: 'bg-destructive'
     }
   ]
 
@@ -350,7 +350,7 @@ export function Resumes(): React.JSX.Element {
                 {resume.interviewStatus && (
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full border font-medium ${getInterviewStatusColor(resume.interviewStatus)}`}
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getInterviewStatusColor(resume.interviewStatus)}`}
                     >
                       {t(`resumes.status_${resume.interviewStatus}`)}
                     </span>
@@ -363,13 +363,13 @@ export function Resumes(): React.JSX.Element {
                     {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
                       <span
                         key={index}
-                        className="px-1.5 py-0.5 bg-primary/10 text-primary/80 text-xs rounded-full border border-primary/15"
+                        className="px-1.5 py-0.5 bg-primary/10 text-primary/80 text-[10px] rounded-full border border-primary/15"
                       >
                         {keyword}
                       </span>
                     ))}
                     {resume.keywords.length > MAX_VISIBLE_KEYWORDS && (
-                      <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-xs rounded-full">
+                      <span className="px-1.5 py-0.5 bg-muted text-muted-foreground text-[10px] rounded-full">
                         +{resume.keywords.length - MAX_VISIBLE_KEYWORDS}
                       </span>
                     )}

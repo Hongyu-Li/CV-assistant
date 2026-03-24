@@ -246,6 +246,34 @@ export function CvSection({
 
   return (
     <>
+      {!generatedCV && (
+        <>
+          <div className="space-y-2">
+            <label htmlFor="cv-language" className="text-sm font-medium">
+              {t('resumes.cv_language')}
+            </label>
+            <CvLanguageSelect
+              id="cv-language"
+              value={cvLanguage}
+              onValueChange={onCvLanguageChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="cv-notes" className="text-sm font-medium">
+              {t('resumes.notes')}
+            </label>
+            <Textarea
+              id="cv-notes"
+              placeholder={t('resumes.notes_ph')}
+              value={notes}
+              onChange={(e): void => onNotesChange(e.target.value)}
+              className="min-h-[60px]"
+            />
+          </div>
+        </>
+      )}
+
       {keywords.length > 0 && (
         <div className="space-y-2">
           <label id="cv-keywords-label" className="text-sm font-medium">
@@ -352,29 +380,33 @@ export function CvSection({
         </div>
         {cvExpanded && (
           <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="cv-language" className="text-sm font-medium">
-                {t('resumes.cv_language')}
-              </label>
-              <CvLanguageSelect
-                id="cv-language"
-                value={cvLanguage}
-                onValueChange={onCvLanguageChange}
-              />
-            </div>
+            {generatedCV && (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="cv-language-gen" className="text-sm font-medium">
+                    {t('resumes.cv_language')}
+                  </label>
+                  <CvLanguageSelect
+                    id="cv-language-gen"
+                    value={cvLanguage}
+                    onValueChange={onCvLanguageChange}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <label htmlFor="cv-notes" className="text-sm font-medium">
-                {t('resumes.notes')}
-              </label>
-              <Textarea
-                id="cv-notes"
-                placeholder={t('resumes.notes_ph')}
-                value={notes}
-                onChange={(e): void => onNotesChange(e.target.value)}
-                className="min-h-[60px]"
-              />
-            </div>
+                <div className="space-y-2">
+                  <label htmlFor="cv-notes-gen" className="text-sm font-medium">
+                    {t('resumes.notes')}
+                  </label>
+                  <Textarea
+                    id="cv-notes-gen"
+                    placeholder={t('resumes.notes_ph')}
+                    value={notes}
+                    onChange={(e): void => onNotesChange(e.target.value)}
+                    className="min-h-[60px]"
+                  />
+                </div>
+              </>
+            )}
 
             {generatedCV ? (
               <MarkdownEditor
