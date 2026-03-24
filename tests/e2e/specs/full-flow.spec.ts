@@ -145,7 +145,7 @@ test.describe('Full User Flow', () => {
       // Verify persistence: navigate away then back
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       await profileBtn.click()
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
@@ -163,14 +163,14 @@ test.describe('Full User Flow', () => {
       // Phase 2: Create and Save Resume
       // ──────────────────────────────────────────────────────────────
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
-      const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+      const newResumeBtn = window.locator('button', { hasText: 'New CV' })
       await newResumeBtn.click()
 
       const dialog = window.locator('[role="dialog"]')
       await expect(dialog).toBeVisible({ timeout: 5000 })
-      await expect(dialog.locator('text=Create Resume')).toBeVisible()
+      await expect(dialog.locator('text=Create CV')).toBeVisible()
 
       // Fill all form fields
       const jobTitleInput = dialog.locator('input[placeholder="e.g. Software Engineer"]')
@@ -189,7 +189,9 @@ test.describe('Full User Flow', () => {
       await notesTextarea.fill('Full flow e2e test notes')
       await expect(notesTextarea).toHaveValue('Full flow e2e test notes')
 
-      const jdTextarea = dialog.locator('textarea[placeholder="Paste the job description here..."]')
+      const jdTextarea = dialog.locator(
+        'textarea[placeholder="Paste the full job posting — the AI uses it to tailor your CV"]'
+      )
       await jdTextarea.fill(JD_FIXTURE)
       await expect(jdTextarea).toHaveValue(JD_FIXTURE)
 
@@ -201,7 +203,7 @@ test.describe('Full User Flow', () => {
       await expect(dialog).not.toBeVisible({ timeout: 5000 })
 
       // Success toast
-      await expect(window.locator('text=Resume saved successfully')).toBeVisible({
+      await expect(window.locator('text=Changes saved')).toBeVisible({
         timeout: 5000
       })
 
@@ -220,7 +222,7 @@ test.describe('Full User Flow', () => {
       // Click resume card to reopen dialog in edit mode
       await resumeCard.click()
       await expect(dialog).toBeVisible({ timeout: 5000 })
-      await expect(dialog.locator('text=Edit Resume')).toBeVisible()
+      await expect(dialog.locator('text=Edit CV')).toBeVisible()
 
       // Verify form fields are pre-filled
       await expect(dialog.locator('input[placeholder="e.g. Software Engineer"]')).toHaveValue(
@@ -325,7 +327,7 @@ test.describe('Full User Flow', () => {
 
       // Re-navigate to Resumes to refresh list
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       // Click the card again
       const cvCard = window.locator('.card-hover').filter({ hasText: uniqueJobTitle }).first()
@@ -342,9 +344,11 @@ test.describe('Full User Flow', () => {
       await expect(cvHeader).toBeVisible({ timeout: 5000 })
 
       // Verify action buttons exist
-      await expect(dialog.locator('button[title="Copy"]')).toBeVisible({ timeout: 5000 })
-      await expect(dialog.locator('button[title="Download"]')).toBeVisible({ timeout: 5000 })
-      await expect(dialog.locator('button[title="Generate CV"]')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.locator('button[aria-label="Copy"]')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.locator('button[aria-label="Download"]')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.locator('button[aria-label="Generate CV"]')).toBeVisible({
+        timeout: 5000
+      })
 
       // Close dialog
       const cancelBtn = dialog.locator('button', { hasText: 'Cancel' })

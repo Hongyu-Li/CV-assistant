@@ -16,7 +16,7 @@ test.describe('Settings View', () => {
   test('should display workspace directory with buttons', async ({ window }) => {
     await expect(window.locator('text=Workspace Directory')).toBeVisible()
     await expect(window.locator('button', { hasText: 'Change...' })).toBeVisible()
-    await expect(window.locator('button', { hasText: 'Open Folder' })).toBeVisible()
+    await expect(window.locator('button[aria-label="Open Folder"]')).toBeVisible()
   })
 
   test('should display theme selector with all options', async ({ window }) => {
@@ -160,7 +160,7 @@ test.describe('Settings View', () => {
 
     // API key field should be visible
     await expect(window.locator('text=API Key').first()).toBeVisible()
-    const apiKeyInput = window.locator('input[placeholder="sk-..."]')
+    const apiKeyInput = window.locator('input[placeholder="Paste your API key"]')
     await expect(apiKeyInput).toBeVisible()
     await expect(apiKeyInput).toHaveAttribute('type', 'password')
   })
@@ -175,14 +175,14 @@ test.describe('Settings View', () => {
     await window.locator('[role="option"]', { hasText: 'OpenAI' }).click()
     await window.waitForTimeout(500)
 
-    const apiKeyInput = window.locator('input[placeholder="sk-..."]')
+    const apiKeyInput = window.locator('input[placeholder="Paste your API key"]')
 
     // Initially password type
     await expect(apiKeyInput).toHaveAttribute('type', 'password')
 
     // Click the eye toggle button (it's next to the API key input)
     const toggleBtn = window
-      .locator('input[placeholder="sk-..."]')
+      .locator('input[placeholder="Paste your API key"]')
       .locator('..')
       .locator('..')
       .locator('button')
@@ -206,7 +206,7 @@ test.describe('Settings View', () => {
     await window.waitForTimeout(500)
 
     // API key field should NOT be visible for Ollama
-    const apiKeyInput = window.locator('input[placeholder="sk-..."]')
+    const apiKeyInput = window.locator('input[placeholder="Paste your API key"]')
     await expect(apiKeyInput).not.toBeVisible()
   })
 

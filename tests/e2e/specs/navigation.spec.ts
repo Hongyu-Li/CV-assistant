@@ -10,7 +10,7 @@ test.describe('Navigation', () => {
     const resumesBtn = window.locator('nav button').nth(1)
     await expect(resumesBtn).toHaveClass(/border-primary/, { timeout: 5000 })
     // Resumes heading should be visible
-    await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible()
+    await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible()
   })
 
   test('should navigate to Profile view', async ({ window }) => {
@@ -42,7 +42,7 @@ test.describe('Navigation', () => {
 
     // Resumes
     await resumesBtn.click()
-    await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible()
+    await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible()
 
     // Back to Profile
     await profileBtn.click()

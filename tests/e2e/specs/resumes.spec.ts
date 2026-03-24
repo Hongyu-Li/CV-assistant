@@ -9,22 +9,22 @@ test.describe('Resumes View', () => {
     // Resumes is the default view, but click to be explicit
     const resumesBtn = window.locator('nav button').nth(1)
     await resumesBtn.click()
-    await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+    await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
   })
 
   test('should display resumes heading and description', async ({ window }) => {
-    await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible()
-    await expect(window.locator('text=Manage your CV drafts and generated resumes.')).toBeVisible()
+    await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible()
+    await expect(window.locator('text=Your job applications and tailored CVs.')).toBeVisible()
   })
 
   test('should display New Resume button', async ({ window }) => {
-    await expect(window.locator('button', { hasText: 'New Resume' })).toBeVisible()
+    await expect(window.locator('button', { hasText: 'New CV' })).toBeVisible()
   })
 
   test('should show empty state when no resumes exist', async ({ window }) => {
     // This test may pass or fail depending on existing data
     // We check for either the empty state OR existing resume cards
-    const emptyTitle = window.locator('text=No Resumes Found')
+    const emptyTitle = window.locator('text=No CVs Yet')
     const resumeCards = window.locator('.card-hover')
     const emptyVisible = await emptyTitle.isVisible().catch(() => false)
     const cardsCount = await resumeCards.count()
@@ -34,7 +34,7 @@ test.describe('Resumes View', () => {
   })
 
   test('should open Create Resume dialog', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     // Dialog should appear
@@ -42,11 +42,11 @@ test.describe('Resumes View', () => {
     await expect(dialog).toBeVisible({ timeout: 5000 })
 
     // Dialog should have "Create Resume" title
-    await expect(dialog.locator('text=Create Resume')).toBeVisible()
+    await expect(dialog.locator('text=Create CV')).toBeVisible()
   })
 
   test('should display all form fields in Create Resume dialog', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -73,7 +73,7 @@ test.describe('Resumes View', () => {
   })
 
   test('should fill resume form fields', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -100,13 +100,15 @@ test.describe('Resumes View', () => {
     await expect(notesTextarea).toHaveValue('Looking for remote position')
 
     // Fill Job Description
-    const jdTextarea = dialog.locator('textarea[placeholder="Paste the job description here..."]')
+    const jdTextarea = dialog.locator(
+      'textarea[placeholder="Paste the full job posting — the AI uses it to tailor your CV"]'
+    )
     await jdTextarea.fill(JD_FIXTURE)
     await expect(jdTextarea).toHaveValue(JD_FIXTURE)
   })
 
   test('should show validation error when saving without job title', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -123,7 +125,7 @@ test.describe('Resumes View', () => {
   })
 
   test('should close dialog on Cancel', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -136,7 +138,7 @@ test.describe('Resumes View', () => {
   })
 
   test('should save a resume and show it in the list', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -157,7 +159,7 @@ test.describe('Resumes View', () => {
     await expect(dialog).not.toBeVisible({ timeout: 5000 })
 
     // Success toast
-    await expect(window.locator('text=Resume saved successfully')).toBeVisible({ timeout: 5000 })
+    await expect(window.locator('text=Changes saved')).toBeVisible({ timeout: 5000 })
 
     // Resume card should appear in the list (use first() in case of duplicates from previous runs)
     await expect(window.locator('text=E2E Test Resume').first()).toBeVisible({ timeout: 5000 })
@@ -189,14 +191,14 @@ test.describe('Resumes View', () => {
       await deleteBtn.click()
 
       // Confirm dialog should appear
-      await expect(window.getByText('Delete Resume')).toBeVisible({ timeout: 5000 })
+      await expect(window.getByText('Delete CV')).toBeVisible({ timeout: 5000 })
 
       // Click confirm button
       const confirmBtn = window.locator('button', { hasText: 'Delete' }).last()
       await confirmBtn.click()
 
       // Success toast
-      await expect(window.locator('text=Resume deleted successfully')).toBeVisible({
+      await expect(window.locator('text=CV deleted')).toBeVisible({
         timeout: 5000
       })
     }
@@ -204,7 +206,7 @@ test.describe('Resumes View', () => {
 
   test('should show download dropdown with export options in resume dialog', async ({ window }) => {
     // Create and save a resume with generated CV content first
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -260,7 +262,7 @@ test.describe('Resumes View', () => {
 
         // Confirm dialog should appear
         const confirmVisible = await window
-          .getByText('Delete Resume')
+          .getByText('Delete CV')
           .isVisible()
           .catch(() => false)
         if (confirmVisible) {
@@ -328,7 +330,7 @@ test.describe('Resumes View', () => {
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       // Wait for resume cards to render (tabs only appear when resumes.length > 0)
       await expect(window.locator('.card-hover').first()).toBeVisible({ timeout: 10000 })
@@ -428,7 +430,7 @@ test.describe('Resumes View', () => {
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       await expect(window.locator('.card-hover').first()).toBeVisible({ timeout: 10000 })
 
@@ -494,7 +496,7 @@ test.describe('Resumes View', () => {
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       // Click the resume card to open dialog in edit mode
       const card = window.locator('.card-hover').filter({ hasText: 'Original Title' }).first()
@@ -505,7 +507,7 @@ test.describe('Resumes View', () => {
       await expect(dialog).toBeVisible({ timeout: 5000 })
 
       // Verify dialog title says "Edit Resume"
-      await expect(dialog.locator('text=Edit Resume')).toBeVisible()
+      await expect(dialog.locator('text=Edit CV')).toBeVisible()
 
       // Verify form fields are pre-filled
       const jobTitleInput = dialog.locator('input[placeholder="e.g. Software Engineer"]')
@@ -567,7 +569,7 @@ test.describe('Resumes View', () => {
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       // Open the resume
       const card = window.locator('.card-hover').filter({ hasText: 'Status Test Job' }).first()
@@ -646,7 +648,7 @@ test.describe('Resumes View', () => {
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       // Open the resume dialog
       const card = window.locator('.card-hover').filter({ hasText: 'Round Test Job' }).first()
@@ -665,7 +667,9 @@ test.describe('Resumes View', () => {
       await roundsToggle.click()
 
       // Verify "No interview rounds recorded yet" message
-      await expect(dialog.locator('text=No interview rounds recorded yet')).toBeVisible({
+      await expect(
+        dialog.locator('text=No interview rounds yet. Add one after your first interview.')
+      ).toBeVisible({
         timeout: 5000
       })
 
@@ -735,7 +739,7 @@ test.describe('Resumes View', () => {
       await expect(window.locator('h2', { hasText: 'Profile' })).toBeVisible({ timeout: 10000 })
       const resumesBtn = window.locator('nav button').nth(1)
       await resumesBtn.click()
-      await expect(window.locator('h2', { hasText: 'Resumes' })).toBeVisible({ timeout: 10000 })
+      await expect(window.locator('h2', { hasText: 'CVs' })).toBeVisible({ timeout: 10000 })
 
       // Open the resume dialog
       const card = window.locator('.card-hover').filter({ hasText: 'CV Display Job' }).first()
@@ -753,9 +757,11 @@ test.describe('Resumes View', () => {
       await expect(cvHeader).toBeVisible({ timeout: 5000 })
 
       // Verify action buttons exist
-      await expect(dialog.locator('button[title="Copy"]')).toBeVisible({ timeout: 5000 })
-      await expect(dialog.locator('button[title="Download"]')).toBeVisible({ timeout: 5000 })
-      await expect(dialog.locator('button[title="Generate CV"]')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.locator('button[aria-label="Copy"]')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.locator('button[aria-label="Download"]')).toBeVisible({ timeout: 5000 })
+      await expect(dialog.locator('button[aria-label="Generate CV"]')).toBeVisible({
+        timeout: 5000
+      })
 
       // Close dialog
       const cancelBtn = dialog.locator('button', { hasText: 'Cancel' })
@@ -771,7 +777,7 @@ test.describe('Resumes View', () => {
   })
 
   test('should show error when generating CV without job description', async ({ window }) => {
-    const newResumeBtn = window.locator('button', { hasText: 'New Resume' })
+    const newResumeBtn = window.locator('button', { hasText: 'New CV' })
     await newResumeBtn.click()
 
     const dialog = window.locator('[role="dialog"]')
@@ -786,7 +792,7 @@ test.describe('Resumes View', () => {
     await generateBtn.click()
 
     // Expect error toast about missing job description
-    await expect(window.locator('text=Please enter a job description')).toBeVisible({
+    await expect(window.locator('text=Please enter a job description first')).toBeVisible({
       timeout: 5000
     })
 
