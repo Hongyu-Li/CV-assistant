@@ -18,6 +18,7 @@
     "change_dir": "Change...",
     "workspace_dir_desc": "Choose where to save your CV data locally.",
     "open_folder": "Open Folder",
+    "open_folder_error": "Unable to open folder",
     "select_theme_ph": "Select theme",
     "select_language_ph": "Select language",
     "ai_provider": "AI Provider",

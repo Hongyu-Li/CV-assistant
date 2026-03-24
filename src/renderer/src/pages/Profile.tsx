@@ -7,8 +7,7 @@ import { Button } from '../components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSettings } from '../context/SettingsContext'
-import { extractProfileFromPdf } from '../lib/provider'
-import { PROVIDER_CONFIGS } from '../lib/provider'
+import { extractProfileFromPdf, PROVIDER_CONFIGS } from '../lib/provider'
 import { toErrorMessage } from '../lib/utils'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 
@@ -88,8 +87,7 @@ export function Profile(): React.JSX.Element {
             result.error ? `${t('profile.save_error')}: ${result.error}` : t('profile.save_error')
           )
         }
-      } catch (error) {
-        console.error('Failed to save profile:', error)
+      } catch {
         toast.error(t('profile.save_error'))
       }
     },
@@ -110,9 +108,8 @@ export function Profile(): React.JSX.Element {
           skipNextSaveRef.current = true
           setProfile(data)
         }
-      } catch (error) {
+      } catch {
         if (cancelled) return
-        console.error('Failed to load profile:', error)
         toast.error(t('profile.load_error'))
       } finally {
         if (!cancelled) {
@@ -303,7 +300,6 @@ export function Profile(): React.JSX.Element {
 
       toast.success(t('profile.import_success'))
     } catch (error) {
-      console.error('Failed to import PDF:', error)
       const msg = toErrorMessage(error)
       toast.error(msg ? `${t('profile.import_error')}: ${msg}` : t('profile.import_error'))
     } finally {

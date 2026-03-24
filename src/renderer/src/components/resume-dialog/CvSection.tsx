@@ -139,7 +139,6 @@ export function CvSection({
       onKeywordsChange(extractedKeywords)
       toast.success(t('resumes.generate_success'))
     } catch (error) {
-      console.error('Generation failed:', error)
       const message = error instanceof Error ? error.message : ''
       if (message) {
         toast.error(`${t('resumes.generate_error')}\n${message}`)
@@ -238,8 +237,7 @@ export function CvSection({
       pdf.save(`${filename}.pdf`)
       document.body.removeChild(container)
       toast.success(t('resumes.exported'))
-    } catch (error) {
-      console.error('Failed to export PDF:', error)
+    } catch {
       toast.error(t('resumes.export_error'))
     } finally {
       setIsExportingPdf(false)
@@ -302,7 +300,7 @@ export function CvSection({
               setCvExpanded(!cvExpanded)
             }
           }}
-          className={`w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors cursor-pointer ${cvExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
+          className={`w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 ${cvExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
         >
           <span className="font-medium">{t('resumes.generated_cv')}</span>
           <div className="flex items-center gap-2">
@@ -336,7 +334,7 @@ export function CvSection({
                     <div className="absolute right-0 top-full mt-1 z-50 w-max rounded-md border bg-popover p-1 shadow-md">
                       <button
                         type="button"
-                        className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                        className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none transition-colors"
                         onClick={() => {
                           handleExportMarkdown()
                           setExportMenuOpen(false)
@@ -347,7 +345,7 @@ export function CvSection({
                       </button>
                       <button
                         type="button"
-                        className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                        className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none transition-colors"
                         onClick={() => {
                           handleExportPdf()
                           setExportMenuOpen(false)

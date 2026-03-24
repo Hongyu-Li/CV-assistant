@@ -48,9 +48,8 @@ export function Resumes(): React.JSX.Element {
       } else {
         setResumes([])
       }
-    } catch (error) {
+    } catch {
       if (currentLoadId !== loadIdRef.current) return
-      console.error('Failed to load resumes:', error)
       toast.error(t('resumes.load_error'))
     } finally {
       if (currentLoadId === loadIdRef.current) {
@@ -82,8 +81,7 @@ export function Resumes(): React.JSX.Element {
       } else {
         toast.error(t('resumes.delete_error'))
       }
-    } catch (error) {
-      console.error('Failed to delete resume:', error)
+    } catch {
       toast.error(t('resumes.delete_error'))
     } finally {
       setConfirmDeleteOpen(false)
@@ -248,7 +246,7 @@ export function Resumes(): React.JSX.Element {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 aria-pressed={activeTab === tab.key}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   activeTab === tab.key
                     ? 'bg-primary text-primary-foreground shadow-md'
                     : 'bg-muted hover:bg-muted/80 text-muted-foreground'

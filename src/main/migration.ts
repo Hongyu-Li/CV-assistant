@@ -118,7 +118,7 @@ export async function runDataMigration(workspaceDir: string): Promise<void> {
           projects
         }
         await writeWorkspaceFile('profile/index.json', JSON.stringify(index, null, 2), workspaceDir)
-        console.log('Profile migrated from userData to workspace')
+        console.debug('Profile migrated from userData to workspace')
       }
     }
   } catch (e) {
@@ -164,7 +164,7 @@ export async function runDataMigration(workspaceDir: string): Promise<void> {
 
           // Delete old root file
           await deleteWorkspaceFile(file, workspaceDir)
-          console.log(`CV migrated: ${file} → resumes/${file}`)
+          console.debug(`CV migrated: ${file} → resumes/${file}`)
         }
       } catch (err) {
         // Skip files that fail to parse

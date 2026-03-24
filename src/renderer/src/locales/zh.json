@@ -18,6 +18,7 @@
     "change_dir": "更改...",
     "workspace_dir_desc": "选择简历数据的本地保存位置。",
     "open_folder": "打开文件夹",
+    "open_folder_error": "无法打开文件夹",
     "select_theme_ph": "选择主题",
     "select_language_ph": "选择语言",
     "ai_provider": "AI 服务商",

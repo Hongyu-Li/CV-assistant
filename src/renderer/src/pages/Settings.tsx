@@ -14,7 +14,7 @@ import {
 } from '../components/ui/select'
 import { Button } from '../components/ui/button'
 import { toast } from 'sonner'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -38,6 +38,7 @@ export const Settings = (): React.JSX.Element => {
   const { t } = useTranslation()
   const [isMigrating, setIsMigrating] = React.useState(false)
   const [showApiKey, setShowApiKey] = React.useState(false)
+  const [isTesting, setIsTesting] = React.useState(false)
   const [appVersion, setAppVersion] = React.useState<string>('')
   const [confirmDialog, setConfirmDialog] = React.useState<ConfirmDialogState>({
     open: false,
@@ -201,9 +202,9 @@ export const Settings = (): React.JSX.Element => {
   const providerConfig = PROVIDER_CONFIGS[settings.provider]
 
   return (
-    <div className="space-y-6 animate-page-enter">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h2>
         <p className="text-muted-foreground">{t('settings.ai_provider_desc')}</p>
       </div>
 
@@ -250,8 +251,8 @@ export const Settings = (): React.JSX.Element => {
                       if (pathToOpen) {
                         await window.electron.ipcRenderer.invoke('shell:openPath', pathToOpen)
                       }
-                    } catch (e) {
-                      console.error('Failed to open folder:', e)
+                    } catch {
+                      toast.error(t('settings.open_folder_error'))
                     }
                   }}
                 >
@@ -386,7 +387,9 @@ export const Settings = (): React.JSX.Element => {
 
             <Button
               variant="outline"
+              disabled={isTesting}
               onClick={async (): Promise<void> => {
+                setIsTesting(true)
                 try {
                   const result = await window.electron.ipcRenderer.invoke('ai:test', {
                     provider: settings.provider,
@@ -402,9 +405,12 @@ export const Settings = (): React.JSX.Element => {
                 } catch (err) {
                   const msg = err instanceof Error ? err.message : String(err)
                   toast.error(`${t('settings.connection_failed')} ${msg}`)
+                } finally {
+                  setIsTesting(false)
                 }
               }}
             >
+              {isTesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('settings.test_connection')}
             </Button>
           </CardContent>

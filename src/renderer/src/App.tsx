@@ -34,6 +34,7 @@ function App(): React.JSX.Element {
             variant="ghost"
             className={`justify-start gap-2 transition-all duration-200 ${currentView === 'profile' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('profile')}
+            aria-current={currentView === 'profile' ? 'page' : undefined}
           >
             <User className="h-4 w-4" />
             {t('app.profile')}
@@ -42,6 +43,7 @@ function App(): React.JSX.Element {
             variant="ghost"
             className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('resumes')}
+            aria-current={currentView === 'resumes' ? 'page' : undefined}
           >
             <FileText className="h-4 w-4" />
             {t('app.resumes')}
@@ -50,6 +52,7 @@ function App(): React.JSX.Element {
             variant="ghost"
             className={`justify-start gap-2 transition-all duration-200 ${currentView === 'settings' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('settings')}
+            aria-current={currentView === 'settings' ? 'page' : undefined}
           >
             <SettingsIcon className="h-4 w-4" />
             {t('app.settings')}

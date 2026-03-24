@@ -1045,8 +1045,7 @@ describe('Settings - Open Folder Error Handling', () => {
     })
   })
 
-  it('does not crash and calls console.error when shell:openPath throws', async (): Promise<void> => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation((): void => {})
+  it('shows error toast when shell:openPath throws', async (): Promise<void> => {
     await act(async () => {
       render(<Settings />)
     })
@@ -1054,10 +1053,10 @@ describe('Settings - Open Folder Error Handling', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(openBtn)
     })
+    const { toast } = await import('sonner')
     await waitFor((): void => {
-      expect(errorSpy).toHaveBeenCalledWith('Failed to open folder:', expect.any(Error))
+      expect(toast.error).toHaveBeenCalledWith('settings.open_folder_error')
     })
-    errorSpy.mockRestore()
   })
 })
 

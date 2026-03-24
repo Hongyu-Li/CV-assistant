@@ -88,7 +88,7 @@ export function InterviewTimeline({
         <button
           type="button"
           onClick={() => setRoundsExpanded(!roundsExpanded)}
-          className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors"
+          className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <span className="font-medium">{t('resumes.interview_rounds')}</span>
           <ChevronDown

@@ -100,7 +100,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         i18n.changeLanguage(settings.language)
       })
       .catch((e: unknown) => {
-        console.error('Failed to load i18n module:', e)
+        console.debug('Failed to load i18n module:', e)
       })
     // Notify main process to rebuild macOS menu and About panel
     window.electron.ipcRenderer.invoke('app:setLanguage', settings.language).catch((e: unknown) => {
