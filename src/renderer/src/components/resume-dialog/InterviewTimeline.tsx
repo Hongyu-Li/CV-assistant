@@ -130,9 +130,9 @@ export function InterviewTimeline({
                             <div className="bg-muted/30 rounded-lg p-3 space-y-2">
                               <div className="flex items-start justify-between">
                                 <div>
-                                  <h4 className="font-semibold text-sm">
+                                  <h3 className="font-semibold text-sm">
                                     {t(`resumes.round_${round.round}`)}
-                                  </h4>
+                                  </h3>
                                   <p className="text-xs text-muted-foreground">
                                     {new Date(round.date).toLocaleDateString()} ·{' '}
                                     {new Date(round.date).toLocaleTimeString([], {
@@ -157,6 +157,7 @@ export function InterviewTimeline({
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7"
+                                    aria-label={t('common.edit')}
                                     onClick={() => setEditingRound(round)}
                                   >
                                     <Edit2 className="h-3 w-3" />
@@ -165,6 +166,7 @@ export function InterviewTimeline({
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7 text-destructive hover:bg-destructive hover:text-white"
+                                    aria-label={t('common.delete')}
                                     onClick={() => handleDeleteClick(round.id)}
                                   >
                                     <Trash2 className="h-3 w-3" />
@@ -227,7 +229,9 @@ export function InterviewTimeline({
             <div className="space-y-4 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.round')}</label>
+                  <label htmlFor="round-type" className="text-sm font-medium">
+                    {t('resumes.round')}
+                  </label>
                   <Select
                     value={editingRound.round}
                     onValueChange={(value) =>
@@ -236,7 +240,7 @@ export function InterviewTimeline({
                       )
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="round-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -250,7 +254,9 @@ export function InterviewTimeline({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.result')}</label>
+                  <label htmlFor="round-result" className="text-sm font-medium">
+                    {t('resumes.result')}
+                  </label>
                   <Select
                     value={editingRound.result}
                     onValueChange={(value) =>
@@ -259,7 +265,7 @@ export function InterviewTimeline({
                       )
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="round-result">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -271,8 +277,11 @@ export function InterviewTimeline({
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('resumes.date')}</label>
+                <label htmlFor="round-date" className="text-sm font-medium">
+                  {t('resumes.date')}
+                </label>
                 <Input
+                  id="round-date"
                   type="date"
                   value={editingRound.date}
                   onChange={(e) =>
@@ -281,8 +290,11 @@ export function InterviewTimeline({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('resumes.interview_notes')}</label>
+                <label id="round-notes-label" className="text-sm font-medium">
+                  {t('resumes.interview_notes')}
+                </label>
                 <MarkdownEditor
+                  aria-labelledby="round-notes-label"
                   value={editingRound.notes}
                   onChange={(value) =>
                     setEditingRound((prev) => (prev ? { ...prev, notes: value } : null))

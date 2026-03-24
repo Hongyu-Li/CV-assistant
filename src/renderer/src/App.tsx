@@ -20,9 +20,12 @@ function App(): React.JSX.Element {
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-muted/40 p-4 flex flex-col gap-4">
+      <aside
+        aria-label={t('a11y.sidebar_nav')}
+        className="w-64 border-r bg-muted/40 p-4 flex flex-col gap-4"
+      >
         <div className="flex items-center gap-2 px-2 py-1">
-          <Sparkles className="h-5 w-5 text-primary" />
+          <Sparkles aria-hidden="true" className="h-5 w-5 text-primary" />
           <span className="font-semibold text-lg">{t('app.title')}</span>
         </div>
         <div className="h-px bg-border" />
@@ -56,6 +59,7 @@ function App(): React.JSX.Element {
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
+        <h1 className="sr-only">{t('app.title')}</h1>
         <ErrorBoundary>
           <div key={currentView} className="animate-page-enter">
             {currentView === 'resumes' && <Resumes />}

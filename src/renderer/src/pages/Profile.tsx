@@ -339,24 +339,33 @@ export function Profile(): React.JSX.Element {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('profile.full_name')}</label>
+              <label htmlFor="profile-name" className="text-sm font-medium">
+                {t('profile.full_name')}
+              </label>
               <Input
+                id="profile-name"
                 value={profile.personalInfo.name}
                 onChange={(e) => updatePersonalInfo('name', e.target.value)}
                 placeholder={t('profile.name_ph')}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('profile.email')}</label>
+              <label htmlFor="profile-email" className="text-sm font-medium">
+                {t('profile.email')}
+              </label>
               <Input
+                id="profile-email"
                 value={profile.personalInfo.email}
                 onChange={(e) => updatePersonalInfo('email', e.target.value)}
                 placeholder={t('profile.email_ph')}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('profile.phone')}</label>
+              <label htmlFor="profile-phone" className="text-sm font-medium">
+                {t('profile.phone')}
+              </label>
               <Input
+                id="profile-phone"
                 value={profile.personalInfo.phone}
                 onChange={(e) => updatePersonalInfo('phone', e.target.value)}
                 placeholder={t('profile.phone_ph')}
@@ -364,8 +373,11 @@ export function Profile(): React.JSX.Element {
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('profile.summary')}</label>
+            <label id="profile-summary-label" className="text-sm font-medium">
+              {t('profile.summary')}
+            </label>
             <MarkdownEditor
+              aria-labelledby="profile-summary-label"
               value={profile.personalInfo.summary}
               onChange={(val) => updatePersonalInfo('summary', val)}
               placeholder={t('profile.summary_ph')}
@@ -402,24 +414,33 @@ export function Profile(): React.JSX.Element {
               </Button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.school')}</label>
+                  <label htmlFor={`edu-school-${edu.id}`} className="text-sm font-medium">
+                    {t('profile.school')}
+                  </label>
                   <Input
+                    id={`edu-school-${edu.id}`}
                     value={edu.school}
                     onChange={(e) => updateEducation(edu.id, 'school', e.target.value)}
                     placeholder={t('profile.school_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.degree')}</label>
+                  <label htmlFor={`edu-degree-${edu.id}`} className="text-sm font-medium">
+                    {t('profile.degree')}
+                  </label>
                   <Input
+                    id={`edu-degree-${edu.id}`}
                     value={edu.degree}
                     onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
                     placeholder={t('profile.degree_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.date_range')}</label>
+                  <label htmlFor={`edu-date-${edu.id}`} className="text-sm font-medium">
+                    {t('profile.date_range')}
+                  </label>
                   <Input
+                    id={`edu-date-${edu.id}`}
                     value={edu.date}
                     onChange={(e) => updateEducation(edu.id, 'date', e.target.value)}
                     placeholder={t('profile.date_range_ph')}
@@ -427,8 +448,11 @@ export function Profile(): React.JSX.Element {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('profile.description')}</label>
+                <label id={`edu-desc-label-${edu.id}`} className="text-sm font-medium">
+                  {t('profile.description')}
+                </label>
                 <MarkdownEditor
+                  aria-labelledby={`edu-desc-label-${edu.id}`}
                   value={edu.description}
                   onChange={(val) => updateEducation(edu.id, 'description', val)}
                   placeholder={t('profile.education_description_ph')}
@@ -472,24 +496,33 @@ export function Profile(): React.JSX.Element {
               </Button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.company')}</label>
+                  <label htmlFor={`exp-company-${exp.id}`} className="text-sm font-medium">
+                    {t('profile.company')}
+                  </label>
                   <Input
+                    id={`exp-company-${exp.id}`}
                     value={exp.company}
                     onChange={(e) => updateWorkExperience(exp.id, 'company', e.target.value)}
                     placeholder={t('profile.company_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.role')}</label>
+                  <label htmlFor={`exp-role-${exp.id}`} className="text-sm font-medium">
+                    {t('profile.role')}
+                  </label>
                   <Input
+                    id={`exp-role-${exp.id}`}
                     value={exp.role}
                     onChange={(e) => updateWorkExperience(exp.id, 'role', e.target.value)}
                     placeholder={t('profile.role_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.date_range')}</label>
+                  <label htmlFor={`exp-date-${exp.id}`} className="text-sm font-medium">
+                    {t('profile.date_range')}
+                  </label>
                   <Input
+                    id={`exp-date-${exp.id}`}
                     value={exp.date}
                     onChange={(e) => updateWorkExperience(exp.id, 'date', e.target.value)}
                     placeholder={t('profile.date_range_ph')}
@@ -497,8 +530,11 @@ export function Profile(): React.JSX.Element {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('profile.description')}</label>
+                <label id={`exp-desc-label-${exp.id}`} className="text-sm font-medium">
+                  {t('profile.description')}
+                </label>
                 <MarkdownEditor
+                  aria-labelledby={`exp-desc-label-${exp.id}`}
                   value={exp.description}
                   onChange={(val) => updateWorkExperience(exp.id, 'description', val)}
                   placeholder={t('profile.description_ph')}
@@ -542,16 +578,22 @@ export function Profile(): React.JSX.Element {
               </Button>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.project_name')}</label>
+                  <label htmlFor={`proj-name-${proj.id}`} className="text-sm font-medium">
+                    {t('profile.project_name')}
+                  </label>
                   <Input
+                    id={`proj-name-${proj.id}`}
                     value={proj.name}
                     onChange={(e) => updateProject(proj.id, 'name', e.target.value)}
                     placeholder={t('profile.project_name_ph')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('profile.tech_stack')}</label>
+                  <label htmlFor={`proj-tech-${proj.id}`} className="text-sm font-medium">
+                    {t('profile.tech_stack')}
+                  </label>
                   <Input
+                    id={`proj-tech-${proj.id}`}
                     value={proj.techStack}
                     onChange={(e) => updateProject(proj.id, 'techStack', e.target.value)}
                     placeholder={t('profile.tech_stack_ph')}
@@ -559,8 +601,11 @@ export function Profile(): React.JSX.Element {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t('profile.description')}</label>
+                <label id={`proj-desc-label-${proj.id}`} className="text-sm font-medium">
+                  {t('profile.description')}
+                </label>
                 <MarkdownEditor
+                  aria-labelledby={`proj-desc-label-${proj.id}`}
                   value={proj.description}
                   onChange={(val) => updateProject(proj.id, 'description', val)}
                   placeholder={t('profile.project_description_ph')}

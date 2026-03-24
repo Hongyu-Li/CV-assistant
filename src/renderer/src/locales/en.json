@@ -126,7 +126,20 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "save": "Save",
-    "download": "Download"
+    "download": "Download",
+    "edit": "Edit",
+    "retry": "Retry",
+    "copy": "Copy",
+    "regenerate": "Regenerate"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again."
+  },
+  "a11y": {
+    "sidebar_nav": "Main navigation",
+    "search_resumes": "Search resumes by job title or company",
+    "open_resume": "Open resume for {{company}}"
   },
   "resumes": {
     "description": "Manage your CV drafts and generated resumes.",

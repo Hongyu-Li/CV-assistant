@@ -126,7 +126,20 @@
     "delete": "删除",
     "cancel": "取消",
     "save": "保存",
-    "download": "下载"
+    "download": "下载",
+    "edit": "编辑",
+    "retry": "重试",
+    "copy": "复制",
+    "regenerate": "重新生成"
+  },
+  "error": {
+    "title": "出了点问题",
+    "description": "发生了意外错误，请重试。"
+  },
+  "a11y": {
+    "sidebar_nav": "主导航",
+    "search_resumes": "按职位名称或公司搜索简历",
+    "open_resume": "打开 {{company}} 的简历"
   },
   "resumes": {
     "description": "管理您的简历草稿和已生成的简历。",

@@ -5,16 +5,18 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '.
 interface CvLanguageSelectProps {
   value: string
   onValueChange: (value: string) => void
+  id?: string
 }
 
 export function CvLanguageSelect({
   value,
-  onValueChange
+  onValueChange,
+  id
 }: CvLanguageSelectProps): React.JSX.Element {
   const { t } = useTranslation()
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger>
+      <SelectTrigger id={id}>
         <SelectValue placeholder={t('resumes.cv_language_ph')} />
       </SelectTrigger>
       <SelectContent>

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Button } from './ui/button'
+import i18n from '../i18n'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -32,17 +33,15 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
-          <h2 className="text-xl font-semibold text-destructive">Something went wrong</h2>
-          <p className="text-sm text-muted-foreground max-w-md">
-            An unexpected error occurred. Please try again.
-          </p>
+          <h2 className="text-xl font-semibold text-destructive">{i18n.t('error.title')}</h2>
+          <p className="text-sm text-muted-foreground max-w-md">{i18n.t('error.description')}</p>
           {this.state.error && (
             <pre className="text-xs text-muted-foreground bg-muted p-3 rounded-md max-w-lg overflow-auto">
               {this.state.error.message}
             </pre>
           )}
           <Button onClick={this.handleRetry} variant="outline">
-            Retry
+            {i18n.t('common.retry')}
           </Button>
         </div>
       )

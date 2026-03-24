@@ -274,7 +274,7 @@ describe('CvSection', () => {
   it('copies generated CV to clipboard and shows success toast', async () => {
     renderCvSection({ generatedCV: '# My Resume Content' })
 
-    const copyButton = screen.getByTitle('resumes.copy')
+    const copyButton = screen.getByLabelText('resumes.copy')
     fireEvent.click(copyButton)
 
     await waitFor((): void => {
@@ -288,7 +288,7 @@ describe('CvSection', () => {
 
     renderCvSection({ generatedCV: '# My Resume' })
 
-    const copyButton = screen.getByTitle('resumes.copy')
+    const copyButton = screen.getByLabelText('resumes.copy')
     fireEvent.click(copyButton)
 
     await waitFor((): void => {
@@ -315,7 +315,7 @@ describe('CvSection', () => {
       .mockImplementation((node: Node): Node => node)
 
     // Open the download dropdown first, then click the markdown export item
-    const downloadButton = screen.getByTitle('common.download')
+    const downloadButton = screen.getByLabelText('common.download')
     fireEvent.click(downloadButton)
     const exportMdButton = screen.getByText('resumes.export_md')
     fireEvent.click(exportMdButton)
@@ -344,7 +344,7 @@ describe('CvSection', () => {
   it('opens download dropdown showing export options on click', () => {
     renderCvSection({ generatedCV: '# Resume' })
 
-    const downloadButton = screen.getByTitle('common.download')
+    const downloadButton = screen.getByLabelText('common.download')
     fireEvent.click(downloadButton)
 
     expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
@@ -354,7 +354,7 @@ describe('CvSection', () => {
   it('closes download dropdown on outside mousedown', () => {
     renderCvSection({ generatedCV: '# Resume' })
 
-    const downloadButton = screen.getByTitle('common.download')
+    const downloadButton = screen.getByLabelText('common.download')
     fireEvent.click(downloadButton)
     expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
 
@@ -376,7 +376,7 @@ describe('CvSection', () => {
       .spyOn(document.body, 'removeChild')
       .mockImplementation(<T extends Node>(node: T): T => originalRemoveChild(node))
 
-    const downloadButton = screen.getByTitle('common.download')
+    const downloadButton = screen.getByLabelText('common.download')
     fireEvent.click(downloadButton)
     const exportPdfButton = screen.getByText('resumes.export_pdf')
     fireEvent.click(exportPdfButton)
@@ -401,7 +401,7 @@ describe('CvSection', () => {
       .spyOn(document.body, 'appendChild')
       .mockImplementation(<T extends Node>(node: T): T => originalAppendChild(node))
 
-    const downloadButton = screen.getByTitle('common.download')
+    const downloadButton = screen.getByLabelText('common.download')
     fireEvent.click(downloadButton)
     const exportPdfButton = screen.getByText('resumes.export_pdf')
     fireEvent.click(exportPdfButton)
@@ -419,7 +419,7 @@ describe('CvSection', () => {
     const mockCreateObjectURL = vi.fn((): string => 'blob:test-url')
     global.URL.createObjectURL = mockCreateObjectURL
 
-    expect(screen.queryByTitle('common.download')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('common.download')).not.toBeInTheDocument()
     expect(mockCreateObjectURL).not.toHaveBeenCalled()
     expect(toast.success).not.toHaveBeenCalled()
   })
@@ -427,7 +427,7 @@ describe('CvSection', () => {
   it('export PDF does nothing when no CV exists', async (): Promise<void> => {
     renderCvSection()
 
-    expect(screen.queryByTitle('common.download')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('common.download')).not.toBeInTheDocument()
     expect(mockSave).not.toHaveBeenCalled()
     expect(toast.success).not.toHaveBeenCalled()
   })
@@ -550,10 +550,10 @@ describe('CvSection', () => {
     fireEvent.click(screen.getByText('resumes.generated_cv'))
 
     await waitFor((): void => {
-      expect(screen.getByTitle('common.download')).toBeInTheDocument()
+      expect(screen.getByLabelText('common.download')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByTitle('common.download'))
+    fireEvent.click(screen.getByLabelText('common.download'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
@@ -566,7 +566,7 @@ describe('CvSection', () => {
       expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByTitle('common.download'))
+    fireEvent.click(screen.getByLabelText('common.download'))
     await waitFor((): void => {
       expect(screen.getByText('resumes.export_pdf')).toBeInTheDocument()
     })
@@ -583,10 +583,10 @@ describe('CvSection', () => {
     fireEvent.click(screen.getByText('resumes.generated_cv'))
 
     await waitFor((): void => {
-      expect(screen.getByTitle('resumes.copy')).toBeInTheDocument()
+      expect(screen.getByLabelText('resumes.copy')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByTitle('resumes.copy'))
+    fireEvent.click(screen.getByLabelText('resumes.copy'))
 
     await waitFor((): void => {
       expect(screen.getByTestId('markdown-editor')).toBeInTheDocument()
@@ -599,10 +599,10 @@ describe('CvSection', () => {
     fireEvent.click(screen.getByText('resumes.generated_cv'))
 
     await waitFor((): void => {
-      expect(screen.getByTitle('common.download')).toBeInTheDocument()
+      expect(screen.getByLabelText('common.download')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByTitle('common.download'))
+    fireEvent.click(screen.getByLabelText('common.download'))
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
@@ -637,15 +637,15 @@ describe('CvSection', () => {
     fireEvent.click(screen.getByText('resumes.generated_cv'))
 
     await waitFor((): void => {
-      expect(screen.getByTitle('common.download')).toBeInTheDocument()
+      expect(screen.getByLabelText('common.download')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByTitle('common.download'))
+    fireEvent.click(screen.getByLabelText('common.download'))
     await waitFor((): void => {
       expect(screen.getByText('resumes.export_md')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByTitle('common.download'))
+    fireEvent.click(screen.getByLabelText('common.download'))
     await waitFor((): void => {
       expect(screen.queryByText('resumes.export_md')).not.toBeInTheDocument()
     })
@@ -664,7 +664,7 @@ describe('CvSection', () => {
       generatedCV: '# Existing CV'
     })
 
-    const regenButton = screen.getByTitle('resumes.generate_cv')
+    const regenButton = screen.getByLabelText('resumes.generate_cv')
     expect(regenButton).toBeInTheDocument()
 
     fireEvent.click(regenButton)

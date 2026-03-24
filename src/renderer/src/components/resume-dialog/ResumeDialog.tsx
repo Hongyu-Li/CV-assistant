@@ -106,17 +106,22 @@ function ResumeDialogForm({
         {/* Form fields - 2 column grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('resumes.job_title')}</label>
+            <label htmlFor="resume-job-title" className="text-sm font-medium">
+              {t('resumes.job_title')}
+            </label>
             <Input
+              id="resume-job-title"
               placeholder={t('resumes.job_title_ph')}
               value={jobTitle}
               onChange={(e): void => setJobTitle(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('resumes.exp_level')}</label>
+            <label htmlFor="resume-exp-level" className="text-sm font-medium">
+              {t('resumes.exp_level')}
+            </label>
             <Select value={experienceLevel} onValueChange={setExperienceLevel}>
-              <SelectTrigger>
+              <SelectTrigger id="resume-exp-level">
                 <SelectValue placeholder={t('resumes.exp_level_ph')} />
               </SelectTrigger>
               <SelectContent>
@@ -127,16 +132,22 @@ function ResumeDialogForm({
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('resumes.company_name')}</label>
+            <label htmlFor="resume-company-name" className="text-sm font-medium">
+              {t('resumes.company_name')}
+            </label>
             <Input
+              id="resume-company-name"
               placeholder={t('resumes.company_name_ph')}
               value={companyName}
               onChange={(e): void => setCompanyName(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('resumes.target_salary')}</label>
+            <label htmlFor="resume-target-salary" className="text-sm font-medium">
+              {t('resumes.target_salary')}
+            </label>
             <Input
+              id="resume-target-salary"
               placeholder={t('resumes.target_salary_ph')}
               value={targetSalary}
               onChange={(e): void => setTargetSalary(e.target.value)}
@@ -146,8 +157,11 @@ function ResumeDialogForm({
 
         {/* Job Description */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">{t('resumes.job_description')}</label>
+          <label htmlFor="resume-job-description" className="text-sm font-medium">
+            {t('resumes.job_description')}
+          </label>
           <Textarea
+            id="resume-job-description"
             placeholder={t('resumes.jd_placeholder')}
             value={jobDescription}
             onChange={(e): void => setJobDescription(e.target.value)}
@@ -173,12 +187,14 @@ function ResumeDialogForm({
 
         {/* Interview Status */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">{t('resumes.interview_status')}</label>
+          <label htmlFor="resume-interview-status" className="text-sm font-medium">
+            {t('resumes.interview_status')}
+          </label>
           <Select
             value={interviewStatus}
             onValueChange={(value) => setInterviewStatus(value as InterviewStatus)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="resume-interview-status">
               <SelectValue placeholder={t('resumes.interview_status_ph')} />
             </SelectTrigger>
             <SelectContent>

@@ -215,11 +215,15 @@ export const Settings = (): React.JSX.Element => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="settings-workspace"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 {t('settings.workspace_dir')}
               </label>
               <div className="flex gap-2">
                 <Input
+                  id="settings-workspace"
                   readOnly
                   value={settings.workspacePath || ''}
                   placeholder={t('settings.workspace_dir_ph')}
@@ -257,11 +261,14 @@ export const Settings = (): React.JSX.Element => {
               <p className="text-xs text-muted-foreground">{t('settings.workspace_dir_desc')}</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="settings-theme"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 {t('settings.theme')}
               </label>
               <Select value={settings.theme} onValueChange={handleThemeChange}>
-                <SelectTrigger className="w-full md:w-[240px]">
+                <SelectTrigger id="settings-theme" className="w-full md:w-[240px]">
                   <SelectValue placeholder={t('settings.select_theme_ph')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -272,11 +279,14 @@ export const Settings = (): React.JSX.Element => {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label
+                htmlFor="settings-language"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
                 {t('settings.language')}
               </label>
               <Select value={settings.language || 'en'} onValueChange={handleLanguageChange}>
-                <SelectTrigger className="w-full md:w-[240px]">
+                <SelectTrigger id="settings-language" className="w-full md:w-[240px]">
                   <SelectValue placeholder={t('settings.select_language_ph')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -296,9 +306,11 @@ export const Settings = (): React.JSX.Element => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">{t('settings.provider')}</label>
+              <label htmlFor="settings-provider" className="text-sm font-medium leading-none">
+                {t('settings.provider')}
+              </label>
               <Select value={settings.provider} onValueChange={handleProviderChange}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="settings-provider" className="w-full">
                   <SelectValue placeholder={t('settings.select_provider_ph')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -313,10 +325,13 @@ export const Settings = (): React.JSX.Element => {
 
             {providerConfig.requiresApiKey && (
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">{t('settings.api_key')}</label>
+                <label htmlFor="settings-apikey" className="text-sm font-medium leading-none">
+                  {t('settings.api_key')}
+                </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Input
+                      id="settings-apikey"
                       type={showApiKey ? 'text' : 'password'}
                       placeholder={t('settings.api_key_ph')}
                       value={settings.apiKeys?.[settings.provider] || ''}
@@ -330,7 +345,9 @@ export const Settings = (): React.JSX.Element => {
                     size="icon"
                     type="button"
                     onClick={(): void => setShowApiKey(!showApiKey)}
-                    title={showApiKey ? t('settings.hide_api_key') : t('settings.show_api_key')}
+                    aria-label={
+                      showApiKey ? t('settings.hide_api_key') : t('settings.show_api_key')
+                    }
                   >
                     {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
@@ -340,8 +357,11 @@ export const Settings = (): React.JSX.Element => {
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">{t('settings.model')}</label>
+              <label htmlFor="settings-model" className="text-sm font-medium leading-none">
+                {t('settings.model')}
+              </label>
               <Input
+                id="settings-model"
                 type="text"
                 placeholder={t('settings.model_ph')}
                 value={settings.model}
@@ -351,8 +371,11 @@ export const Settings = (): React.JSX.Element => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">{t('settings.base_url')}</label>
+              <label htmlFor="settings-baseurl" className="text-sm font-medium leading-none">
+                {t('settings.base_url')}
+              </label>
               <Input
+                id="settings-baseurl"
                 type="text"
                 placeholder={t('settings.base_url_ph')}
                 value={settings.baseUrl}

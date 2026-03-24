@@ -56,11 +56,18 @@ export function CvSection({
         setExportMenuOpen(false)
       }
     }
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        setExportMenuOpen(false)
+      }
+    }
     if (exportMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
     }
     return (): void => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [exportMenuOpen])
 
@@ -244,13 +251,22 @@ export function CvSection({
       {!generatedCV && (
         <>
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
-            <CvLanguageSelect value={cvLanguage} onValueChange={onCvLanguageChange} />
+            <label htmlFor="cv-language" className="text-sm font-medium">
+              {t('resumes.cv_language')}
+            </label>
+            <CvLanguageSelect
+              id="cv-language"
+              value={cvLanguage}
+              onValueChange={onCvLanguageChange}
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">{t('resumes.notes')}</label>
+            <label htmlFor="cv-notes" className="text-sm font-medium">
+              {t('resumes.notes')}
+            </label>
             <Textarea
+              id="cv-notes"
               placeholder={t('resumes.notes_ph')}
               value={notes}
               onChange={(e): void => onNotesChange(e.target.value)}
@@ -262,8 +278,10 @@ export function CvSection({
 
       {keywords.length > 0 && (
         <div className="space-y-2">
-          <label className="text-sm font-medium">{t('resumes.keywords')}</label>
-          <div className="flex flex-wrap gap-2">
+          <label id="cv-keywords-label" className="text-sm font-medium">
+            {t('resumes.keywords')}
+          </label>
+          <div className="flex flex-wrap gap-2" role="list" aria-labelledby="cv-keywords-label">
             {keywords.map((keyword, index) => (
               <span key={index} className="px-2 py-1 bg-primary/10 text-primary text-sm rounded-md">
                 {keyword}
@@ -294,7 +312,7 @@ export function CvSection({
                   variant="ghost"
                   size="icon"
                   onClick={handleCopy}
-                  title={t('resumes.copy')}
+                  aria-label={t('resumes.copy')}
                   className="h-7 w-7"
                 >
                   {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -305,7 +323,7 @@ export function CvSection({
                     size="icon"
                     onClick={() => setExportMenuOpen(!exportMenuOpen)}
                     disabled={isExportingPdf}
-                    title={t('common.download')}
+                    aria-label={t('common.download')}
                     className="h-7 w-7"
                   >
                     {isExportingPdf ? (
@@ -346,7 +364,7 @@ export function CvSection({
                   size="icon"
                   onClick={handleGenerate}
                   disabled={isGenerating}
-                  title={t('resumes.generate_cv')}
+                  aria-label={t('resumes.generate_cv')}
                   className="h-7 w-7"
                 >
                   {isGenerating ? (
@@ -367,13 +385,22 @@ export function CvSection({
             {generatedCV && (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.cv_language')}</label>
-                  <CvLanguageSelect value={cvLanguage} onValueChange={onCvLanguageChange} />
+                  <label htmlFor="cv-language-gen" className="text-sm font-medium">
+                    {t('resumes.cv_language')}
+                  </label>
+                  <CvLanguageSelect
+                    id="cv-language-gen"
+                    value={cvLanguage}
+                    onValueChange={onCvLanguageChange}
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">{t('resumes.notes')}</label>
+                  <label htmlFor="cv-notes-gen" className="text-sm font-medium">
+                    {t('resumes.notes')}
+                  </label>
                   <Textarea
+                    id="cv-notes-gen"
                     placeholder={t('resumes.notes_ph')}
                     value={notes}
                     onChange={(e): void => onNotesChange(e.target.value)}

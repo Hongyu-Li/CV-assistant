@@ -12,7 +12,7 @@ describe('App', () => {
         </SettingsProvider>
       )
     })
-    expect(screen.getByText('app.title')).toBeInTheDocument()
+    expect(screen.getAllByText('app.title').length).toBeGreaterThanOrEqual(1)
   })
 
   it('sets document.title from i18n app.title', async () => {

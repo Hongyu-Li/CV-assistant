@@ -232,6 +232,7 @@ export function Resumes(): React.JSX.Element {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
+                aria-pressed={activeTab === tab.key}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                   activeTab === tab.key
                     ? 'bg-primary text-primary-foreground shadow-md'
@@ -255,6 +256,7 @@ export function Resumes(): React.JSX.Element {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              aria-label={t('a11y.search_resumes')}
               placeholder={t('resumes.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -268,7 +270,7 @@ export function Resumes(): React.JSX.Element {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-10 space-y-4">
             <div className="p-4 bg-muted rounded-full">
-              <FileText className="h-8 w-8 text-muted-foreground" />
+              <FileText aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
             </div>
             <div className="text-center">
               <h3 className="text-lg font-medium">
@@ -290,8 +292,20 @@ export function Resumes(): React.JSX.Element {
             <Card
               key={resume.id}
               className="group relative overflow-hidden card-hover cursor-pointer flex flex-col"
+              role="button"
+              tabIndex={0}
+              aria-label={t('a11y.open_resume', {
+                company: resume.companyName || t('resumes.untitled'),
+                title: resume.jobTitle || ''
+              })}
               onClick={(): void => {
                 handleEdit(resume)
+              }}
+              onKeyDown={(e: React.KeyboardEvent): void => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleEdit(resume)
+                }
               }}
             >
               <CardHeader className="pb-2">
@@ -311,7 +325,7 @@ export function Resumes(): React.JSX.Element {
                   )}
                   {resume.targetSalary && (
                     <div className="flex items-center text-sm font-medium text-green-600">
-                      <CircleDollarSign className="h-3.5 w-3.5 mr-1" />
+                      <CircleDollarSign aria-hidden="true" className="h-3.5 w-3.5 mr-1" />
                       <span>{resume.targetSalary}</span>
                     </div>
                   )}
@@ -352,7 +366,7 @@ export function Resumes(): React.JSX.Element {
                 {/* Last Modified Date - always pinned to bottom */}
                 <div className="flex items-center justify-between mt-auto pt-2">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
+                    <Calendar aria-hidden="true" className="h-3 w-3" />
                     {resume.lastModified
                       ? new Date(resume.lastModified).toLocaleDateString()
                       : t('resumes.unknown_date')}

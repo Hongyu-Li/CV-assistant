@@ -237,7 +237,7 @@ describe('Settings Component', () => {
     const apiKeyInput = document.querySelector('input[type="password"]')
     expect(apiKeyInput).not.toBeNull()
     // Click the eye toggle button
-    const toggleBtn = screen.getByTitle('settings.show_api_key')
+    const toggleBtn = screen.getByLabelText('settings.show_api_key')
     fireEvent.click(toggleBtn)
     // Now should be text type
     const visibleInput = document.querySelector(
