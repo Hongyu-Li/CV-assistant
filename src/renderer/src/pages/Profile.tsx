@@ -84,7 +84,9 @@ export function Profile(): React.JSX.Element {
           settings.workspacePath
         )
         if (!result.success) {
-          toast.error(t('profile.save_error') + result.error)
+          toast.error(
+            result.error ? `${t('profile.save_error')}: ${result.error}` : t('profile.save_error')
+          )
         }
       } catch (error) {
         console.error('Failed to save profile:', error)
@@ -266,7 +268,11 @@ export function Profile(): React.JSX.Element {
       const pdfResult = await window.electron.ipcRenderer.invoke('profile:extractPdfText')
       if (pdfResult === null) return
       if (!pdfResult.success) {
-        toast.error(t('profile.import_error') + pdfResult.error)
+        toast.error(
+          pdfResult.error
+            ? `${t('profile.import_error')}: ${pdfResult.error}`
+            : t('profile.import_error')
+        )
         return
       }
 
@@ -298,7 +304,8 @@ export function Profile(): React.JSX.Element {
       toast.success(t('profile.import_success'))
     } catch (error) {
       console.error('Failed to import PDF:', error)
-      toast.error(t('profile.import_error') + toErrorMessage(error))
+      const msg = toErrorMessage(error)
+      toast.error(msg ? `${t('profile.import_error')}: ${msg}` : t('profile.import_error'))
     } finally {
       setImporting(false)
     }

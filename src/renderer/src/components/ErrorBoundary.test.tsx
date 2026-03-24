@@ -32,7 +32,11 @@ describe('ErrorBoundary', () => {
     )
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument()
-    expect(screen.getByText('An unexpected error occurred. Please try again.')).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        'Something went wrong loading this page. Click Retry, or restart the app if it keeps happening.'
+      )
+    ).toBeInTheDocument()
     expect(screen.getByText('Test render error')).toBeInTheDocument()
     expect(screen.getByText('Retry')).toBeInTheDocument()
   })
