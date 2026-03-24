@@ -175,18 +175,16 @@ export function InterviewTimeline({
                               </div>
 
                               {round.notes && (
-                                <div className="space-y-2 text-sm">
-                                  <div className="bg-muted/50 rounded p-2">
-                                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                                      {t('resumes.interview_notes')}
-                                    </p>
-                                    <div
-                                      className="text-sm prose prose-sm dark:prose-invert max-w-none max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
-                                      dangerouslySetInnerHTML={{
-                                        __html: markdownToHtml(round.notes)
-                                      }}
-                                    />
-                                  </div>
+                                <div className="text-sm">
+                                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                                    {t('resumes.interview_notes')}
+                                  </p>
+                                  <div
+                                    className="text-sm prose prose-sm dark:prose-invert max-w-none max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
+                                    dangerouslySetInnerHTML={{
+                                      __html: markdownToHtml(round.notes)
+                                    }}
+                                  />
                                 </div>
                               )}
                             </div>

@@ -14,7 +14,7 @@ import {
 } from '../components/ui/select'
 import { Button } from '../components/ui/button'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, FolderOpen, Loader2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -202,10 +202,9 @@ export const Settings = (): React.JSX.Element => {
   const providerConfig = PROVIDER_CONFIGS[settings.provider]
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h2>
-        <p className="text-muted-foreground">{t('settings.ai_provider_desc')}</p>
       </div>
 
       <div className="grid gap-6">
@@ -243,6 +242,8 @@ export const Settings = (): React.JSX.Element => {
                 </Button>
                 <Button
                   variant="outline"
+                  size="icon"
+                  aria-label={t('settings.open_folder')}
                   onClick={async (): Promise<void> => {
                     try {
                       const pathToOpen =
@@ -256,7 +257,7 @@ export const Settings = (): React.JSX.Element => {
                     }
                   }}
                 >
-                  {t('settings.open_folder')}
+                  <FolderOpen className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">{t('settings.workspace_dir_desc')}</p>

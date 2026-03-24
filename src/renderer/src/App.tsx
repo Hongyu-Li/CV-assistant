@@ -28,11 +28,10 @@ function App(): React.JSX.Element {
           <Sparkles aria-hidden="true" className="h-5 w-5 text-primary" />
           <span className="font-semibold text-lg">{t('app.title')}</span>
         </div>
-        <div className="h-px bg-border" />
         <nav className="flex flex-col gap-2">
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'profile' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'profile' ? 'bg-primary/10 text-primary' : ''}`}
             onClick={(): void => setCurrentView('profile')}
             aria-current={currentView === 'profile' ? 'page' : undefined}
           >
@@ -41,7 +40,7 @@ function App(): React.JSX.Element {
           </Button>
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/10 text-primary' : ''}`}
             onClick={(): void => setCurrentView('resumes')}
             aria-current={currentView === 'resumes' ? 'page' : undefined}
           >
@@ -50,7 +49,7 @@ function App(): React.JSX.Element {
           </Button>
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'settings' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'settings' ? 'bg-primary/10 text-primary' : ''}`}
             onClick={(): void => setCurrentView('settings')}
             aria-current={currentView === 'settings' ? 'page' : undefined}
           >

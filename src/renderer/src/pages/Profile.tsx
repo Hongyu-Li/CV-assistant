@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input'
 import { MarkdownEditor } from '../components/MarkdownEditor'
 import { Button } from '../components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Briefcase, FolderKanban, GraduationCap, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSettings } from '../context/SettingsContext'
 import { extractProfileFromPdf, PROVIDER_CONFIGS } from '../lib/provider'
@@ -309,7 +309,7 @@ export function Profile(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
+      <div className="space-y-6 max-w-4xl mx-auto pb-10">
         <div className="flex justify-between items-center">
           <div className="h-8 w-48 rounded-lg animate-shimmer" />
           <div className="h-10 w-32 rounded-lg animate-shimmer" />
@@ -322,7 +322,7 @@ export function Profile(): React.JSX.Element {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
+    <div className="space-y-6 max-w-4xl mx-auto pb-10">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h2>
         <div className="flex gap-2">
@@ -334,7 +334,7 @@ export function Profile(): React.JSX.Element {
       </div>
 
       {/* Personal Info */}
-      <Card className="border-l-4 border-l-primary">
+      <Card className="shadow-none">
         <CardHeader>
           <CardTitle>{t('profile.personal_info')}</CardTitle>
           <CardDescription>{t('profile.personal_info_desc')}</CardDescription>
@@ -391,7 +391,7 @@ export function Profile(): React.JSX.Element {
       </Card>
 
       {/* Education */}
-      <Card className="border-l-4 border-l-info">
+      <Card className="shadow-none">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.education')}</CardTitle>
@@ -403,10 +403,7 @@ export function Profile(): React.JSX.Element {
         </CardHeader>
         <CardContent className="space-y-6">
           {profile.education.map((edu) => (
-            <div
-              key={edu.id}
-              className="grid gap-4 p-4 pt-8 border rounded-lg relative bg-muted/20"
-            >
+            <div key={edu.id} className="grid gap-4 p-4 pt-8 border-t relative">
               <Button
                 variant="ghost"
                 size="sm"
@@ -465,15 +462,16 @@ export function Profile(): React.JSX.Element {
             </div>
           ))}
           {profile.education.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {t('profile.no_education')}
+            <div className="flex flex-col items-center justify-center py-8 space-y-2">
+              <GraduationCap aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{t('profile.no_education')}</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Work Experience */}
-      <Card className="border-l-4 border-l-success">
+      <Card className="shadow-none">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.work_experience')}</CardTitle>
@@ -485,10 +483,7 @@ export function Profile(): React.JSX.Element {
         </CardHeader>
         <CardContent className="space-y-6">
           {profile.workExperience.map((exp) => (
-            <div
-              key={exp.id}
-              className="grid gap-4 p-4 pt-8 border rounded-lg relative bg-muted/20"
-            >
+            <div key={exp.id} className="grid gap-4 p-4 pt-8 border-t relative">
               <Button
                 variant="ghost"
                 size="sm"
@@ -547,15 +542,16 @@ export function Profile(): React.JSX.Element {
             </div>
           ))}
           {profile.workExperience.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {t('profile.no_work_experience')}
+            <div className="flex flex-col items-center justify-center py-8 space-y-2">
+              <Briefcase aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{t('profile.no_work_experience')}</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Projects */}
-      <Card className="border-l-4 border-l-interview">
+      <Card className="shadow-none">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>{t('profile.projects')}</CardTitle>
@@ -567,10 +563,7 @@ export function Profile(): React.JSX.Element {
         </CardHeader>
         <CardContent className="space-y-6">
           {profile.projects.map((proj) => (
-            <div
-              key={proj.id}
-              className="grid gap-4 p-4 pt-8 border rounded-lg relative bg-muted/20"
-            >
+            <div key={proj.id} className="grid gap-4 p-4 pt-8 border-t relative">
               <Button
                 variant="ghost"
                 size="sm"
@@ -618,7 +611,10 @@ export function Profile(): React.JSX.Element {
             </div>
           ))}
           {profile.projects.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">{t('profile.no_projects')}</div>
+            <div className="flex flex-col items-center justify-center py-8 space-y-2">
+              <FolderKanban aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">{t('profile.no_projects')}</p>
+            </div>
           )}
         </CardContent>
       </Card>

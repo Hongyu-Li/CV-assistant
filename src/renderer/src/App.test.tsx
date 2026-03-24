@@ -97,9 +97,9 @@ describe('App navigation', () => {
       const settingsBtn = screen.getByText('app.settings')
 
       // Default: Resumes is active
-      expect(resumesBtn.closest('button')).toHaveClass('bg-primary/15')
-      expect(profileBtn.closest('button')).not.toHaveClass('bg-primary/15')
-      expect(settingsBtn.closest('button')).not.toHaveClass('bg-primary/15')
+      expect(resumesBtn.closest('button')).toHaveClass('bg-primary/10')
+      expect(profileBtn.closest('button')).not.toHaveClass('bg-primary/10')
+      expect(settingsBtn.closest('button')).not.toHaveClass('bg-primary/10')
     })
 
     it('updates button styling when switching views', async (): Promise<void> => {
@@ -109,8 +109,8 @@ describe('App navigation', () => {
       const resumesBtn = screen.getByText('app.resumes')
       const profileBtn = screen.getByText('app.profile')
 
-      expect(profileBtn.closest('button')).toHaveClass('bg-primary/15')
-      expect(resumesBtn.closest('button')).not.toHaveClass('bg-primary/15')
+      expect(profileBtn.closest('button')).toHaveClass('bg-primary/10')
+      expect(resumesBtn.closest('button')).not.toHaveClass('bg-primary/10')
     })
   })
 })
