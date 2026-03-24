@@ -41,7 +41,7 @@ const DISPLAY_STYLES: StyleMap = {
   codeBlock:
     '<pre class="bg-slate-800 p-3 rounded-lg overflow-x-auto my-3"><code class="text-sm font-mono text-slate-200">$CODE</code></pre>',
   codeBlockCode: '',
-  link: '<a href="$URL" class="text-blue-400 hover:underline" target="_blank" rel="noopener">$TEXT</a>',
+  link: '<a href="$URL" class="text-info hover:underline" target="_blank" rel="noopener">$TEXT</a>',
   blockquote:
     '<blockquote class="border-l-4 border-slate-600 pl-4 italic my-3 text-slate-400">$1</blockquote>',
   hr: '<hr class="border-slate-700 my-4" />',

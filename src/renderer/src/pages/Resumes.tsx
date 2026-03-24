@@ -187,26 +187,41 @@ export function Resumes(): React.JSX.Element {
   })
 
   const tabs: { key: FilterTab; label: string; count: number; color: string }[] = [
-    { key: 'all', label: t('resumes.tab_all'), count: resumes.length, color: 'bg-gray-500' },
-    { key: 'draft', label: t('resumes.tab_draft'), count: stats.draft, color: 'bg-slate-400' },
+    {
+      key: 'all',
+      label: t('resumes.tab_all'),
+      count: resumes.length,
+      color: 'bg-muted-foreground'
+    },
+    {
+      key: 'draft',
+      label: t('resumes.tab_draft'),
+      count: stats.draft,
+      color: 'bg-muted-foreground/60'
+    },
     {
       key: 'interview',
       label: t('resumes.tab_interview'),
       count: stats.inInterview,
-      color: 'bg-blue-500'
+      color: 'bg-info'
     },
-    { key: 'hr', label: t('resumes.tab_hr'), count: stats.hrInterview, color: 'bg-purple-500' },
+    {
+      key: 'hr',
+      label: t('resumes.tab_hr'),
+      count: stats.hrInterview,
+      color: 'bg-interview'
+    },
     {
       key: 'offer',
       label: t('resumes.tab_offer'),
       count: stats.offerAccepted,
-      color: 'bg-green-500'
+      color: 'bg-success'
     },
     {
       key: 'rejected',
       label: t('resumes.tab_rejected'),
       count: stats.rejected,
-      color: 'bg-red-500'
+      color: 'bg-destructive'
     }
   ]
 
@@ -269,8 +284,8 @@ export function Resumes(): React.JSX.Element {
       {filteredResumes.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-10 space-y-4">
-            <div className="p-4 bg-muted rounded-full">
-              <FileText aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+            <div className="p-4 bg-primary/10 rounded-full">
+              <FileText aria-hidden="true" className="h-8 w-8 text-primary" />
             </div>
             <div className="text-center">
               <h3 className="text-lg font-medium">
@@ -324,7 +339,7 @@ export function Resumes(): React.JSX.Element {
                     <span />
                   )}
                   {resume.targetSalary && (
-                    <div className="flex items-center text-sm font-medium text-green-600">
+                    <div className="flex items-center text-sm font-medium text-success">
                       <CircleDollarSign aria-hidden="true" className="h-3.5 w-3.5 mr-1" />
                       <span>{resume.targetSalary}</span>
                     </div>
@@ -350,7 +365,7 @@ export function Resumes(): React.JSX.Element {
                     {resume.keywords.slice(0, MAX_VISIBLE_KEYWORDS).map((keyword, index) => (
                       <span
                         key={index}
-                        className="px-1.5 py-0.5 bg-primary/5 text-primary/80 text-[10px] rounded-full border border-primary/10"
+                        className="px-1.5 py-0.5 bg-primary/10 text-primary/80 text-[10px] rounded-full border border-primary/15"
                       >
                         {keyword}
                       </span>

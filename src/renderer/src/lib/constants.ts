@@ -18,24 +18,24 @@ export type FilterTab = 'all' | 'draft' | 'interview' | 'hr' | 'offer' | 'reject
 export function getInterviewStatusColor(status: InterviewStatus): string {
   switch (status) {
     case 'draft':
-      return 'bg-slate-100 text-slate-600 border-slate-200'
+      return 'bg-muted text-muted-foreground border-border'
     case 'resume_sent':
-      return 'bg-gray-100 text-gray-700 border-gray-200'
+      return 'bg-muted text-muted-foreground border-border'
     case 'first_interview':
     case 'second_interview':
     case 'third_interview':
     case 'fourth_interview':
     case 'fifth_interview':
-      return 'bg-blue-100 text-blue-700 border-blue-200'
+      return 'bg-info/10 text-info-foreground border-info/20'
     case 'hr_interview':
-      return 'bg-purple-100 text-purple-700 border-purple-200'
+      return 'bg-interview/10 text-interview-foreground border-interview/20'
     case 'offer_accepted':
-      return 'bg-green-100 text-green-700 border-green-200'
+      return 'bg-success/10 text-success-foreground border-success/20'
     case 'offer_rejected':
     case 'interview_failed':
-      return 'bg-red-100 text-red-700 border-red-200'
+      return 'bg-destructive/10 text-destructive border-destructive/20'
     default:
-      return 'bg-gray-100 text-gray-700 border-gray-200'
+      return 'bg-muted text-muted-foreground border-border'
   }
 }
 

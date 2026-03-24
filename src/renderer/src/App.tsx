@@ -32,7 +32,7 @@ function App(): React.JSX.Element {
         <nav className="flex flex-col gap-2">
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'profile' ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''}`}
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'profile' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('profile')}
           >
             <User className="h-4 w-4" />
@@ -40,7 +40,7 @@ function App(): React.JSX.Element {
           </Button>
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''}`}
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'resumes' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('resumes')}
           >
             <FileText className="h-4 w-4" />
@@ -48,7 +48,7 @@ function App(): React.JSX.Element {
           </Button>
           <Button
             variant="ghost"
-            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'settings' ? 'bg-primary/10 text-primary border-l-2 border-primary' : ''}`}
+            className={`justify-start gap-2 transition-all duration-200 ${currentView === 'settings' ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary' : ''}`}
             onClick={(): void => setCurrentView('settings')}
           >
             <SettingsIcon className="h-4 w-4" />

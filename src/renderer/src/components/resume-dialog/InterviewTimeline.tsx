@@ -111,10 +111,10 @@ export function InterviewTimeline({
                     .map((round, index) => {
                       const dotColor =
                         round.result === 'passed'
-                          ? 'bg-green-500 border-green-500'
+                          ? 'bg-success border-success'
                           : round.result === 'failed'
-                            ? 'bg-red-500 border-red-500'
-                            : 'bg-yellow-400 border-yellow-400'
+                            ? 'bg-destructive border-destructive'
+                            : 'bg-warning border-warning'
 
                       return (
                         <div key={round.id} className="relative flex gap-4 pb-6">
@@ -145,10 +145,10 @@ export function InterviewTimeline({
                                   <span
                                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                                       round.result === 'passed'
-                                        ? 'bg-green-100 text-green-700'
+                                        ? 'bg-success/10 text-success-foreground'
                                         : round.result === 'failed'
-                                          ? 'bg-red-100 text-red-700'
-                                          : 'bg-yellow-100 text-yellow-700'
+                                          ? 'bg-destructive/10 text-destructive'
+                                          : 'bg-warning/10 text-warning-foreground'
                                     }`}
                                   >
                                     {t(`resumes.result_${round.result}`)}

@@ -228,7 +228,7 @@ describe('InterviewTimeline — round display', () => {
     expect(texts.indexOf('resumes.round_first')).toBeLessThan(texts.indexOf('resumes.round_second'))
   })
 
-  it('applies green dot class for passed result', async (): Promise<void> => {
+  it('applies success dot class for passed result', async (): Promise<void> => {
     const round = makeRound({ result: 'passed' })
     const { container } = render(
       <InterviewTimeline
@@ -240,10 +240,10 @@ describe('InterviewTimeline — round display', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(container.querySelector('button[type="button"]')!)
     })
-    expect(container.querySelector('.bg-green-500')).toBeInTheDocument()
+    expect(container.querySelector('.bg-success')).toBeInTheDocument()
   })
 
-  it('applies red dot class for failed result', async (): Promise<void> => {
+  it('applies destructive dot class for failed result', async (): Promise<void> => {
     const round = makeRound({ result: 'failed' })
     const { container } = render(
       <InterviewTimeline
@@ -255,10 +255,10 @@ describe('InterviewTimeline — round display', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(container.querySelector('button[type="button"]')!)
     })
-    expect(container.querySelector('.bg-red-500')).toBeInTheDocument()
+    expect(container.querySelector('.bg-destructive')).toBeInTheDocument()
   })
 
-  it('applies yellow dot class for pending result', async (): Promise<void> => {
+  it('applies warning dot class for pending result', async (): Promise<void> => {
     const round = makeRound({ result: 'pending' })
     const { container } = render(
       <InterviewTimeline
@@ -270,7 +270,7 @@ describe('InterviewTimeline — round display', () => {
     await act(async (): Promise<void> => {
       fireEvent.click(container.querySelector('button[type="button"]')!)
     })
-    expect(container.querySelector('.bg-yellow-400')).toBeInTheDocument()
+    expect(container.querySelector('.bg-warning')).toBeInTheDocument()
   })
 
   it('renders notes via markdownToHtml when notes are non-empty', async (): Promise<void> => {

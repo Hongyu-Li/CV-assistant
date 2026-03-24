@@ -63,15 +63,15 @@ describe('magic number constants', () => {
 })
 
 describe('getInterviewStatusColor', () => {
-  it('returns slate for draft', () => {
-    expect(getInterviewStatusColor('draft')).toContain('bg-slate-100')
+  it('returns muted for draft', () => {
+    expect(getInterviewStatusColor('draft')).toContain('bg-muted')
   })
 
-  it('returns gray for resume_sent', () => {
-    expect(getInterviewStatusColor('resume_sent')).toContain('bg-gray-100')
+  it('returns muted for resume_sent', () => {
+    expect(getInterviewStatusColor('resume_sent')).toContain('bg-muted')
   })
 
-  it('returns blue for interview rounds', () => {
+  it('returns info for interview rounds', () => {
     const rounds = [
       'first_interview',
       'second_interview',
@@ -80,24 +80,24 @@ describe('getInterviewStatusColor', () => {
       'fifth_interview'
     ] as const
     for (const status of rounds) {
-      expect(getInterviewStatusColor(status)).toContain('bg-blue-100')
+      expect(getInterviewStatusColor(status)).toContain('bg-info/10')
     }
   })
 
-  it('returns purple for hr_interview', () => {
-    expect(getInterviewStatusColor('hr_interview')).toContain('bg-purple-100')
+  it('returns interview for hr_interview', () => {
+    expect(getInterviewStatusColor('hr_interview')).toContain('bg-interview/10')
   })
 
-  it('returns green for offer_accepted', () => {
-    expect(getInterviewStatusColor('offer_accepted')).toContain('bg-green-100')
+  it('returns success for offer_accepted', () => {
+    expect(getInterviewStatusColor('offer_accepted')).toContain('bg-success/10')
   })
 
-  it('returns red for rejection statuses', () => {
-    expect(getInterviewStatusColor('offer_rejected')).toContain('bg-red-100')
-    expect(getInterviewStatusColor('interview_failed')).toContain('bg-red-100')
+  it('returns destructive for rejection statuses', () => {
+    expect(getInterviewStatusColor('offer_rejected')).toContain('bg-destructive/10')
+    expect(getInterviewStatusColor('interview_failed')).toContain('bg-destructive/10')
   })
 
-  it('returns gray for unknown status', () => {
-    expect(getInterviewStatusColor('unknown' as never)).toContain('bg-gray-100')
+  it('returns muted for unknown status', () => {
+    expect(getInterviewStatusColor('unknown' as never)).toContain('bg-muted')
   })
 })
