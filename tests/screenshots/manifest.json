@@ -4,62 +4,71 @@
   "device_category": "mac",
   "dimensions": "2880x1800",
   "format": "png",
-  "generated": "2026-03-01",
+  "generated": "2026-03-24",
   "locales": {
     "en-US": {
       "mac_retina": [
-        "01_hero_editor.png",
-        "02_profile.png",
-        "03_resumes.png",
-        "04_settings_ai.png",
-        "05_settings_theme.png"
+        "01_hero_cv_dialog.png",
+        "02_resumes_list.png",
+        "03_interview_timeline.png",
+        "04_profile.png",
+        "05_export.png",
+        "06_settings.png"
       ]
     },
     "zh-CN": {
       "mac_retina": [
-        "01_hero_editor.png",
-        "02_profile.png",
-        "03_resumes.png",
-        "04_settings_ai.png",
-        "05_settings_theme.png"
+        "01_hero_cv_dialog.png",
+        "02_resumes_list.png",
+        "03_interview_timeline.png",
+        "04_profile.png",
+        "05_export.png",
+        "06_settings.png"
       ]
     }
   },
   "frames": {
-    "01_hero_editor": {
-      "screen": "Create Resume dialog",
-      "headline_en": "One-Click CV Creation",
-      "headline_zh": "一键生成简历",
+    "01_hero_cv_dialog": {
+      "screen": "Create CV dialog with form filled",
+      "headline_en": "AI Crafts Your Perfect CV",
+      "headline_zh": "AI 为你量身定制简历",
       "badge_en": "Smart Generation",
       "badge_zh": "智能生成"
     },
-    "02_profile": {
-      "screen": "Profile management page",
+    "02_resumes_list": {
+      "screen": "CVs list with application cards and status tabs",
+      "headline_en": "Track Every Application",
+      "headline_zh": "追踪每一次求职",
+      "badge_en": "Job Tracker",
+      "badge_zh": "求职管理"
+    },
+    "03_interview_timeline": {
+      "screen": "CV dialog scrolled to interview round timeline",
+      "headline_en": "Interview Timeline",
+      "headline_zh": "面试进度追踪",
+      "badge_en": "Round by Round",
+      "badge_zh": "逐轮记录"
+    },
+    "04_profile": {
+      "screen": "Profile page with education and work experience",
       "headline_en": "Smart Profile Management",
-      "headline_zh": "智能个人档案管理",
-      "badge_en": "Markdown Editor",
-      "badge_zh": "支持 Markdown 编辑"
+      "headline_zh": "智能档案管理",
+      "badge_en": "PDF Import",
+      "badge_zh": "PDF 导入"
     },
-    "03_resumes": {
-      "screen": "Resumes list page",
-      "headline_en": "AI-Powered Resume Generation",
-      "headline_zh": "AI 赋能简历生成",
-      "badge_en": "12 AI Providers",
-      "badge_zh": "支持 12 家 AI 服务商"
+    "05_export": {
+      "screen": "CV dialog with generated CV and export dropdown open",
+      "headline_en": "Export Anywhere",
+      "headline_zh": "随处导出",
+      "badge_en": "PDF & Markdown",
+      "badge_zh": "PDF 和 Markdown"
     },
-    "04_settings_ai": {
-      "screen": "Settings - AI provider configuration",
+    "06_settings": {
+      "screen": "Settings page with AI provider configuration",
       "headline_en": "12 AI Providers Built In",
       "headline_zh": "内置 12 家 AI 服务商",
-      "badge_en": "Flexible Choice",
+      "badge_en": "Your Choice",
       "badge_zh": "灵活选择"
-    },
-    "05_settings_theme": {
-      "screen": "Settings - Theme and language",
-      "headline_en": "Your Workspace, Your Way",
-      "headline_zh": "你的空间，随心定制",
-      "badge_en": "Personalized",
-      "badge_zh": "个性化定制"
     }
   }
 }
