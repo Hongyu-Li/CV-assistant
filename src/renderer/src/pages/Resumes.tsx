@@ -289,7 +289,7 @@ export function Resumes(): React.JSX.Element {
           {filteredResumes.map((resume) => (
             <Card
               key={resume.id}
-              className="group relative overflow-hidden card-hover cursor-pointer"
+              className="group relative overflow-hidden card-hover cursor-pointer flex flex-col"
               onClick={(): void => {
                 handleEdit(resume)
               }}
@@ -318,7 +318,7 @@ export function Resumes(): React.JSX.Element {
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-0 pb-4">
+              <CardContent className="pt-0 pb-4 flex flex-col flex-1">
                 {/* Interview Status - Prominent */}
                 {resume.interviewStatus && (
                   <div className="flex items-center gap-2 mb-2">
@@ -349,8 +349,8 @@ export function Resumes(): React.JSX.Element {
                   </div>
                 )}
 
-                {/* Last Modified Date - inline with delete */}
-                <div className="flex items-center justify-between mt-2">
+                {/* Last Modified Date - always pinned to bottom */}
+                <div className="flex items-center justify-between mt-auto pt-2">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
                     {resume.lastModified
