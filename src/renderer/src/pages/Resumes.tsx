@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { toast } from 'sonner'
-import { Trash2, FileText, Calendar, Plus, Search } from 'lucide-react'
+import { Trash2, FileText, Calendar, Plus, Search, CircleDollarSign } from 'lucide-react'
 import { ResumeDialog } from '../components/resume-dialog'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { CV, InterviewStatus } from '../components/resume-dialog'
@@ -311,6 +311,7 @@ export function Resumes(): React.JSX.Element {
                   )}
                   {resume.targetSalary && (
                     <div className="flex items-center text-sm font-medium text-green-600">
+                      <CircleDollarSign className="h-3.5 w-3.5 mr-1" />
                       <span>{resume.targetSalary}</span>
                     </div>
                   )}
