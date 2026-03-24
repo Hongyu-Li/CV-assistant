@@ -392,7 +392,7 @@ export function Profile(): React.JSX.Element {
 
       {/* Education */}
       <Card className="border-l-4 border-l-info">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between">
           <div>
             <CardTitle>{t('profile.education')}</CardTitle>
             <CardDescription>{t('profile.education_desc')}</CardDescription>
@@ -474,7 +474,7 @@ export function Profile(): React.JSX.Element {
 
       {/* Work Experience */}
       <Card className="border-l-4 border-l-success">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between">
           <div>
             <CardTitle>{t('profile.work_experience')}</CardTitle>
             <CardDescription>{t('profile.work_experience_desc')}</CardDescription>
@@ -556,7 +556,7 @@ export function Profile(): React.JSX.Element {
 
       {/* Projects */}
       <Card className="border-l-4 border-l-interview">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between">
           <div>
             <CardTitle>{t('profile.projects')}</CardTitle>
             <CardDescription>{t('profile.projects_desc')}</CardDescription>

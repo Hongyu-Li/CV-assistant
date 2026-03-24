@@ -488,7 +488,7 @@ describe('Settings - Workspace Directory', () => {
     await act(async () => {
       render(<Settings />)
     })
-    const openBtn = screen.getByText('settings.open_folder')
+    const openBtn = screen.getByLabelText('settings.open_folder')
     await act(async (): Promise<void> => {
       fireEvent.click(openBtn)
     })
@@ -525,7 +525,7 @@ describe('Settings - Workspace Directory', () => {
     await act(async () => {
       render(<Settings />)
     })
-    const openBtn = screen.getByText('settings.open_folder')
+    const openBtn = screen.getByLabelText('settings.open_folder')
     await act(async (): Promise<void> => {
       fireEvent.click(openBtn)
     })
@@ -1049,7 +1049,7 @@ describe('Settings - Open Folder Error Handling', () => {
     await act(async () => {
       render(<Settings />)
     })
-    const openBtn = screen.getByText('settings.open_folder')
+    const openBtn = screen.getByLabelText('settings.open_folder')
     await act(async (): Promise<void> => {
       fireEvent.click(openBtn)
     })

@@ -227,7 +227,7 @@ export function InterviewTimeline({
               <DialogDescription>{t('resumes.edit_round_description')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label htmlFor="round-type" className="text-sm font-medium">
                     {t('resumes.round')}
