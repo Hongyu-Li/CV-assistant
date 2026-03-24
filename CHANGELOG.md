@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.3.0...cv-assistant-v1.4.0) (2026-03-24)
+
+
+### Features
+
+* add salary icon to resume card ([0906410](https://github.com/tc9011/CV-assistant/commit/090641036995580e39e39d48afa033cb2e91f609))
+* **settings:** add folder open icon and update button accessibility ([8b544d9](https://github.com/tc9011/CV-assistant/commit/8b544d93d1cbf18b19822616f5ea252903cb659b))
+
+
+### Bug Fixes
+
+* **a11y:** add form labels, ARIA attributes, and keyboard navigation ([dac525c](https://github.com/tc9011/CV-assistant/commit/dac525cc4a7c74a46d0375e31a1030b903d0527f))
+* **adapt:** add responsive grid fallback, flex-wrap on card headers, and fix open folder test queries ([6174c42](https://github.com/tc9011/CV-assistant/commit/6174c42f90211e82bcad4a402caa6984a9682ac5))
+* **copy:** improve UX text clarity across all user-facing messages ([27fe760](https://github.com/tc9011/CV-assistant/commit/27fe760d0e3e165ae2092a37fed70b6c95ab08c9))
+* pin date to bottom of resume card regardless of content height ([57aca7b](https://github.com/tc9011/CV-assistant/commit/57aca7b6bec26e1a8690943316ec9b9270cbb82b))
+* **polish:** add focus-visible states, loading guards, and remove dead code ([e375cd8](https://github.com/tc9011/CV-assistant/commit/e375cd88ec3c05487d5679b4d40076a067143803))
+* use solid destructive background on delete button hover ([93a355c](https://github.com/tc9011/CV-assistant/commit/93a355ceb9b2fbc554ad79a0100e93047e893924))
+
 ## [1.3.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.2.0...cv-assistant-v1.3.0) (2026-03-23)
 
 
