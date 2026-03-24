@@ -164,7 +164,7 @@ export function InterviewTimeline({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                    className="h-7 w-7 text-destructive hover:bg-destructive hover:text-white"
                                     onClick={() => handleDeleteClick(round.id)}
                                   >
                                     <Trash2 className="h-3 w-3" />

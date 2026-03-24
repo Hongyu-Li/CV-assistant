@@ -395,7 +395,7 @@ export function Profile(): React.JSX.Element {
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                className="absolute top-2 right-2 text-destructive hover:bg-destructive hover:text-white"
                 onClick={() => removeEducation(edu.id)}
               >
                 {t('profile.remove')}
@@ -465,7 +465,7 @@ export function Profile(): React.JSX.Element {
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                className="absolute top-2 right-2 text-destructive hover:bg-destructive hover:text-white"
                 onClick={() => removeWorkExperience(exp.id)}
               >
                 {t('profile.remove')}
@@ -535,7 +535,7 @@ export function Profile(): React.JSX.Element {
               <Button
                 variant="ghost"
                 size="sm"
-                className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                className="absolute top-2 right-2 text-destructive hover:bg-destructive hover:text-white"
                 onClick={() => removeProject(proj.id)}
               >
                 {t('profile.remove')}
