@@ -6,7 +6,8 @@ import {
   COPY_FEEDBACK_DURATION_MS,
   AI_CHAT_TIMEOUT_MS,
   AI_PDF_EXTRACT_TIMEOUT_MS,
-  MAX_VISIBLE_KEYWORDS
+  MAX_VISIBLE_KEYWORDS,
+  getInterviewStatusColor
 } from './constants'
 
 describe('INTERVIEW_STATUSES', () => {
@@ -58,5 +59,45 @@ describe('magic number constants', () => {
 
   it('MAX_VISIBLE_KEYWORDS is 4', () => {
     expect(MAX_VISIBLE_KEYWORDS).toBe(4)
+  })
+})
+
+describe('getInterviewStatusColor', () => {
+  it('returns slate for draft', () => {
+    expect(getInterviewStatusColor('draft')).toContain('bg-slate-100')
+  })
+
+  it('returns gray for resume_sent', () => {
+    expect(getInterviewStatusColor('resume_sent')).toContain('bg-gray-100')
+  })
+
+  it('returns blue for interview rounds', () => {
+    const rounds = [
+      'first_interview',
+      'second_interview',
+      'third_interview',
+      'fourth_interview',
+      'fifth_interview'
+    ] as const
+    for (const status of rounds) {
+      expect(getInterviewStatusColor(status)).toContain('bg-blue-100')
+    }
+  })
+
+  it('returns purple for hr_interview', () => {
+    expect(getInterviewStatusColor('hr_interview')).toContain('bg-purple-100')
+  })
+
+  it('returns green for offer_accepted', () => {
+    expect(getInterviewStatusColor('offer_accepted')).toContain('bg-green-100')
+  })
+
+  it('returns red for rejection statuses', () => {
+    expect(getInterviewStatusColor('offer_rejected')).toContain('bg-red-100')
+    expect(getInterviewStatusColor('interview_failed')).toContain('bg-red-100')
+  })
+
+  it('returns gray for unknown status', () => {
+    expect(getInterviewStatusColor('unknown' as never)).toContain('bg-gray-100')
   })
 })
