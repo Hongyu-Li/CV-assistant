@@ -210,6 +210,24 @@
   }
 }
 
+@keyframes sidebar-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes sidebar-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Utility classes */
 @layer utilities {
   .animate-page-enter {
@@ -237,6 +255,14 @@
 
   .animate-scale-out {
     animation: scale-out 150ms ease-in;
+  }
+
+  .animate-sidebar-slide-in {
+    animation: sidebar-slide-in 200ms ease-out;
+  }
+
+  .animate-sidebar-backdrop-in {
+    animation: sidebar-backdrop-in 200ms ease-out;
   }
 
   .card-hover {
@@ -298,7 +324,9 @@
   .animate-fade-in-blur,
   .animate-shimmer,
   .animate-scale-in,
-  .animate-scale-out {
+  .animate-scale-out,
+  .animate-sidebar-slide-in,
+  .animate-sidebar-backdrop-in {
     animation: none !important;
   }
 

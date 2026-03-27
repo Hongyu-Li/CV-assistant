@@ -140,7 +140,11 @@
   "a11y": {
     "sidebar_nav": "主导航",
     "search_resumes": "按职位名称或公司搜索简历",
-    "open_resume": "打开 {{company}} 的简历"
+    "open_resume": "打开 {{company}} 的简历",
+    "toggle_sidebar": "打开导航菜单",
+    "close_sidebar": "关闭导航菜单",
+    "collapse_sidebar": "收起侧边栏",
+    "expand_sidebar": "展开侧边栏"
   },
   "resumes": {
     "description": "你的求职申请和定制简历。",

@@ -140,7 +140,11 @@
   "a11y": {
     "sidebar_nav": "Main navigation",
     "search_resumes": "Search CVs by job title or company",
-    "open_resume": "Open CV for {{company}}"
+    "open_resume": "Open CV for {{company}}",
+    "toggle_sidebar": "Open navigation menu",
+    "close_sidebar": "Close navigation menu",
+    "collapse_sidebar": "Collapse sidebar",
+    "expand_sidebar": "Expand sidebar"
   },
   "resumes": {
     "description": "Your job applications and tailored CVs.",
