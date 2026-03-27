@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.4.0...cv-assistant-v1.5.0) (2026-03-27)
+
+
+### Features
+
+* **sidebar:** add responsive mobile drawer and desktop collapsible sidebar ([d3680e8](https://github.com/tc9011/CV-assistant/commit/d3680e8824062369d65873df6de16dd15df28c5c))
+
 ## [1.4.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.3.0...cv-assistant-v1.4.0) (2026-03-24)
 
 
