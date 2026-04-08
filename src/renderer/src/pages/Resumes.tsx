@@ -390,7 +390,7 @@ export function Resumes(): React.JSX.Element {
                     variant="ghost"
                     size="icon"
                     aria-label={t('common.delete')}
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity text-destructive hover:bg-destructive hover:text-white"
+                    className="h-9 w-9 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-opacity text-destructive hover:bg-destructive hover:text-white"
                     onClick={(e: React.MouseEvent): void => {
                       handleDeleteClick(e, resume.filename)
                     }}

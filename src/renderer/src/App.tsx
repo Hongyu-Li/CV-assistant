@@ -156,7 +156,7 @@ function App(): React.JSX.Element {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-accent-foreground"
+            className="h-9 w-9 text-muted-foreground hover:text-accent-foreground"
             onClick={(): void => setSidebarCollapsed((prev) => !prev)}
             aria-label={sidebarCollapsed ? t('a11y.expand_sidebar') : t('a11y.collapse_sidebar')}
           >

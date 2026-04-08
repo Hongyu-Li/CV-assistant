@@ -311,7 +311,7 @@ export function CvSection({
                   size="icon"
                   onClick={handleCopy}
                   aria-label={t('resumes.copy')}
-                  className="h-7 w-7"
+                  className="h-9 w-9"
                 >
                   {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 </Button>
@@ -322,7 +322,7 @@ export function CvSection({
                     onClick={() => setExportMenuOpen(!exportMenuOpen)}
                     disabled={isExportingPdf}
                     aria-label={t('common.download')}
-                    className="h-7 w-7"
+                    className="h-9 w-9"
                   >
                     {isExportingPdf ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -363,7 +363,7 @@ export function CvSection({
                   onClick={handleGenerate}
                   disabled={isGenerating}
                   aria-label={t('resumes.generate_cv')}
-                  className="h-7 w-7"
+                  className="h-9 w-9"
                 >
                   {isGenerating ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />

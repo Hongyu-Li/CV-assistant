@@ -96,7 +96,7 @@ Inspired by the original Flip7 board game packaging. Three layers:
 
 ### Buttons
 
-Pill shape (999rpx radius), minimum 72rpx height, bounce transition curve.
+Pill shape (999rpx radius), minimum 72rpx height, ease-out-quart transition curve.
 
 #### Primary (Teal CTA)
 

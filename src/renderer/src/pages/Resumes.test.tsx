@@ -734,6 +734,22 @@ describe('Resumes Component', () => {
     expect(grid?.className).not.toContain('grid-cols-3')
   })
 
+  it('delete button meets minimum touch target size', async (): Promise<void> => {
+    const resumes = [
+      { id: '1', filename: 'cv1.json', jobTitle: 'Developer', lastModified: '2023-01-01' }
+    ]
+    mockInvoke.mockResolvedValue(resumes)
+    renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Developer')).toBeInTheDocument()
+    })
+
+    const deleteButton = screen.getByLabelText('common.delete')
+    expect(deleteButton).toHaveClass('h-9')
+    expect(deleteButton).toHaveClass('w-9')
+  })
+
   it('uses two-column container query grid for loading skeleton', (): void => {
     mockInvoke.mockReturnValue(new Promise(() => {}))
     const { container } = renderWithProvider(<Resumes />)

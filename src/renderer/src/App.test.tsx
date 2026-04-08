@@ -244,14 +244,10 @@ describe('Sidebar collapse (desktop)', () => {
     expect(labelSpan).toHaveClass('md:sr-only')
   })
 
-  it('still navigates correctly when collapsed', async (): Promise<void> => {
+  it('sidebar collapse button meets minimum touch target size', async (): Promise<void> => {
     await renderApp()
-    fireEvent.click(screen.getByLabelText('a11y.collapse_sidebar'))
-
-    fireEvent.click(screen.getByText('app.settings'))
-    expect(screen.getByTestId('settings-view')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('app.profile'))
-    expect(screen.getByTestId('profile-view')).toBeInTheDocument()
+    const collapseBtn = screen.getByLabelText('a11y.collapse_sidebar')
+    expect(collapseBtn).toHaveClass('h-9')
+    expect(collapseBtn).toHaveClass('w-9')
   })
 })

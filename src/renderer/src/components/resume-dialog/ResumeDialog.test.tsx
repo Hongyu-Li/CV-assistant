@@ -378,20 +378,8 @@ describe('ResumeDialog', () => {
       expect(screen.getByText('resumes.round_first')).toBeInTheDocument()
     })
 
-    const editButtons = document.querySelectorAll('button')
-    const editButton = Array.from(editButtons).find((btn): boolean => {
-      const svg = btn.querySelector('.lucide-edit-2, .lucide-edit2')
-      return svg !== null
-    })
-
-    if (!editButton) {
-      const ghostButtons = Array.from(document.querySelectorAll('button.h-7'))
-      if (ghostButtons.length > 0) {
-        fireEvent.click(ghostButtons[0])
-      }
-    } else {
-      fireEvent.click(editButton)
-    }
+    const editButton = screen.getByLabelText('common.edit')
+    fireEvent.click(editButton)
 
     await waitFor((): void => {
       expect(screen.getByText('resumes.edit_round')).toBeInTheDocument()

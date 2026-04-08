@@ -156,7 +156,7 @@ export function InterviewTimeline({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7"
+                                    className="h-9 w-9"
                                     aria-label={t('common.edit')}
                                     onClick={() => setEditingRound(round)}
                                   >
@@ -165,7 +165,7 @@ export function InterviewTimeline({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 text-destructive hover:bg-destructive hover:text-white"
+                                    className="h-9 w-9 text-destructive hover:bg-destructive hover:text-white"
                                     aria-label={t('common.delete')}
                                     onClick={() => handleDeleteClick(round.id)}
                                   >

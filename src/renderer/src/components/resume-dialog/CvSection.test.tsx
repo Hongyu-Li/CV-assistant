@@ -651,6 +651,27 @@ describe('CvSection', () => {
     })
   })
 
+  it('copy button meets minimum touch target size', (): void => {
+    renderCvSection({ generatedCV: '# My Resume' })
+    const copyButton = screen.getByLabelText('resumes.copy')
+    expect(copyButton).toHaveClass('h-9')
+    expect(copyButton).toHaveClass('w-9')
+  })
+
+  it('download button meets minimum touch target size', (): void => {
+    renderCvSection({ generatedCV: '# My Resume' })
+    const downloadButton = screen.getByLabelText('common.download')
+    expect(downloadButton).toHaveClass('h-9')
+    expect(downloadButton).toHaveClass('w-9')
+  })
+
+  it('regenerate button meets minimum touch target size', (): void => {
+    renderCvSection({ generatedCV: '# My Resume', jobDescription: JD_FIXTURE })
+    const regenButton = screen.getByLabelText('resumes.generate_cv')
+    expect(regenButton).toHaveClass('h-9')
+    expect(regenButton).toHaveClass('w-9')
+  })
+
   it('shows regenerate button when CV exists and clicks it', async (): Promise<void> => {
     mockInvoke.mockResolvedValue({
       personalInfo: { name: 'Test' },
