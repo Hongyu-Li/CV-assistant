@@ -110,6 +110,7 @@ IPC Pattern: All external API calls must go through IPC. Renderer invokes via `w
 - Non-test source files must not exceed 600 lines; split into smaller modules when approaching the limit.
 - Follow existing component patterns in `src/renderer/src/components/`.
 - Follow existing context patterns in `src/renderer/src/context/`.
+- Never modify files under `src/renderer/src/components/ui/` — these are shadcn/ui primitives managed separately.
 
 ## File Modification Warnings
 
