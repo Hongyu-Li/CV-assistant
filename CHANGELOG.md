@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.1](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.5.0...cv-assistant-v1.5.1) (2026-04-08)
+
+
+### Bug Fixes
+
+* **ui:** address P3 audit findings — container queries, 2-col grid, stale comment ([0404484](https://github.com/tc9011/CV-assistant/commit/0404484958b59e75b5040bd193227b02e74cb264))
+
 ## [1.5.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.4.0...cv-assistant-v1.5.0) (2026-03-27)
 
 
