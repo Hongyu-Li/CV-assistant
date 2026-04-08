@@ -715,4 +715,34 @@ describe('Resumes Component', () => {
 
     consoleSpy.mockRestore()
   })
+
+  it('uses two-column container query grid for resume cards', async (): Promise<void> => {
+    const resumes = [
+      { id: '1', filename: 'cv1.json', jobTitle: 'Developer', lastModified: '2023-01-01' },
+      { id: '2', filename: 'cv2.json', jobTitle: 'Designer', lastModified: '2023-01-02' }
+    ]
+    mockInvoke.mockResolvedValue(resumes)
+    const { container } = renderWithProvider(<Resumes />)
+
+    await waitFor((): void => {
+      expect(screen.getByText('Developer')).toBeInTheDocument()
+    })
+
+    const grid = container.querySelector('.stagger-fade-in')
+    expect(grid).toBeInTheDocument()
+    expect(grid?.className).toContain('@sm/main:grid-cols-2')
+    expect(grid?.className).not.toContain('grid-cols-3')
+  })
+
+  it('uses two-column container query grid for loading skeleton', (): void => {
+    mockInvoke.mockReturnValue(new Promise(() => {}))
+    const { container } = renderWithProvider(<Resumes />)
+
+    const grids = container.querySelectorAll('.grid')
+    const skeletonGrid = Array.from(grids).find((el) =>
+      el.className.includes('@sm/main:grid-cols-2')
+    )
+    expect(skeletonGrid).toBeInTheDocument()
+    expect(skeletonGrid?.className).not.toContain('grid-cols-3')
+  })
 })

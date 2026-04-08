@@ -77,9 +77,9 @@
 
 @layer base {
   /* Flip7 Design System — Retro-playful teal-coral-gold
-     Light: Surface Base (#EFF8F7) teal-tinted canvas, Primary Teal (#2BA8A2),
-            Accent Gold (#FFD23F), Coral (#EF6C4A) destructive, Cream (#FFF8E7) surfaces
-     Dark: Deep teal canvas, bright teal primary, gold accent, colored glow shadows */
+     Light: Neutral near-white canvas, Primary Teal (#2BA8A2),
+            Accent Gold (#FFD23F), Coral (#EF6C4A) destructive
+     Dark: Neutral near-black canvas, bright teal primary, gold accent, colored glow shadows */
   :root {
     --background: 0 0% 98%;
     --foreground: 240 6% 10%;

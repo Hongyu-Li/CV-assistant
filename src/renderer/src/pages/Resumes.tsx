@@ -121,7 +121,7 @@ export function Resumes(): React.JSX.Element {
           </div>
           <div className="h-10 w-32 rounded-lg animate-shimmer" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 @sm/main:grid-cols-2 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-48 rounded-xl animate-shimmer" />
           ))}
@@ -300,7 +300,7 @@ export function Resumes(): React.JSX.Element {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-fade-in">
+        <div className="grid grid-cols-1 @sm/main:grid-cols-2 gap-6 stagger-fade-in">
           {filteredResumes.map((resume) => (
             <Card
               key={resume.id}

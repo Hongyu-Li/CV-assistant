@@ -169,7 +169,7 @@ function App(): React.JSX.Element {
         </div>
       </aside>
 
-      <main className="flex-1 pt-14 px-3 pb-3 md:p-6 overflow-auto">
+      <main className="flex-1 pt-14 px-3 pb-3 md:p-6 overflow-auto @container/main">
         <h1 className="sr-only">{t('app.title')}</h1>
         <ErrorBoundary>
           <div key={currentView} className="animate-page-enter">
