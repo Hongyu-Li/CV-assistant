@@ -33,7 +33,8 @@ Key Features:
 - **Profile Management**: Maintain education, work experience, projects, and a Markdown description as the foundation for all your CVs.
 - **Multi-language CVs**: Generate in English, Chinese, Japanese, Korean, French, German, and Spanish.
 - **Bilingual Interface**: Switch between English and Chinese UI instantly.
-- **Theme Options**: Light, Dark, and System themes.
+- **Theme Options**: Light, Dark, and System themes with a refreshed retro-playful visual design.
+- **Collapsible Sidebar**: Full sidebar on desktop, icon-only collapsed mode, and a mobile drawer for smaller screens.
 - **100% Local Data**: All profiles, CVs, and settings stored on your device. Nothing uploaded to any server.
 - **Data Portability**: Configurable local workspace with built-in migration tools.
 
@@ -62,7 +63,8 @@ CV Assistant is built for privacy and performance, ensuring your professional da
 - **档案管理**：维护教育背景、工作经历、项目经历和 Markdown 描述，作为生成简历的基础。
 - **多语言简历**：支持生成英文、中文、日文、韩文、法文、德文和西班牙文简历。
 - **双语界面**：提供完整的中英文界面即时切换。
-- **主题选项**：支持浅色、深色及系统主题。
+- **主题选项**：支持浅色、深色及系统主题，全新复古趣味视觉设计。
+- **可折叠侧边栏**：桌面端支持完整侧边栏和图标折叠模式，小屏设备自动切换为抽屉式导航。
 - **100% 本地存储**：所有档案、简历和设置均存储在本地设备，不会上传至任何服务器。
 - **数据迁移**：支持自定义本地工作空间，并提供内置迁移工具。
 
@@ -73,10 +75,10 @@ CV Assistant is built for privacy and performance, ensuring your professional da
 - **English**: resume,cv,ai,career,job,interview,tracker,builder,editor,markdown,export,pdf,profile
 - **Chinese**: 简历,求职,AI,面试,追踪,简历生成,PDF导出,编辑器,Markdown,职业,求职管理,面试记录
 
-## 5. What's New (v1.4.0)
+## 5. What's New (v1.5.2)
 
-- **English**: New: Full interview pipeline tracker with round-by-round timeline. Export CVs as styled PDFs or Markdown. Import profile from existing PDF resumes. Education section in profile. Filter and search applications. Improved accessibility and keyboard navigation. Refreshed UX copy across the app.
-- **Chinese**: 新增：完整面试流程追踪，逐轮时间线记录。支持将简历导出为 PDF 或 Markdown。PDF 简历导入自动提取档案。个人档案新增教育背景。求职申请支持筛选和搜索。优化无障碍访问和键盘导航。全面刷新界面文案。
+- **English**: New: Refreshed visual design with retro-playful color palette. Collapsible sidebar — full, icon-only, or mobile drawer. Responsive 2-column resume grid with container queries. Improved touch targets and smoother animations. Styled dialog scrollbars with reduced max height to prevent overflow.
+- **Chinese**: 新增：全新复古趣味视觉设计。可折叠侧边栏 — 支持完整、图标和移动端抽屉三种模式。响应式两列简历网格布局。优化触控目标尺寸和动画流畅度。美化弹窗滚动条样式，防止内容溢出。
 
 ## 6. Support URL
 
