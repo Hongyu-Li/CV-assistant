@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.2](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.5.1...cv-assistant-v1.5.2) (2026-04-08)
+
+
+### Bug Fixes
+
+* **ui:** address P1+P2 audit findings — touch targets, easing curve ([4cc3f6a](https://github.com/tc9011/CV-assistant/commit/4cc3f6adb981d50753328ba0f365320ec0125f06))
+
 ## [1.5.1](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.5.0...cv-assistant-v1.5.1) (2026-04-08)
 
 
