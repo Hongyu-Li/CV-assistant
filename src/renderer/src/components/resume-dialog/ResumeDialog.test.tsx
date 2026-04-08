@@ -91,6 +91,13 @@ describe('ResumeDialog', () => {
     expect(screen.getByText('resumes.create_resume')).toBeInTheDocument()
   })
 
+  it('constrains dialog height to 85vh to prevent viewport overflow', () => {
+    renderDialog()
+    const dialogContent = screen.getByRole('dialog')
+    expect(dialogContent.className).toMatch(/max-h-\[85vh\]/)
+    expect(dialogContent.className).toMatch(/overflow-y-auto/)
+  })
+
   it('renders edit mode title with prefilled values when resume prop passed', async () => {
     const resume: CV = {
       id: '1',
