@@ -227,7 +227,7 @@ export function Resumes(): React.JSX.Element {
     <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('app.resumes')}</h2>
+          <h2 className="text-3xl font-extrabold tracking-wide">{t('app.resumes')}</h2>
           <p className="text-muted-foreground mt-1">{t('resumes.description')}</p>
         </div>
         <Button onClick={handleCreate}>
@@ -246,17 +246,17 @@ export function Resumes(): React.JSX.Element {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 aria-pressed={activeTab === tab.key}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                   activeTab === tab.key
-                    ? 'bg-primary text-primary-foreground shadow-md'
-                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    ? 'bg-card border-primary/40 text-primary'
+                    : 'bg-card border-border hover:border-primary/30 text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full ${tab.color}`} />
                 {tab.label}
                 <span
                   className={`px-1.5 py-0.5 rounded text-xs ${
-                    activeTab === tab.key ? 'bg-primary-foreground/20' : 'bg-background'
+                    activeTab === tab.key ? 'bg-primary/15 text-primary' : 'bg-secondary'
                   }`}
                 >
                   {tab.count}
@@ -323,7 +323,7 @@ export function Resumes(): React.JSX.Element {
             >
               <CardHeader className="pb-2">
                 {/* Company Name - Most Prominent */}
-                <CardTitle className="text-xl font-bold text-foreground truncate">
+                <CardTitle className="text-xl font-medium text-foreground truncate">
                   {resume.companyName || t('resumes.untitled')}
                 </CardTitle>
 

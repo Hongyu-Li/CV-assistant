@@ -324,7 +324,7 @@ export function Profile(): React.JSX.Element {
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">{t('profile.title')}</h2>
+        <h2 className="text-3xl font-extrabold tracking-wide">{t('profile.title')}</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleImportPdf} disabled={importing}>
             {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

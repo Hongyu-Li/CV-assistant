@@ -76,74 +76,90 @@
 }
 
 @layer base {
+  /* Flip7 Design System — Retro-playful teal-coral-gold
+     Light: Surface Base (#EFF8F7) teal-tinted canvas, Primary Teal (#2BA8A2),
+            Accent Gold (#FFD23F), Coral (#EF6C4A) destructive, Cream (#FFF8E7) surfaces
+     Dark: Deep teal canvas, bright teal primary, gold accent, colored glow shadows */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 166 56% 18%;
+    --background: 0 0% 98%;
+    --foreground: 240 6% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 166 56% 18%;
+    --card-foreground: 240 6% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 166 56% 18%;
-    --primary: 174 62% 32%;
+    --popover-foreground: 240 6% 10%;
+    /* Primary Teal (#2BA8A2) */
+    --primary: 177 58% 41%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 166 20% 96%;
-    --secondary-foreground: 166 56% 18%;
-    --muted: 166 30% 94%;
-    --muted-foreground: 166 10% 40%;
-    --accent: 174 50% 40%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    /* Accent: Primary Light Teal (#3CC4BD) for CTAs, hover */
+    --accent: 177 52% 50%;
+    /* White text on teal accent surfaces */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 166 20% 88%;
-    --input: 166 20% 88%;
-    --ring: 174 62% 32%;
-    --chart-1: 174 62% 32%;
-    --chart-2: 166 40% 45%;
-    --chart-3: 166 56% 18%;
-    --chart-4: 174 40% 55%;
-    --chart-5: 180 35% 55%;
-    --radius: 0.5rem;
-    --success: 152 60% 36%;
-    --success-foreground: 152 60% 18%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 80% 20%;
-    --info: 210 80% 55%;
-    --info-foreground: 210 80% 20%;
-    --interview: 262 60% 55%;
-    --interview-foreground: 262 60% 20%;
+    /* Coral (#EF6C4A) for destructive/BOOM */
+    --destructive: 13 84% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    /* Focus ring: primary teal */
+    --ring: 177 58% 41%;
+    /* Chart colors: Flip7 spectrum */
+    --chart-1: 177 58% 41%;
+    --chart-2: 46 100% 62%;
+    --chart-3: 13 84% 61%;
+    --chart-4: 202 69% 63%;
+    --chart-5: 145 62% 42%;
+    /* Pill buttons: 999px, cards: 16px (md) */
+    --radius: 1rem;
+    /* Semantic status tokens */
+    --success: 145 62% 42%;
+    --success-foreground: 145 62% 10%;
+    --warning: 46 100% 62%;
+    --warning-foreground: 30 60% 15%;
+    --info: 202 69% 63%;
+    --info-foreground: 202 69% 15%;
+    --interview: 177 58% 41%;
+    --interview-foreground: 0 0% 100%;
   }
   .dark {
-    --background: 166 50% 4%;
-    --foreground: 0 0% 98%;
-    --card: 166 30% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 166 30% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 174 62% 45%;
-    --primary-foreground: 166 50% 4%;
-    --secondary: 166 15% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 166 15% 12%;
-    --muted-foreground: 166 5% 65%;
-    --accent: 174 50% 50%;
+    --background: 240 17% 2%;
+    --foreground: 0 0% 95%;
+    --card: 240 17% 6%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 17% 6%;
+    --popover-foreground: 0 0% 95%;
+    /* Primary Teal — brighter in dark mode (#3CC4BD) */
+    --primary: 177 52% 50%;
+    --primary-foreground: 177 65% 5%;
+    --secondary: 240 17% 10%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 240 17% 10%;
+    --muted-foreground: 240 5% 65%;
+    /* Accent: Lighter teal in dark mode (#4DD4CD) */
+    --accent: 177 35% 38%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 166 10% 16%;
-    --input: 166 10% 16%;
-    --ring: 174 62% 45%;
-    --chart-1: 174 62% 45%;
-    --chart-2: 166 40% 55%;
-    --chart-3: 166 5% 65%;
-    --chart-4: 174 40% 55%;
-    --chart-5: 180 35% 60%;
-    --success: 152 55% 45%;
-    --success-foreground: 152 60% 90%;
-    --warning: 38 92% 55%;
-    --warning-foreground: 38 80% 90%;
-    --info: 210 75% 60%;
-    --info-foreground: 210 80% 90%;
-    --interview: 262 55% 65%;
-    --interview-foreground: 262 60% 90%;
+    /* Coral destructive unchanged */
+    --destructive: 13 84% 61%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 17% 14%;
+    --input: 240 17% 14%;
+    /* Teal ring */
+    --ring: 177 52% 50%;
+    --chart-1: 177 52% 50%;
+    --chart-2: 46 100% 62%;
+    --chart-3: 13 84% 61%;
+    --chart-4: 202 69% 63%;
+    --chart-5: 145 62% 42%;
+    --success: 145 62% 50%;
+    --success-foreground: 145 62% 90%;
+    --warning: 46 100% 62%;
+    --warning-foreground: 46 100% 90%;
+    --info: 202 69% 63%;
+    --info-foreground: 202 69% 90%;
+    --interview: 177 52% 50%;
+    --interview-foreground: 174 42% 93%;
   }
 }
 
@@ -228,6 +244,17 @@
   }
 }
 
+/* Primary Teal (#2BA8A2) opacity pulse per DESIGN.md §Animations Glow Pulse */
+@keyframes green-glow-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 /* Utility classes */
 @layer utilities {
   .animate-page-enter {
@@ -265,19 +292,34 @@
     animation: sidebar-backdrop-in 200ms ease-out;
   }
 
+  /* Green glow pulse utility for logo / icons */
+  .animate-green-glow {
+    animation: green-glow-pulse 3s ease-in-out infinite;
+  }
+
+  /* Colored glow shadows per DESIGN.md §Elevation */
+  .shadow-warm-ambient {
+    box-shadow: 0 4px 20px rgba(43, 168, 162, 0.1);
+  }
+
+  .shadow-deep-dramatic {
+    box-shadow: 0 8px 32px rgba(43, 168, 162, 0.16);
+  }
+
+  /* Card hover: scale(1.05) + teal glow per DESIGN.md §Components Cards */
   .card-hover {
     transition:
-      transform 200ms ease,
-      box-shadow 200ms ease,
-      border-color 200ms ease;
+      transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 200ms ease;
   }
 
   .card-hover:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 8px 25px -5px hsl(var(--foreground) / 0.1),
-      0 4px 10px -6px hsl(var(--foreground) / 0.1);
-    border-color: hsl(var(--primary) / 0.3);
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(43, 168, 162, 0.1);
+  }
+
+  .card-hover:active {
+    transform: scale(0.95);
   }
 
   .card-hover:focus-visible {
@@ -330,8 +372,10 @@
     animation: none !important;
   }
 
-  .card-hover:hover {
+  .card-hover:hover,
+  .card-hover:active {
     transform: none !important;
+    box-shadow: none !important;
   }
 
   .stagger-fade-in > * {

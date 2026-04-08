@@ -204,7 +204,7 @@ export const Settings = (): React.JSX.Element => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-10 animate-page-enter">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h2>
+        <h2 className="text-3xl font-extrabold tracking-wide">{t('settings.title')}</h2>
       </div>
 
       <div className="grid gap-6">

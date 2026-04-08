@@ -68,10 +68,10 @@ function App(): React.JSX.Element {
       <aside
         aria-label={t('a11y.sidebar_nav')}
         className={[
-          'fixed inset-y-0 left-0 z-50 border-r flex flex-col transition-all duration-200 ease-out',
-          'bg-muted/95 backdrop-blur-sm',
+          'fixed inset-y-0 left-0 z-50 border-r border-border flex flex-col transition-all duration-200 ease-out',
+          'bg-background',
           sidebarOpen ? 'w-64 translate-x-0 animate-sidebar-slide-in' : '-translate-x-full w-64',
-          'md:static md:translate-x-0 md:bg-muted/40 md:backdrop-blur-none',
+          'md:static md:translate-x-0',
           sidebarCollapsed ? 'md:w-14 md:px-1.5 md:py-4' : 'md:w-64 md:p-4'
         ].join(' ')}
       >
@@ -87,9 +87,12 @@ function App(): React.JSX.Element {
               sidebarCollapsed ? 'md:px-0' : ''
             ].join(' ')}
           >
-            <Sparkles aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+            <Sparkles
+              aria-hidden="true"
+              className="h-5 w-5 shrink-0 text-primary animate-green-glow"
+            />
             <span
-              className={`font-semibold text-lg whitespace-nowrap ${sidebarCollapsed ? 'md:hidden' : ''}`}
+              className={`font-medium text-lg whitespace-nowrap ${sidebarCollapsed ? 'md:hidden' : ''}`}
             >
               {t('app.title')}
             </span>
@@ -124,14 +127,14 @@ function App(): React.JSX.Element {
                   ? [
                       'md:h-9 md:w-9 md:rounded-lg',
                       isActive(view)
-                        ? 'md:bg-primary/15 md:text-primary'
-                        : 'md:text-muted-foreground md:hover:text-foreground'
+                        ? 'md:bg-primary/10 md:text-primary md:border md:border-primary/40'
+                        : 'md:text-muted-foreground md:hover:text-accent-foreground'
                     ].join(' ')
                   : [
                       'justify-start gap-2 w-full',
                       isActive(view)
-                        ? 'bg-primary/15 text-primary font-medium border-l-2 border-primary'
-                        : ''
+                        ? 'bg-primary/10 text-primary font-medium border-l-2 border-primary'
+                        : 'text-muted-foreground hover:text-accent-foreground'
                     ].join(' ')
               ].join(' ')}
               onClick={(): void => handleNavClick(view)}
@@ -153,7 +156,7 @@ function App(): React.JSX.Element {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 text-muted-foreground hover:text-accent-foreground"
             onClick={(): void => setSidebarCollapsed((prev) => !prev)}
             aria-label={sidebarCollapsed ? t('a11y.expand_sidebar') : t('a11y.collapse_sidebar')}
           >

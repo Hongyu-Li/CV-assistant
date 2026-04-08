@@ -331,7 +331,7 @@ export function CvSection({
                     )}
                   </Button>
                   {exportMenuOpen && (
-                    <div className="absolute right-0 top-full mt-1 z-50 w-max rounded-md border bg-popover p-1 shadow-md">
+                    <div className="absolute right-0 top-full mt-1 z-50 w-max rounded-md border bg-popover p-1 shadow-deep-dramatic">
                       <button
                         type="button"
                         className="flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none transition-colors"

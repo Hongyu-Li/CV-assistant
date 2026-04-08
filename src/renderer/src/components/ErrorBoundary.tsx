@@ -33,7 +33,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center">
-          <h2 className="text-xl font-semibold text-destructive">{i18n.t('error.title')}</h2>
+          <h2 className="text-xl font-extrabold text-destructive">{i18n.t('error.title')}</h2>
           <p className="text-sm text-muted-foreground max-w-md">{i18n.t('error.description')}</p>
           {this.state.error && (
             <pre className="text-xs text-muted-foreground bg-muted p-3 rounded-md max-w-lg overflow-auto">

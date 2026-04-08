@@ -120,9 +120,9 @@ export function InterviewTimeline({
                         <div key={round.id} className="relative flex gap-4 pb-6">
                           <div className="relative z-10">
                             <div
-                              className={`w-10 h-10 rounded-full border-4 border-background ${dotColor} flex items-center justify-center shadow-sm`}
+                              className={`w-10 h-10 rounded-full border-4 border-background ${dotColor} flex items-center justify-center shadow-warm-ambient`}
                             >
-                              <span className="text-xs font-bold text-white">{index + 1}</span>
+                              <span className="text-xs font-medium text-white">{index + 1}</span>
                             </div>
                           </div>
 
@@ -130,7 +130,7 @@ export function InterviewTimeline({
                             <div className="bg-muted/30 rounded-lg p-3 space-y-2">
                               <div className="flex items-start justify-between">
                                 <div>
-                                  <h3 className="font-semibold text-sm">
+                                  <h3 className="font-medium text-sm">
                                     {t(`resumes.round_${round.round}`)}
                                   </h3>
                                   <p className="text-xs text-muted-foreground">
