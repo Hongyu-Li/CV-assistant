@@ -7,3 +7,10 @@ export type {
 } from './types'
 export { AVAILABLE_MODELS } from './types'
 export { findFreePort, getLlamaServerPath, startEngine, stopEngine, getEngineState } from './engine'
+export {
+  getModelsDir,
+  listDownloadedModels,
+  downloadModel,
+  deleteModel,
+  getModelPath
+} from './download'
