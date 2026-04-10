@@ -1,5 +1,6 @@
 import { app } from 'electron'
 import { createHash } from 'node:crypto'
+import * as nodeFs from 'node:fs'
 import * as fs from 'fs/promises'
 import * as path from 'path'
 
@@ -67,7 +68,7 @@ async function executeDownload(
   const finalPath = path.join(modelsDir, modelInfo.filename)
   const url = `https://huggingface.co/${modelInfo.repo}/resolve/main/${modelInfo.filename}?download=true`
 
-  const response = await fetch(url, { signal })
+  const response = await fetch(url, { signal, redirect: 'follow' })
 
   if (!response.ok) {
     throw new Error(`Download failed: HTTP ${response.status}`)
@@ -82,8 +83,8 @@ async function executeDownload(
 
   const hash = createHash('sha256')
   const reader = response.body.getReader()
+  const fileStream = nodeFs.createWriteStream(tempPath)
   let receivedBytes = 0
-  const chunks: Uint8Array[] = []
 
   try {
     for (;;) {
@@ -92,7 +93,7 @@ async function executeDownload(
         break
       }
 
-      chunks.push(value)
+      fileStream.write(value)
       hash.update(value)
       receivedBytes += value.byteLength
 
@@ -105,7 +106,15 @@ async function executeDownload(
         percent
       })
     }
+
+    await new Promise<void>((resolve: () => void, reject: (err: unknown) => void): void => {
+      fileStream.end((): void => {
+        resolve()
+      })
+      fileStream.on('error', reject)
+    })
   } catch (error: unknown) {
+    fileStream.destroy()
     await cleanupTempFile(tempPath)
     throw error
   }
@@ -118,8 +127,6 @@ async function executeDownload(
     throw new Error(`SHA256 checksum mismatch: expected ${modelInfo.sha256}, got ${computedHash}`)
   }
 
-  const fullBuffer = concatenateChunks(chunks, receivedBytes)
-  await fs.writeFile(tempPath, fullBuffer)
   await fs.rename(tempPath, finalPath)
 
   return {
@@ -127,16 +134,6 @@ async function executeDownload(
     path: finalPath,
     downloadedAt: new Date().toISOString()
   }
-}
-
-function concatenateChunks(chunks: Uint8Array[], totalLength: number): Uint8Array {
-  const result = new Uint8Array(totalLength)
-  let offset = 0
-  for (const chunk of chunks) {
-    result.set(chunk, offset)
-    offset += chunk.byteLength
-  }
-  return result
 }
 
 async function cleanupTempFile(tempPath: string): Promise<void> {

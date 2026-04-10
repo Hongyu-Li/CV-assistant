@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import path from 'node:path'
+import { EventEmitter } from 'node:events'
 
 vi.mock('electron', () => ({
   app: {
@@ -13,7 +14,6 @@ const mockStat = vi.fn()
 const mockUnlink = vi.fn()
 const mockRename = vi.fn()
 const mockAccess = vi.fn()
-const mockWriteFile = vi.fn()
 
 vi.mock('fs/promises', () => ({
   mkdir: (...args: unknown[]): unknown => mockMkdir(...args),
@@ -21,9 +21,36 @@ vi.mock('fs/promises', () => ({
   stat: (...args: unknown[]): unknown => mockStat(...args),
   unlink: (...args: unknown[]): unknown => mockUnlink(...args),
   rename: (...args: unknown[]): unknown => mockRename(...args),
-  access: (...args: unknown[]): unknown => mockAccess(...args),
-  writeFile: (...args: unknown[]): unknown => mockWriteFile(...args)
+  access: (...args: unknown[]): unknown => mockAccess(...args)
 }))
+
+interface MockWriteStream extends EventEmitter {
+  write: ReturnType<typeof vi.fn>
+  end: ReturnType<typeof vi.fn>
+  destroy: ReturnType<typeof vi.fn>
+}
+
+let latestMockStream: MockWriteStream | null = null
+const mockCreateWriteStream = vi.fn()
+
+vi.mock('node:fs', async () => {
+  const actual = await vi.importActual<typeof import('node:fs')>('node:fs')
+  return {
+    ...actual,
+    default: actual,
+    createWriteStream: (...args: unknown[]): unknown => mockCreateWriteStream(...args)
+  }
+})
+
+function createMockWriteStream(): MockWriteStream {
+  const stream = new EventEmitter() as MockWriteStream
+  stream.write = vi.fn().mockReturnValue(true)
+  stream.end = vi.fn().mockImplementation((cb?: () => void): void => {
+    if (cb) cb()
+  })
+  stream.destroy = vi.fn()
+  return stream
+}
 
 const mockFetch = vi.fn()
 Object.defineProperty(globalThis, 'fetch', { value: mockFetch, writable: true })
@@ -42,6 +69,8 @@ describe('llm/download', (): void => {
   beforeEach((): void => {
     vi.clearAllMocks()
     mockMkdir.mockResolvedValue(undefined)
+    latestMockStream = createMockWriteStream()
+    mockCreateWriteStream.mockReturnValue(latestMockStream)
   })
 
   describe('getModelsDir', (): void => {
@@ -93,6 +122,33 @@ describe('llm/download', (): void => {
       })
     }
 
+    it('streams chunks to disk via createWriteStream', async (): Promise<void> => {
+      const modelInfo = AVAILABLE_MODELS[0]
+      const chunk1 = new Uint8Array([1, 2, 3])
+      const chunk2 = new Uint8Array([4, 5, 6])
+      const body = createMockStream([chunk1, chunk2])
+
+      mockFetch.mockResolvedValue({
+        ok: true,
+        headers: {
+          get: (name: string): string | null => (name === 'content-length' ? '6' : null)
+        },
+        body
+      })
+      mockRename.mockResolvedValue(undefined)
+
+      const { promise } = downloadModel(modelInfo, vi.fn())
+      await promise
+
+      expect(mockCreateWriteStream).toHaveBeenCalledWith(
+        path.join('/mock/userData', 'models', `${modelInfo.filename}.downloading`)
+      )
+      expect(latestMockStream!.write).toHaveBeenCalledTimes(2)
+      expect(latestMockStream!.write).toHaveBeenNthCalledWith(1, chunk1)
+      expect(latestMockStream!.write).toHaveBeenNthCalledWith(2, chunk2)
+      expect(latestMockStream!.end).toHaveBeenCalled()
+    })
+
     it('emits progress events with increasing bytes', async (): Promise<void> => {
       const modelInfo = AVAILABLE_MODELS[0]
       const chunk1 = new Uint8Array([1, 2, 3])
@@ -107,7 +163,6 @@ describe('llm/download', (): void => {
         body
       })
       mockRename.mockResolvedValue(undefined)
-      mockWriteFile.mockResolvedValue(undefined)
 
       const progressEvents: Array<{
         receivedBytes: number
@@ -139,7 +194,6 @@ describe('llm/download', (): void => {
         body
       })
       mockRename.mockResolvedValue(undefined)
-      mockWriteFile.mockResolvedValue(undefined)
 
       const { promise } = downloadModel(modelInfo, vi.fn())
       const result = await promise
@@ -161,7 +215,6 @@ describe('llm/download', (): void => {
         body
       })
       mockRename.mockResolvedValue(undefined)
-      mockWriteFile.mockResolvedValue(undefined)
 
       const { promise } = downloadModel(modelInfo, vi.fn())
 
@@ -169,7 +222,7 @@ describe('llm/download', (): void => {
       expect(mockUnlink).toHaveBeenCalled()
     })
 
-    it('cancellation via AbortController cleans up temp file', async (): Promise<void> => {
+    it('cancellation via AbortController cleans up temp file and destroys stream', async (): Promise<void> => {
       const modelInfo = AVAILABLE_MODELS[0]
 
       mockFetch.mockImplementation(
@@ -206,6 +259,7 @@ describe('llm/download', (): void => {
       abort.abort()
 
       await expect(promise).rejects.toThrow(/abort/i)
+      expect(latestMockStream!.destroy).toHaveBeenCalled()
       expect(mockUnlink).toHaveBeenCalledWith(
         path.join('/mock/userData', 'models', `${modelInfo.filename}.downloading`)
       )
