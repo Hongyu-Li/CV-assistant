@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.5.2...cv-assistant-v1.6.0) (2026-04-10)
+
+
+### Features
+
+* **i18n:** add local LLM translation keys ([e253e5c](https://github.com/tc9011/CV-assistant/commit/e253e5cad27b144a25d140eb5c1a8e4985cc350a))
+* **llm:** add local LLM IPC handlers ([80f8fc7](https://github.com/tc9011/CV-assistant/commit/80f8fc7d0cefe15d29d54463374711098b86ecc2))
+* **llm:** add local LLM type definitions ([d1f563e](https://github.com/tc9011/CV-assistant/commit/d1f563e7603860049b60875f6e01c10d2b65e223))
+* **llm:** add local provider config and AI handler support ([11cbdca](https://github.com/tc9011/CV-assistant/commit/11cbdca305a7f826109220265f0285c24c8d5fa7))
+* **llm:** implement llama-server engine manager ([2579f42](https://github.com/tc9011/CV-assistant/commit/2579f4203ff91f61a1cbe0b376e1eefc5e440fc2))
+* **llm:** implement model download manager ([573ce9c](https://github.com/tc9011/CV-assistant/commit/573ce9ccbd1597d89f467a58f3be2b3d56f98ef7))
+* **llm:** wire LLM IPC handlers and engine lifecycle into app entry ([833e058](https://github.com/tc9011/CV-assistant/commit/833e058c10fa3e815fb791d8c66b746cd76dce41))
+* **settings:** add local model state to settings context ([f162a40](https://github.com/tc9011/CV-assistant/commit/f162a4081995b3f97e78d1d1f7eb7cbf884e7a71))
+* **ui:** add LocalModelSettings management component ([03d1e9e](https://github.com/tc9011/CV-assistant/commit/03d1e9e383c13b8c3bfa6711c4b8969b1be4778e))
+* **ui:** integrate LocalModelSettings into Settings page ([116aecc](https://github.com/tc9011/CV-assistant/commit/116aecc0dc8e0f89e3106991332bf41f6b631ccd))
+
+
+### Bug Fixes
+
+* **llm:** add cwd and dylib support for llama-server engine spawn ([871fa35](https://github.com/tc9011/CV-assistant/commit/871fa35b5e7f8c008fcd0b42255cbedbfd2261fd))
+* **llm:** address Oracle audit findings ([7922d62](https://github.com/tc9011/CV-assistant/commit/7922d62ee75c9d80af52a8dfe31e8fc05c98dc9b))
+* **llm:** correct GGUF model filenames to match HuggingFace repo ([591f097](https://github.com/tc9011/CV-assistant/commit/591f097b623beb3e67a32da6c353a4245314980a))
+* **llm:** resolve local provider fetch failure and handle thinking model responses ([fe9288c](https://github.com/tc9011/CV-assistant/commit/fe9288cfce36c61c545549c34bbb5c1ea99522da))
+* **llm:** stream model download to disk instead of buffering in memory ([d40f248](https://github.com/tc9011/CV-assistant/commit/d40f248d548a1b8690f29de161757745a43d5c5e))
+
 ## [1.5.2](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.5.1...cv-assistant-v1.5.2) (2026-04-08)
 
 
