@@ -21,6 +21,7 @@ export * from './types'
 export * from './profile'
 export * from './cv'
 export * from './ai'
+export * from './llm'
 
 const settingsSchema = z
   .object({
