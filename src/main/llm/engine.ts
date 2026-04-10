@@ -208,8 +208,7 @@ export async function startEngine(modelId: string, modelPath: string): Promise<E
         status: 'error',
         port: null,
         modelId: null,
-        error:
-          'Inference engine binary not found. Run scripts/download-llama-server.sh to install it.'
+        error: 'Inference engine binary not found. Please reinstall the application.'
       })
     }
 

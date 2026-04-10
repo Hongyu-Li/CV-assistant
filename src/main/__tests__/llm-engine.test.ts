@@ -313,8 +313,7 @@ describe('main/llm/engine', (): void => {
       status: 'error',
       port: null,
       modelId: null,
-      error:
-        'Inference engine binary not found. Run scripts/download-llama-server.sh to install it.'
+      error: 'Inference engine binary not found. Please reinstall the application.'
     } satisfies EngineState)
     expect(engine.getEngineState()).toEqual(state)
   })
