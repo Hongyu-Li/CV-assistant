@@ -377,6 +377,54 @@ describe('main/handlers', (): void => {
       expect(init.headers && 'Authorization' in init.headers).toBe(false)
     })
 
+    it('falls back to reasoning_content when content is empty (thinking models)', async (): Promise<void> => {
+      mockFetchOkJson({
+        choices: [{ message: { content: '', reasoning_content: 'Thinking result here' } }]
+      })
+
+      const result = await handlers.handleAiChat({
+        provider: 'local',
+        apiKey: '',
+        model: 'gemma-4-e2b-it',
+        messages: [{ role: 'user', content: 'Generate a CV' }],
+        baseUrl: 'http://127.0.0.1:54321/v1'
+      })
+
+      expect(result).toEqual({ success: true, content: 'Thinking result here' })
+    })
+
+    it('prefers content over reasoning_content when both are present', async (): Promise<void> => {
+      mockFetchOkJson({
+        choices: [{ message: { content: 'Actual answer', reasoning_content: 'Internal thought' } }]
+      })
+
+      const result = await handlers.handleAiChat({
+        provider: 'openai',
+        apiKey: 'k',
+        model: 'm',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'https://api.openai.com/v1'
+      })
+
+      expect(result).toEqual({ success: true, content: 'Actual answer' })
+    })
+
+    it('falls back to reasoning_content when content is undefined', async (): Promise<void> => {
+      mockFetchOkJson({
+        choices: [{ message: { reasoning_content: 'Only reasoning' } }]
+      })
+
+      const result = await handlers.handleAiChat({
+        provider: 'local',
+        apiKey: '',
+        model: 'gemma-4-e2b-it',
+        messages: [{ role: 'user', content: 'x' }],
+        baseUrl: 'http://127.0.0.1:54321/v1'
+      })
+
+      expect(result).toEqual({ success: true, content: 'Only reasoning' })
+    })
+
     it('local: uses 120s timeout when timeoutMs not specified', async (): Promise<void> => {
       vi.useFakeTimers()
       try {

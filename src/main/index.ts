@@ -199,7 +199,7 @@ import {
   handleWorkspacePrecheck,
   registerLlmHandlers
 } from './handlers'
-import { stopEngine } from './llm'
+import { stopEngine, getEngineState } from './llm'
 import { listWorkspaceFiles, readWorkspaceFile } from './fs'
 import { runDataMigration } from './migration'
 
@@ -345,13 +345,24 @@ app
     )
 
     // AI API proxy IPC — all external HTTP from main process to bypass CSP
-    ipcMain.handle('ai:chat', (_, { provider, apiKey, model, messages, baseUrl, timeoutMs }) =>
-      handleAiChat({ provider, apiKey, model, messages, baseUrl, timeoutMs })
-    )
+    ipcMain.handle('ai:chat', (_, { provider, apiKey, model, messages, baseUrl, timeoutMs }) => {
+      const resolvedBaseUrl =
+        provider === 'local' ? `http://127.0.0.1:${getEngineState().port ?? 0}/v1` : baseUrl
+      return handleAiChat({
+        provider,
+        apiKey,
+        model,
+        messages,
+        baseUrl: resolvedBaseUrl,
+        timeoutMs
+      })
+    })
 
-    ipcMain.handle('ai:test', (_, { provider, apiKey, model, baseUrl }) =>
-      handleAiTest({ provider, apiKey, model, baseUrl })
-    )
+    ipcMain.handle('ai:test', (_, { provider, apiKey, model, baseUrl }) => {
+      const resolvedBaseUrl =
+        provider === 'local' ? `http://127.0.0.1:${getEngineState().port ?? 0}/v1` : baseUrl
+      return handleAiTest({ provider, apiKey, model, baseUrl: resolvedBaseUrl })
+    })
 
     ipcMain.handle('app:getVersion', () => handleGetVersion({ app }))
 

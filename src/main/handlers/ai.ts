@@ -105,8 +105,12 @@ export async function handleAiChat(params: {
         const content = (data['content'] as Array<{ text?: string }> | undefined)?.[0]?.text || ''
         return { success: true, content }
       }
-      const choices = data['choices'] as Array<{ message?: { content?: string } }> | undefined
-      return { success: true, content: choices?.[0]?.message?.content || '' }
+      const choices = data['choices'] as
+        | Array<{ message?: { content?: string; reasoning_content?: string } }>
+        | undefined
+      const message = choices?.[0]?.message
+      const content = message?.content || message?.reasoning_content || ''
+      return { success: true, content }
     } finally {
       clearTimeout(timeoutId)
     }
