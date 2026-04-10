@@ -22,9 +22,23 @@ download_arch() {
   local binary_name="llama-server-${arch}"
   local target_path="${TARGET_DIR}/${binary_name}"
 
+  # Check binary AND critical dylibs — if binary exists but dylibs are incomplete
+  # (e.g. from a previous partial or old-version download), force re-download
   if [[ -f "${target_path}" ]]; then
-    echo "✓ ${binary_name} already exists at ${target_path}"
-    return 0
+    local missing_dylibs=false
+    for critical in libllama libggml libmtmd; do
+      if ! compgen -G "${TARGET_DIR}/${critical}*.dylib" > /dev/null 2>&1; then
+        missing_dylibs=true
+        echo "⚠ ${binary_name} exists but ${critical}.dylib is missing — re-downloading..."
+        break
+      fi
+    done
+    if [[ "${missing_dylibs}" == "false" ]]; then
+      echo "✓ ${binary_name} and critical dylibs already exist at ${TARGET_DIR}"
+      return 0
+    fi
+    rm -f "${target_path}"
+    rm -f "${TARGET_DIR}/"lib*.dylib
   fi
 
   local archive_name="llama-${LLAMA_VERSION}-bin-${platform_suffix}.tar.gz"
@@ -74,10 +88,10 @@ download_arch() {
   fi
 
   for f in "${dylib_source}/"lib*.dylib; do
-    [[ -e "$f" ]] || continue
+    [[ -e "$f" || -L "$f" ]] || continue
     local base
     base=$(basename "$f")
-    if [[ -e "${TARGET_DIR}/${base}" ]]; then
+    if [[ -e "${TARGET_DIR}/${base}" || -L "${TARGET_DIR}/${base}" ]]; then
       continue
     fi
     if [[ -L "$f" ]]; then
