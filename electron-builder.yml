@@ -11,6 +11,11 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+extraResources:
+  - from: resources/
+    to: .
+    filter:
+      - llama-server-*
 win:
   executableName: cv-assistant
 nsis:
