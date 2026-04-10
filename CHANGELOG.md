@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.6.1](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.6.0...cv-assistant-v1.6.1) (2026-04-10)
+
+
+### Bug Fixes
+
+* **llm:** validate engine binary exists before spawn and improve i18n ([4b1b826](https://github.com/tc9011/CV-assistant/commit/4b1b8269a4a3cf9c8764764ed7de9bf3c64777b9))
+
 ## [1.6.0](https://github.com/tc9011/CV-assistant/compare/cv-assistant-v1.5.2...cv-assistant-v1.6.0) (2026-04-10)
 
 
