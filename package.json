@@ -25,7 +25,8 @@
     "e2e:coverage": "playwright test",
     "prepare": "husky",
     "build:mas-dev": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml -c.mas.type=development -c.mas.provisioningProfile=build/CV_Assistant_Dev.provisionprofile",
-    "build:mas": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml"
+    "build:mas": "electron-vite build && electron-builder --mac --config electron-builder.mas.yml",
+    "download:llama-server": "bash scripts/download-llama-server.sh"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

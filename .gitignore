@@ -24,3 +24,6 @@ test-results/
 
 # Build artifacts
 *.tsbuildinfo
+
+# llama-server binaries (downloaded at build time)
+resources/llama-server-*
