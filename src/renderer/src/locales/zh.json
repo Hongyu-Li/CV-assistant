@@ -127,7 +127,7 @@
   "localLlm": {
     "section_title": "本地模型",
     "engine_stopped": "已停止",
-    "engine_starting": "启动中...",
+    "engine_starting": "初始化中...",
     "engine_running": "运行中",
     "engine_error": "错误",
     "download": "下载",
@@ -151,7 +151,7 @@
     "memory_warning_8gb": "建议：8GB+ 内存",
     "memory_warning_16gb": "建议：16GB+ 内存",
     "no_model_test_hint": "请先下载模型再测试连接。",
-    "starting_engine": "正在启动本地推理引擎..."
+    "starting_engine": "正在初始化本地推理引擎..."
   },
   "common": {
     "delete": "删除",

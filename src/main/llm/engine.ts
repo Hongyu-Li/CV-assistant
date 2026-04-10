@@ -1,4 +1,5 @@
 import path from 'node:path'
+import fs from 'node:fs'
 import { EventEmitter } from 'node:events'
 import * as childProcess from 'node:child_process'
 import * as net from 'node:net'
@@ -200,6 +201,18 @@ export async function startEngine(modelId: string, modelPath: string): Promise<E
 
     expectedExit = false
     const binaryPath = getLlamaServerPath()
+
+    if (!fs.existsSync(binaryPath)) {
+      currentStartPromise = null
+      return setEngineState({
+        status: 'error',
+        port: null,
+        modelId: null,
+        error:
+          'Inference engine binary not found. Run scripts/download-llama-server.sh to install it.'
+      })
+    }
+
     const binaryDir = path.dirname(binaryPath)
     const child = childProcess.spawn(
       binaryPath,

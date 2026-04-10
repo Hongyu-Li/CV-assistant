@@ -4,11 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { EngineState } from '../llm'
 
-const { mockSpawn, mockCreateServer, mockFetch } = vi.hoisted(() => {
+const { mockSpawn, mockCreateServer, mockFetch, mockExistsSync } = vi.hoisted(() => {
   return {
     mockSpawn: vi.fn(),
     mockCreateServer: vi.fn(),
-    mockFetch: vi.fn()
+    mockFetch: vi.fn(),
+    mockExistsSync: vi.fn().mockReturnValue(true)
   }
 })
 
@@ -17,6 +18,15 @@ vi.mock('node:child_process', () => {
     spawn: mockSpawn,
     default: {
       spawn: mockSpawn
+    }
+  }
+})
+
+vi.mock('node:fs', () => {
+  return {
+    existsSync: mockExistsSync,
+    default: {
+      existsSync: mockExistsSync
     }
   }
 })
@@ -289,5 +299,23 @@ describe('main/llm/engine', (): void => {
 
     expect(secondState).toEqual(firstState)
     expect(mockSpawn).toHaveBeenCalledTimes(1)
+  })
+
+  it('startEngine() returns error when binary does not exist', async (): Promise<void> => {
+    mockPortAllocation(41008)
+    mockExistsSync.mockReturnValue(false)
+
+    const engine = await loadEngineModule()
+    const state = await engine.startEngine('test-model', '/models/test.gguf')
+
+    expect(mockSpawn).not.toHaveBeenCalled()
+    expect(state).toEqual({
+      status: 'error',
+      port: null,
+      modelId: null,
+      error:
+        'Inference engine binary not found. Run scripts/download-llama-server.sh to install it.'
+    } satisfies EngineState)
+    expect(engine.getEngineState()).toEqual(state)
   })
 })
