@@ -196,8 +196,10 @@ import {
   handleSettingsSave,
   handleShellOpenPath,
   handleWorkspaceMigrate,
-  handleWorkspacePrecheck
+  handleWorkspacePrecheck,
+  registerLlmHandlers
 } from './handlers'
+import { stopEngine } from './llm'
 import { listWorkspaceFiles, readWorkspaceFile } from './fs'
 import { runDataMigration } from './migration'
 
@@ -357,7 +359,12 @@ app
     ipcMain.handle('app:setLanguage', (_, lang: string) => {
       buildAppMenu(lang)
     })
-    createWindow()
+    const mainWindow = createWindow()
+
+    // Register local LLM IPC handlers (disabled in Mac App Store builds)
+    if (!(process as NodeJS.Process & { mas?: boolean }).mas) {
+      registerLlmHandlers(ipcMain, mainWindow)
+    }
 
     // Register macOS activate handler early (before async migration) to ensure it's always available
     app.on('activate', function () {
@@ -422,9 +429,12 @@ app
     app.quit()
   })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+app.on('before-quit', () => {
+  stopEngine().catch((err: unknown) => {
+    console.error('Failed to stop LLM engine on quit:', err)
+  })
+})
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
