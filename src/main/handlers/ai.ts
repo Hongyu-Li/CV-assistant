@@ -47,7 +47,7 @@ function buildAiRequestBase(config: AiRequestConfig): {
   if (config.provider === 'anthropic') {
     headers['x-api-key'] = config.apiKey
     headers['anthropic-version'] = '2023-06-01'
-  } else if (config.provider !== 'ollama') {
+  } else if (config.provider !== 'ollama' && config.provider !== 'local') {
     headers['Authorization'] = `Bearer ${config.apiKey}`
   }
 

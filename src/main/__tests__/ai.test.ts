@@ -360,6 +360,62 @@ describe('main/handlers', (): void => {
         expect(result.error.toLowerCase()).toContain('protocol')
       }
     })
+
+    it('local: does not send Authorization header', async (): Promise<void> => {
+      mockFetchOkJson({ choices: [{ message: { content: 'ok' } }] })
+
+      await handlers.handleAiChat({
+        provider: 'local',
+        apiKey: '',
+        model: 'gemma-4-e2b-it',
+        messages: [{ role: 'user', content: 'hi' }],
+        baseUrl: 'http://127.0.0.1:54321/v1'
+      })
+
+      const { init } = getFetchCall()
+      expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+      expect(init.headers && 'Authorization' in init.headers).toBe(false)
+    })
+
+    it('local: uses 120s timeout when timeoutMs not specified', async (): Promise<void> => {
+      vi.useFakeTimers()
+      try {
+        mockFetch.mockImplementation(
+          (_url: string, init?: { signal?: AbortSignal }) =>
+            new Promise<never>((_resolve, reject) => {
+              if (init?.signal) {
+                init.signal.addEventListener('abort', () => {
+                  const err = new Error('The operation was aborted')
+                  err.name = 'AbortError'
+                  reject(err)
+                })
+              }
+            })
+        )
+
+        const resultPromise = handlers.handleAiChat({
+          provider: 'local',
+          apiKey: '',
+          model: 'gemma-4-e2b-it',
+          messages: [{ role: 'user', content: 'x' }],
+          baseUrl: 'http://127.0.0.1:54321/v1',
+          timeoutMs: 120_000
+        })
+
+        // Should NOT timeout at 30s
+        await vi.advanceTimersByTimeAsync(30_000)
+        // Should timeout at 120s
+        await vi.advanceTimersByTimeAsync(90_000)
+
+        const result = await resultPromise
+        expect(result).toEqual({
+          success: false,
+          error: 'AI request timed out after 120 seconds'
+        })
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 
   describe('handleAiTest', (): void => {

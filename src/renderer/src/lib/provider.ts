@@ -15,6 +15,7 @@ export type AIProvider =
   | 'zhipu'
   | 'kimi'
   | 'custom'
+  | 'local'
 
 export interface ProviderConfig {
   label: string
@@ -95,6 +96,12 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
     defaultBaseUrl: '',
     defaultModel: '',
     requiresApiKey: true
+  },
+  local: {
+    label: 'Local LLM (Gemma 4)',
+    defaultBaseUrl: 'http://127.0.0.1:0/v1',
+    defaultModel: 'gemma-4-e2b-it',
+    requiresApiKey: false
   }
 }
 

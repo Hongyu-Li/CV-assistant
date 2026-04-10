@@ -14,9 +14,9 @@ import {
 // Mock window.electron for IPC calls
 const mockInvoke = window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>
 describe('PROVIDER_CONFIGS', () => {
-  it('defines exactly 12 providers', (): void => {
+  it('defines exactly 13 providers', (): void => {
     const providers = Object.keys(PROVIDER_CONFIGS)
-    expect(providers).toHaveLength(12)
+    expect(providers).toHaveLength(13)
     expect(providers).toEqual([
       'openai',
       'anthropic',
@@ -29,7 +29,8 @@ describe('PROVIDER_CONFIGS', () => {
       'qwen',
       'zhipu',
       'kimi',
-      'custom'
+      'custom',
+      'local'
     ])
   })
 
@@ -62,9 +63,9 @@ describe('PROVIDER_CONFIGS', () => {
     }
   })
 
-  it('only ollama does not require an API key', (): void => {
+  it('only ollama and local do not require an API key', (): void => {
     for (const [key, config] of Object.entries(PROVIDER_CONFIGS)) {
-      if (key === 'ollama') {
+      if (key === 'ollama' || key === 'local') {
         expect(config.requiresApiKey).toBe(false)
       } else {
         expect(config.requiresApiKey).toBe(true)
