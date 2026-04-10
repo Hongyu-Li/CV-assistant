@@ -25,6 +25,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel
 } from '../components/ui/alert-dialog'
+import { LocalModelSettings } from '../components/LocalModelSettings'
 
 interface ConfirmDialogState {
   open: boolean
@@ -414,6 +415,7 @@ export const Settings = (): React.JSX.Element => {
               {isTesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t('settings.test_connection')}
             </Button>
+            {settings.provider === 'local' && <LocalModelSettings />}
           </CardContent>
         </Card>
 

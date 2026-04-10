@@ -41,8 +41,20 @@ vi.mock('../lib/provider', () => ({
       defaultBaseUrl: '',
       defaultModel: '',
       requiresApiKey: true
+    },
+    local: {
+      label: 'Local LLM',
+      defaultBaseUrl: 'http://127.0.0.1:8080/v1',
+      defaultModel: 'auto',
+      requiresApiKey: false
     }
   }
+}))
+
+// Mock LocalModelSettings component
+vi.mock('../components/LocalModelSettings', () => ({
+  LocalModelSettings: (): React.ReactElement =>
+    React.createElement('div', { 'data-testid': 'local-model-settings' }, 'LocalModelSettings')
 }))
 
 // Mock Radix Select with native <select> elements for testability in jsdom
@@ -1166,5 +1178,82 @@ describe('Settings - Test Connection Edge Cases', () => {
     await waitFor((): void => {
       expect(toast.error).toHaveBeenCalledWith('settings.connection_failed ')
     })
+  })
+})
+
+describe('Settings - Local LLM Provider', () => {
+  const mockUpdateSettings = vi.fn()
+
+  beforeEach((): void => {
+    vi.clearAllMocks()
+    ;(window.electron.ipcRenderer.invoke as ReturnType<typeof vi.fn>).mockImplementation(
+      (channel: string): Promise<unknown> => {
+        if (channel === 'app:getVersion') return Promise.resolve('1.0.2')
+        return Promise.resolve(undefined)
+      }
+    )
+  })
+
+  it('renders LocalModelSettings when provider is local', async (): Promise<void> => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: {
+        provider: 'local',
+        apiKeys: {},
+        model: 'auto',
+        baseUrl: 'http://127.0.0.1:8080/v1',
+        theme: 'system',
+        language: 'en',
+        workspacePath: ''
+      },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    await act(async () => {
+      render(<Settings />)
+    })
+    expect(screen.getByTestId('local-model-settings')).toBeInTheDocument()
+  })
+
+  it('does not render LocalModelSettings when provider is not local', async (): Promise<void> => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: {
+        provider: 'openai',
+        apiKeys: {},
+        model: 'gpt-5.2',
+        baseUrl: '',
+        theme: 'system',
+        language: 'en',
+        workspacePath: ''
+      },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    await act(async () => {
+      render(<Settings />)
+    })
+    expect(screen.queryByTestId('local-model-settings')).not.toBeInTheDocument()
+  })
+
+  it('hides API key field when provider is local', async (): Promise<void> => {
+    ;(useSettings as Mock).mockReturnValue({
+      settings: {
+        provider: 'local',
+        apiKeys: {},
+        model: 'auto',
+        baseUrl: 'http://127.0.0.1:8080/v1',
+        theme: 'system',
+        language: 'en',
+        workspacePath: ''
+      },
+      updateSettings: mockUpdateSettings,
+      isLoading: false,
+      error: null
+    })
+    await act(async () => {
+      render(<Settings />)
+    })
+    expect(screen.queryByText('settings.api_key')).not.toBeInTheDocument()
   })
 })
