@@ -407,6 +407,28 @@ describe('SettingsContext', () => {
     })
   })
 
+  describe('localModelId', () => {
+    it('provides localModelId defaulting to null', async (): Promise<void> => {
+      mockInvoke.mockResolvedValueOnce(null)
+
+      renderWithProvider()
+
+      await waitFor(() => {
+        expect(screen.getByTestId('isLoading').textContent).toBe('false')
+      })
+
+      mockInvoke.mockResolvedValueOnce(undefined)
+      await act(async () => {
+        screen.getByTestId('update-btn').click()
+      })
+
+      expect(mockInvoke).toHaveBeenCalledWith(
+        'settings:save',
+        expect.objectContaining({ localModelId: null })
+      )
+    })
+  })
+
   describe('error state', () => {
     it('should set error when load fails', async () => {
       mockInvoke.mockRejectedValueOnce(new Error('Network error'))
