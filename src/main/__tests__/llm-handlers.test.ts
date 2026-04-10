@@ -113,7 +113,7 @@ describe('registerLlmHandlers', () => {
       const result = await handler(null, { modelId: 'gemma-4-e2b-it' })
 
       expect(result).toEqual({ success: true, state: expectedState })
-      expect(engineMock.startEngine).toHaveBeenCalledWith('/path/to/model.gguf')
+      expect(engineMock.startEngine).toHaveBeenCalledWith('gemma-4-e2b-it', '/path/to/model.gguf')
     })
 
     it('returns error when model is not downloaded', async () => {
@@ -144,13 +144,20 @@ describe('registerLlmHandlers', () => {
   })
 
   describe('llm:stopEngine', () => {
-    it('returns success after stopping engine', async () => {
+    it('returns success with state after stopping engine', async () => {
       vi.mocked(engineMock.stopEngine).mockResolvedValue(undefined)
+      const stoppedState: EngineState = {
+        status: 'stopped',
+        port: null,
+        modelId: null,
+        error: null
+      }
+      vi.mocked(engineMock.getEngineState).mockReturnValue(stoppedState)
 
       const handler = getHandler(mockIpcMain, 'llm:stopEngine')
       const result = await handler(null, {})
 
-      expect(result).toEqual({ success: true })
+      expect(result).toEqual({ success: true, state: stoppedState })
       expect(engineMock.stopEngine).toHaveBeenCalled()
     })
   })

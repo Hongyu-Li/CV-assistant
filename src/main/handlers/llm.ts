@@ -42,7 +42,7 @@ export function registerLlmHandlers(ipcMain: IpcMainLike, mainWindow: BrowserWin
         return { success: false, error: 'Model not found. Please download it first.' }
       }
       try {
-        const state = await startEngine(modelPath)
+        const state = await startEngine(args.modelId, modelPath)
         return { success: true, state }
       } catch (error) {
         return { success: false, error: sanitizeLlmError(toErrorMessage(error)) }
@@ -50,15 +50,18 @@ export function registerLlmHandlers(ipcMain: IpcMainLike, mainWindow: BrowserWin
     }
   )
 
-  ipcMain.handle('llm:stopEngine', async (): Promise<{ success: true } | IpcErrorResponse> => {
-    if (isMas()) return MAS_ERROR
-    try {
-      await stopEngine()
-      return { success: true }
-    } catch (error) {
-      return { success: false, error: sanitizeLlmError(toErrorMessage(error)) }
+  ipcMain.handle(
+    'llm:stopEngine',
+    async (): Promise<{ success: true; state: EngineState } | IpcErrorResponse> => {
+      if (isMas()) return MAS_ERROR
+      try {
+        await stopEngine()
+        return { success: true, state: getEngineState() }
+      } catch (error) {
+        return { success: false, error: sanitizeLlmError(toErrorMessage(error)) }
+      }
     }
-  })
+  )
 
   ipcMain.handle(
     'llm:engineStatus',

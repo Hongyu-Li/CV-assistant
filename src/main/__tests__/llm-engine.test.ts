@@ -170,7 +170,7 @@ describe('main/llm/engine', (): void => {
 
     const engine = await loadEngineModule()
 
-    await engine.startEngine('/models/test.gguf')
+    await engine.startEngine('test-model', '/models/test.gguf')
 
     const llamaPath = engine.getLlamaServerPath()
     const llamaDir = path.dirname(llamaPath)
@@ -215,7 +215,7 @@ describe('main/llm/engine', (): void => {
       } satisfies HealthResponse)
 
     const engine = await loadEngineModule()
-    const startPromise = engine.startEngine('/models/test.gguf')
+    const startPromise = engine.startEngine('test-model', '/models/test.gguf')
 
     await vi.advanceTimersByTimeAsync(500)
     const state = await startPromise
@@ -224,7 +224,7 @@ describe('main/llm/engine', (): void => {
     expect(state).toEqual({
       status: 'running',
       port: 41004,
-      modelId: '/models/test.gguf',
+      modelId: 'test-model',
       error: null
     } satisfies EngineState)
     expect(engine.getEngineState()).toEqual(state)
@@ -245,7 +245,7 @@ describe('main/llm/engine', (): void => {
     mockSpawn.mockReturnValue(child)
 
     const engine = await loadEngineModule()
-    await engine.startEngine('/models/test.gguf')
+    await engine.startEngine('test-model', '/models/test.gguf')
 
     await engine.stopEngine()
 
@@ -265,7 +265,7 @@ describe('main/llm/engine', (): void => {
     mockSpawn.mockReturnValue(child)
 
     const engine = await loadEngineModule()
-    await engine.startEngine('/models/test.gguf')
+    await engine.startEngine('test-model', '/models/test.gguf')
 
     child.emit('exit', 2, null)
 
@@ -284,8 +284,8 @@ describe('main/llm/engine', (): void => {
     mockSpawn.mockReturnValue(child)
 
     const engine = await loadEngineModule()
-    const firstState = await engine.startEngine('/models/test.gguf')
-    const secondState = await engine.startEngine('/models/other.gguf')
+    const firstState = await engine.startEngine('test-model', '/models/test.gguf')
+    const secondState = await engine.startEngine('other-model', '/models/other.gguf')
 
     expect(secondState).toEqual(firstState)
     expect(mockSpawn).toHaveBeenCalledTimes(1)

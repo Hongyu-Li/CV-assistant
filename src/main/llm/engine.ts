@@ -183,7 +183,7 @@ export function getEngineState(): EngineState {
   return engineState
 }
 
-export async function startEngine(modelPath: string): Promise<EngineState> {
+export async function startEngine(modelId: string, modelPath: string): Promise<EngineState> {
   if (engineState.status === 'running' || engineState.status === 'starting') {
     return currentStartPromise ?? Promise.resolve(engineState)
   }
@@ -194,7 +194,7 @@ export async function startEngine(modelPath: string): Promise<EngineState> {
     setEngineState({
       status: 'starting',
       port,
-      modelId: modelPath,
+      modelId,
       error: null
     })
 
@@ -219,7 +219,7 @@ export async function startEngine(modelPath: string): Promise<EngineState> {
       return setEngineState({
         status: 'running',
         port,
-        modelId: modelPath,
+        modelId,
         error: null
       })
     } catch (error) {

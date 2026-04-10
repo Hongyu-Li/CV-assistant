@@ -106,6 +106,25 @@ describe('generateCV', () => {
     })
   })
 
+  it('uses 120s timeout for local provider', async (): Promise<void> => {
+    const localOptions: GenerateCVOptions = {
+      ...baseOptions,
+      provider: 'local',
+      apiKey: '',
+      baseUrl: 'http://127.0.0.1:41001/v1',
+      model: 'gemma-4-e2b-it'
+    }
+
+    await generateCV(localOptions)
+
+    expect(mockInvoke).toHaveBeenCalledWith(
+      'ai:chat',
+      expect.objectContaining({
+        timeoutMs: 120_000
+      })
+    )
+  })
+
   it('returns the IPC result as a string', async (): Promise<void> => {
     mockInvoke.mockResolvedValue({ success: true, content: '# My CV\n\nGreat content' })
 

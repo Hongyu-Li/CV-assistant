@@ -1,6 +1,6 @@
 import { jsonrepair } from 'jsonrepair'
 import { z } from 'zod/v4'
-import { AI_CHAT_TIMEOUT_MS, AI_PDF_EXTRACT_TIMEOUT_MS } from './constants'
+import { AI_CHAT_TIMEOUT_MS, AI_LOCAL_TIMEOUT_MS, AI_PDF_EXTRACT_TIMEOUT_MS } from './constants'
 
 export type AIProvider =
   | 'openai'
@@ -162,7 +162,8 @@ Generate the CV now.${options.language ? ` Write the CV entirely in ${languageNa
     model,
     messages,
     baseUrl,
-    timeoutMs: options.timeoutMs ?? AI_CHAT_TIMEOUT_MS
+    timeoutMs:
+      options.timeoutMs ?? (options.provider === 'local' ? AI_LOCAL_TIMEOUT_MS : AI_CHAT_TIMEOUT_MS)
   })
 
   if (!result.success) {
