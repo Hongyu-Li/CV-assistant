@@ -172,8 +172,11 @@ describe('main/llm/engine', (): void => {
 
     await engine.startEngine('/models/test.gguf')
 
+    const llamaPath = engine.getLlamaServerPath()
+    const llamaDir = path.dirname(llamaPath)
+
     expect(mockSpawn).toHaveBeenCalledWith(
-      engine.getLlamaServerPath(),
+      llamaPath,
       [
         '-m',
         '/models/test.gguf',
@@ -186,7 +189,13 @@ describe('main/llm/engine', (): void => {
         '-c',
         '8192'
       ],
-      expect.objectContaining({ stdio: 'ignore' })
+      expect.objectContaining({
+        stdio: 'ignore',
+        cwd: llamaDir,
+        env: expect.objectContaining({
+          DYLD_LIBRARY_PATH: llamaDir
+        })
+      })
     )
   })
 

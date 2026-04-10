@@ -35,9 +35,22 @@ TEMP_DIR=$(mktemp -d)
 echo "Downloading ${ARCHIVE_NAME}..."
 curl -fSL -o "${TEMP_DIR}/${ARCHIVE_NAME}" "${DOWNLOAD_URL}"
 
-echo "Extracting llama-server..."
-unzip -o -j "${TEMP_DIR}/${ARCHIVE_NAME}" "*/llama-server" -d "${TEMP_DIR}/extracted" \
-  || unzip -o -j "${TEMP_DIR}/${ARCHIVE_NAME}" "llama-server" -d "${TEMP_DIR}/extracted"
+echo "Extracting llama-server and dependencies..."
+REQUIRED_FILES=(
+  "build/bin/llama-server"
+  "build/bin/libllama.dylib"
+  "build/bin/libggml.dylib"
+  "build/bin/libggml-base.dylib"
+  "build/bin/libggml-metal.dylib"
+  "build/bin/libggml-cpu.dylib"
+  "build/bin/libggml-blas.dylib"
+  "build/bin/libggml-rpc.dylib"
+  "build/bin/ggml-metal.metal"
+  "build/bin/ggml-common.h"
+  "build/bin/ggml-metal-impl.h"
+)
+
+unzip -o -j "${TEMP_DIR}/${ARCHIVE_NAME}" "${REQUIRED_FILES[@]}" -d "${TEMP_DIR}/extracted"
 
 if [[ ! -f "${TEMP_DIR}/extracted/llama-server" ]]; then
   echo "ERROR: llama-server binary not found in archive"
@@ -45,11 +58,20 @@ if [[ ! -f "${TEMP_DIR}/extracted/llama-server" ]]; then
   exit 1
 fi
 
+# Move llama-server with arch-specific name
 mv "${TEMP_DIR}/extracted/llama-server" "${TARGET_PATH}"
 chmod +x "${TARGET_PATH}"
 
-# Ad-hoc sign for hardened runtime on macOS
-codesign --force --sign - "${TARGET_PATH}" 2>/dev/null || echo "Warning: codesign failed (non-fatal)"
+# Move dylibs and metal shaders alongside the binary
+for f in "${TEMP_DIR}/extracted/"*.dylib "${TEMP_DIR}/extracted/"ggml-metal.metal "${TEMP_DIR}/extracted/"ggml-common.h "${TEMP_DIR}/extracted/"ggml-metal-impl.h; do
+  [[ -f "$f" ]] && mv "$f" "${TARGET_DIR}/"
+done
+
+# Ad-hoc sign all binaries and dylibs for macOS
+codesign --force --sign - "${TARGET_PATH}" 2>/dev/null || echo "Warning: codesign failed for binary (non-fatal)"
+for dylib in "${TARGET_DIR}/"*.dylib; do
+  [[ -f "$dylib" ]] && codesign --force --sign - "$dylib" 2>/dev/null || echo "Warning: codesign failed for $(basename "$dylib") (non-fatal)"
+done
 
 rm -rf "${TEMP_DIR}"
 

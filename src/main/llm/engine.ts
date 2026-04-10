@@ -199,10 +199,16 @@ export async function startEngine(modelPath: string): Promise<EngineState> {
     })
 
     expectedExit = false
+    const binaryPath = getLlamaServerPath()
+    const binaryDir = path.dirname(binaryPath)
     const child = childProcess.spawn(
-      getLlamaServerPath(),
+      binaryPath,
       ['-m', modelPath, '--host', '127.0.0.1', '--port', String(port), '-ngl', '99', '-c', '8192'],
-      { stdio: 'ignore' }
+      {
+        stdio: 'ignore',
+        cwd: binaryDir,
+        env: { ...process.env, DYLD_LIBRARY_PATH: binaryDir }
+      }
     )
 
     engineProcess = child

@@ -27,3 +27,7 @@ test-results/
 
 # llama-server binaries (downloaded at build time)
 resources/llama-server-*
+resources/lib*.dylib
+resources/ggml-metal.metal
+resources/ggml-common.h
+resources/ggml-metal-impl.h
