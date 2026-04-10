@@ -17,9 +17,6 @@ extraResources:
     filter:
       - llama-server-*
       - lib*.dylib
-      - ggml-metal.metal
-      - ggml-common.h
-      - ggml-metal-impl.h
 win:
   executableName: cv-assistant
 nsis:
